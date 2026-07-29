@@ -9,10 +9,10 @@
   .card{background:#fff; border-radius:16px; padding:32px; max-width:360px; width:90%; text-align:center; box-shadow:0 4px 20px rgba(0,0,0,.06);}
   .logo{font-size:22px; font-weight:700; color:#E6007A; margin-bottom:20px;}
   button{background:#E6007A; color:#fff; border:none; border-radius:10px; padding:12px 20px; font-size:14px; font-weight:700; cursor:pointer; width:100%;}
-  button:disabled{background:#E9E7DF; color:#9C9A92;}
   .info{margin-top:20px; text-align:left; font-size:12px; color:#6B6B6B; background:#F7F6F2; border-radius:8px; padding:12px; word-break:break-all;}
   .err{color:#DC2626; font-size:13px; margin-top:12px;}
   img.avatar{width:56px; height:56px; border-radius:50%; margin-bottom:10px;}
+  .role-badge{display:inline-block; background:#FCE7F1; color:#B8005F; font-size:12px; font-weight:700; padding:4px 12px; border-radius:999px; margin-bottom:12px;}
 </style>
 </head>
 <body>
@@ -24,7 +24,9 @@
   <div id="loggedIn" style="display:none">
     <img id="avatar" class="avatar" src="">
     <p id="displayName" style="font-weight:700; margin:0 0 2px;"></p>
-    <p id="email" style="font-size:13px; color:#6B6B6B; margin:0 0 16px;"></p>
+    <p id="email" style="font-size:13px; color:#6B6B6B; margin:0 0 10px;"></p>
+    <div class="role-badge" id="roleBadge"></div>
+    <br>
     <button id="logoutBtn">Logout</button>
   </div>
   <div class="info" id="debugInfo"></div>
@@ -32,53 +34,37 @@
 </div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
-  import {
-    getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
-  } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+  import { auth, onAuth, loginWithGoogle, logout, ensureUserProfile } from './firebase-shared.js';
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyAhOrjsZJZLPmu-MhqQ8FaHp05E-eIJ8wU",
-    authDomain: "lms-anteraja.firebaseapp.com",
-    projectId: "lms-anteraja",
-    storageBucket: "lms-anteraja.firebasestorage.app",
-    messagingSenderId: "1012108901126",
-    appId: "1:1012108901126:web:96c79d04340c11bede7c87",
-    measurementId: "G-C1868ZCX9L"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const provider = new GoogleAuthProvider();
-
-  const debugInfo = document.getElementById('debugInfo');
   const errMsg = document.getElementById('errMsg');
+  const debugInfo = document.getElementById('debugInfo');
 
   document.getElementById('loginBtn').addEventListener('click', async () => {
     errMsg.textContent = '';
-    try {
-      await signInWithPopup(auth, provider);
-    } catch (err) {
-      errMsg.textContent = 'Gagal login: ' + err.message;
-      console.error(err);
-    }
+    try { await loginWithGoogle(); }
+    catch (err) { errMsg.textContent = 'Gagal login: ' + err.message; }
   });
+  document.getElementById('logoutBtn').addEventListener('click', () => logout());
 
-  document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
-
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      document.getElementById('loggedOut').style.display = 'none';
-      document.getElementById('loggedIn').style.display = 'block';
-      document.getElementById('avatar').src = user.photoURL || '';
-      document.getElementById('displayName').textContent = user.displayName || '(tanpa nama)';
-      document.getElementById('email').textContent = user.email;
-      debugInfo.innerHTML =
-        `UID: ${user.uid}<br>Email verified: ${user.emailVerified}<br>Provider: ${user.providerData.map(p=>p.providerId).join(', ')}`;
-    } else {
+  onAuth(async (user) => {
+    if (!user) {
       document.getElementById('loggedOut').style.display = 'block';
       document.getElementById('loggedIn').style.display = 'none';
       debugInfo.textContent = 'Belum login.';
+      return;
+    }
+    try {
+      const profile = await ensureUserProfile(user);
+      document.getElementById('loggedOut').style.display = 'none';
+      document.getElementById('loggedIn').style.display = 'block';
+      document.getElementById('avatar').src = user.photoURL || '';
+      document.getElementById('displayName').textContent = profile.displayName || '(tanpa nama)';
+      document.getElementById('email').textContent = profile.email;
+      document.getElementById('roleBadge').textContent = 'Role: ' + profile.role;
+      debugInfo.innerHTML = `UID: ${user.uid}<br>Role tersimpan di Firestore (users/${user.uid}): <strong>${profile.role}</strong>`;
+    } catch (err) {
+      errMsg.textContent = 'Gagal load profil: ' + err.message;
+      console.error(err);
     }
   });
 </script>
