@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./lms-design-system.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
   .avatar { width: 28px; height: 28px; border-radius: 50%; }
   .user-chip { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); }
@@ -23,6 +24,11 @@
   .scale-row { display: flex; gap: 8px; }
   .scale-opt { flex: 1; text-align: center; padding: 12px 0; border: 1px solid var(--border); border-radius: var(--r-control); cursor: pointer; font-weight: 700; color: var(--text-2); }
   .scale-opt.selected { border-color: var(--pink); background: var(--pink); color: #fff; }
+  .pdf-nav { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 10px; border-top: 1px solid var(--border); background: var(--surface); }
+  .pdf-nav button { background: var(--pink-bg); color: var(--pink-dark); border: none; border-radius: var(--r-control); width: 34px; height: 34px; cursor: pointer; display:flex; align-items:center; justify-content:center; }
+  .pdf-nav button:disabled { background: var(--surface-2); color: var(--text-3); cursor: not-allowed; }
+  .pdf-canvas-wrap { flex: 1; overflow: auto; display: flex; align-items: flex-start; justify-content: center; background: var(--surface-2); padding: 16px; }
+  .pdf-canvas-wrap canvas { box-shadow: 0 1px 4px rgba(0,0,0,.15); max-width: 100%; }
 </style>
 </head>
 <body>
@@ -64,7 +70,12 @@
       <span id="previewTitle" style="font-weight:700; font-size:14px;"></span>
       <button class="icon-btn" id="closePreviewBtn"></button>
     </div>
-    <div style="flex:1; background:var(--surface-2);"><iframe id="previewFrame" style="width:100%; height:100%; border:none;"></iframe></div>
+    <div class="pdf-canvas-wrap"><canvas id="pdfCanvas"></canvas></div>
+    <div class="pdf-nav">
+      <button id="pdfPrevBtn"></button>
+      <span class="text-sub" id="pdfPageIndicator">Halaman - / -</span>
+      <button id="pdfNextBtn"></button>
+    </div>
   </div>
 </div>
 
@@ -86,6 +97,7 @@
 
   let currentUser = null, currentProfile = null, moduleData = null, questions = [];
   let videoWatched = false;
+  let viewedFiles = new Set();
   let ytPlayer = null;
   let answers = {}; // questionIndex -> jawaban
   let uploadedFiles = {}; // questionIndex -> {url, nama}
@@ -96,17 +108,52 @@
     setTimeout(() => t.style.display = 'none', 2500);
   }
 
-  window.openPreviewModal = function(url, name){
-    const isPdf = /\.pdf($|\?)/i.test(name) || /\.pdf($|\?)/i.test(url);
-    const src = isPdf ? url : `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  let pdfDoc = null, pdfPageNum = 1, currentFileIdx = null;
+
+  window.openPreviewModal = async function(url, name, idx){
     document.getElementById('previewTitle').textContent = name;
-    document.getElementById('previewFrame').src = src;
     document.getElementById('previewModal').style.display = 'flex';
+    currentFileIdx = idx;
+    pdfPageNum = 1;
+    document.getElementById('pdfPageIndicator').textContent = 'Memuat...';
+    try{
+      pdfDoc = await pdfjsLib.getDocument(url).promise;
+      renderPdfPage(pdfPageNum);
+    } catch(err){
+      document.getElementById('pdfPageIndicator').textContent = 'Gagal memuat PDF: ' + err.message;
+    }
   };
+
+  async function renderPdfPage(num){
+    const page = await pdfDoc.getPage(num);
+    const canvas = document.getElementById('pdfCanvas');
+    const ctx = canvas.getContext('2d');
+    const viewport = page.getViewport({ scale: 1.3 });
+    canvas.width = viewport.width; canvas.height = viewport.height;
+    await page.render({ canvasContext: ctx, viewport }).promise;
+    document.getElementById('pdfPageIndicator').textContent = `Halaman ${num} dari ${pdfDoc.numPages}`;
+    document.getElementById('pdfPrevBtn').disabled = num <= 1;
+    document.getElementById('pdfNextBtn').disabled = num >= pdfDoc.numPages;
+
+    // Tandai "sudah dilihat" begitu trainee mencapai halaman terakhir (sama konsepnya kayak video "ended").
+    if(num >= pdfDoc.numPages && currentFileIdx != null){
+      viewedFiles.add(String(currentFileIdx));
+      const badge = document.getElementById(`viewed-${currentFileIdx}`);
+      if(badge) badge.style.display = 'inline';
+      renderPostTest();
+    }
+  }
+
+  document.getElementById('pdfPrevBtn').innerHTML = `<span style="display:inline-flex; transform:rotate(90deg);">${iconSvg('chevron-down', {size:16})}</span>`;
+  document.getElementById('pdfNextBtn').innerHTML = `<span style="display:inline-flex; transform:rotate(-90deg);">${iconSvg('chevron-down', {size:16})}</span>`;
+  document.getElementById('pdfPrevBtn').addEventListener('click', () => { if(pdfPageNum > 1) renderPdfPage(--pdfPageNum); });
+  document.getElementById('pdfNextBtn').addEventListener('click', () => { if(pdfPageNum < pdfDoc.numPages) renderPdfPage(++pdfPageNum); });
   document.getElementById('closePreviewBtn').innerHTML = iconSvg('x', {size:18});
   document.getElementById('closePreviewBtn').addEventListener('click', () => {
     document.getElementById('previewModal').style.display = 'none';
-    document.getElementById('previewFrame').src = '';
+    pdfDoc = null; currentFileIdx = null;
   });
   window.downloadFile = async function(url, name, btn){
     const original = btn.textContent; btn.textContent = '...';
@@ -142,12 +189,15 @@
     }
 
     const filesBox = document.getElementById('materiFilesList');
-    filesBox.innerHTML = (moduleData.materiFiles||[]).map(f => `
+    const files = moduleData.materiFiles || [];
+    filesBox.innerHTML = files.map((f,idx) => `
       <div class="file-row">
         ${iconSvg('file-text',{size:15})} <span style="flex:1;">${f.nama}</span>
-        <button onclick="openPreviewModal('${f.url}', '${f.nama.replace(/'/g,"\\'")}')" style="background:none; border:none; color:var(--pink); font-weight:700; font-size:12px; cursor:pointer;">Preview</button>
+        <span id="viewed-${idx}" style="display:none; color:var(--green);">${iconSvg('check',{size:14})}</span>
+        <button onclick="openPreviewModal('${f.url}', '${f.nama.replace(/'/g,"\\'")}', ${idx})" style="background:none; border:none; color:var(--pink); font-weight:700; font-size:12px; cursor:pointer;">Preview</button>
         <button onclick="downloadFile('${f.url}', '${f.nama.replace(/'/g,"\\'")}', this)" style="background:none; border:none; color:var(--text-2); font-weight:700; font-size:12px; cursor:pointer;">Unduh</button>
       </div>`).join('') || `<p class="text-meta">Tidak ada file materi.</p>`;
+    if(!files.length) { /* tidak ada file materi = tidak ada gerbang dari sisi ini */ }
   }
 
   function initYoutubePlayer(videoId){
@@ -169,10 +219,18 @@
     else window.onYouTubeIframeAPIReady = create;
   }
 
+  function allMateriViewed(){
+    const total = (moduleData.materiFiles||[]).length;
+    return total === 0 || viewedFiles.size >= total;
+  }
+
   function renderPostTest(){
     const box = document.getElementById('postTestBody');
-    if(!videoWatched){
-      box.innerHTML = `<div class="lock-note">${iconSvg('lock',{size:16})} Selesaikan video di atas dulu untuk membuka Post-Test.</div>`;
+    if(!videoWatched || !allMateriViewed()){
+      const need = [];
+      if(!videoWatched) need.push('tonton video sampai selesai');
+      if(!allMateriViewed()) need.push(`buka semua file materi (${viewedFiles.size}/${(moduleData.materiFiles||[]).length})`);
+      box.innerHTML = `<div class="lock-note">${iconSvg('lock',{size:16})} Selesaikan dulu: ${need.join(' dan ')}.</div>`;
       return;
     }
     if(!questions.length){
