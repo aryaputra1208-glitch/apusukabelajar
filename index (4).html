@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anteraja LMS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./lms-design-system.css">
+<style>
+  .center-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .login-card { max-width: 360px; width: 90%; text-align: center; }
+  .logo-big { font-size: 26px; font-weight: 700; color: var(--pink); margin-bottom: 6px; }
+  .avatar-lg { width: 64px; height: 64px; border-radius: 50%; margin-bottom: 12px; }
+  .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 24px; }
+  .menu-card { border: 1px solid var(--border); border-radius: var(--r-card); padding: 20px; text-decoration: none; color: var(--text); display: block; transition: border-color .12s; }
+  .menu-card:hover { border-color: var(--pink); }
+  .menu-icon { width: 40px; height: 40px; border-radius: var(--r-control); background: var(--pink-bg); color: var(--pink-dark); display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+  .role-badge { display: inline-flex; align-items: center; gap: 4px; background: var(--pink-bg); color: var(--pink-dark); font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: var(--r-pill); margin-top: 6px; }
+</style>
+</head>
+<body>
+
+<div id="loggedOut" class="center-wrap">
+  <div class="card login-card">
+    <div class="logo-big">anteraja LMS</div>
+    <p class="text-sub" style="margin-bottom:20px;">Login pakai akun Google untuk melanjutkan</p>
+    <button class="btn btn-primary" id="loginBtn" style="width:100%;">Login dengan Google</button>
+    <p class="field-error" id="errMsg" style="display:none; margin-top:12px;"></p>
+  </div>
+</div>
+
+<div id="loggedIn" style="display:none;">
+  <div class="topbar">
+    <div class="sidebar-logo" style="margin:0;">anteraja LMS</div>
+    <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-2);">
+      <img id="userAvatar" src="" style="width:28px; height:28px; border-radius:50%;">
+      <span id="userName"></span>
+      <button class="btn btn-outline btn-sm" id="logoutBtn" style="margin-left:8px;">Logout</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <h1 class="text-h1" id="welcomeTitle"></h1>
+    <div class="role-badge" id="roleBadge"></div>
+    <div class="menu-grid" id="menuGrid"></div>
+  </div>
+</div>
+
+<script type="module">
+  import { auth, onAuth, loginWithGoogle, logout, ensureUserProfile } from './firebase-shared.js';
+  import { iconSvg } from './lms-icons.js';
+
+  const MENU_BY_ROLE = {
+    admin: [
+      { href: 'admin-approval.html', icon: 'check', title: 'Approval Modul', desc: 'Review & publish modul dari trainer' },
+      { href: 'trainer-create-module.html', icon: 'plus', title: 'Buat Modul', desc: 'Buat modul training sendiri' },
+    ],
+    trainer: [
+      { href: 'trainer-create-module.html', icon: 'plus', title: 'Buat Modul', desc: 'Susun materi & post-test baru' },
+    ],
+    trainee: [
+      { href: 'trainee-library.html', icon: 'books', title: 'Library Modul', desc: 'Lihat semua modul training online' },
+    ],
+  };
+
+  document.getElementById('loginBtn').addEventListener('click', async () => {
+    const err = document.getElementById('errMsg');
+    err.style.display = 'none';
+    try { await loginWithGoogle(); }
+    catch (e) { err.textContent = 'Gagal login: ' + e.message; err.style.display = 'block'; }
+  });
+  document.getElementById('logoutBtn').addEventListener('click', () => logout());
+
+  onAuth(async (user) => {
+    const out = document.getElementById('loggedOut');
+    const inn = document.getElementById('loggedIn');
+    if(!user){ out.style.display = 'flex'; inn.style.display = 'none'; return; }
+
+    const profile = await ensureUserProfile(user);
+    out.style.display = 'none'; inn.style.display = 'block';
+    document.getElementById('userAvatar').src = profile.photoURL || '';
+    document.getElementById('userName').textContent = profile.displayName;
+    document.getElementById('welcomeTitle').textContent = `Selamat datang, ${profile.displayName.split(' ')[0]}`;
+    document.getElementById('roleBadge').textContent = 'Role: ' + profile.role;
+
+    const menu = MENU_BY_ROLE[profile.role] || [];
+    document.getElementById('menuGrid').innerHTML = menu.map(m => `
+      <a class="menu-card" href="${m.href}">
+        <div class="menu-icon">${iconSvg(m.icon, {size:20})}</div>
+        <div style="font-weight:700; font-size:14px; margin-bottom:4px;">${m.title}</div>
+        <div class="text-sub">${m.desc}</div>
+      </a>`).join('') || `<p class="text-sub">Belum ada menu untuk role Anda.</p>`;
+  });
+</script>
+</body>
+</html>
