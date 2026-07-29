@@ -123,6 +123,8 @@
         </div>
         <p class="text-sub">${m.deskripsi || ''}</p>
         <div class="q-preview" id="qcount-${m.id}">Memuat jumlah soal...</div>
+        <span class="link-add" data-action="toggle-questions" data-id="${m.id}" style="color:var(--pink); font-weight:700; font-size:12px; cursor:pointer; display:inline-block; margin-bottom:8px;">Lihat Soal</span>
+        <div id="questions-${m.id}" style="display:none; margin-bottom:10px;"></div>
 
         ${youtubeEmbedUrl(m.videoUrl) ? `
           <div style="margin-top:12px; max-width:360px;">
@@ -135,10 +137,11 @@
         ${(m.materiFiles||[]).length ? `
           <div style="margin-top:10px; display:flex; flex-direction:column; gap:6px;">
             ${m.materiFiles.map(f => `
-              <a href="${f.url}" target="_blank" rel="noopener" style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text); text-decoration:none; padding:8px 10px; background:var(--surface-2); border-radius:var(--r-control);">
+              <div style="display:flex; align-items:center; gap:8px; font-size:13px; padding:8px 10px; background:var(--surface-2); border-radius:var(--r-control);">
                 ${iconSvg('file-text',{size:15})} <span style="flex:1;">${f.nama}</span>
-                <span style="color:var(--pink); font-weight:700; font-size:12px;">Buka ${iconSvg('link',{size:12})}</span>
-              </a>`).join('')}
+                <a href="https://docs.google.com/viewer?url=${encodeURIComponent(f.url)}&embedded=true" target="_blank" rel="noopener" style="color:var(--pink); font-weight:700; font-size:12px; text-decoration:none;">Preview</a>
+                <a href="${f.url}" download="${f.nama}" target="_blank" rel="noopener" style="color:var(--text-2); font-weight:700; font-size:12px; text-decoration:none;">Unduh</a>
+              </div>`).join('')}
           </div>` : ''}
 
         ${status === 'pending_approval' ? `
@@ -149,12 +152,36 @@
       </div>`).join('');
 
     // Ambil jumlah soal per modul (query terpisah, ringan)
+    const questionsCache = {};
     modules.forEach(async (m) => {
       const qq = query(collection(db, 'questions'), where('moduleId', '==', m.id));
       const qs = await getDocs(qq);
+      const list = [];
+      qs.forEach(d => list.push(d.data()));
+      list.sort((a,b) => (a.urutan||0) - (b.urutan||0));
+      questionsCache[m.id] = list;
       const target = document.getElementById(`qcount-${m.id}`);
-      if(target) target.textContent = `${qs.size} soal post-test`;
+      if(target) target.textContent = `${list.length} soal post-test`;
     });
+
+    el.querySelectorAll('[data-action="toggle-questions"]').forEach(link => link.addEventListener('click', () => {
+      const id = link.dataset.id;
+      const box = document.getElementById(`questions-${id}`);
+      if(box.style.display === 'block'){ box.style.display = 'none'; link.textContent = 'Lihat Soal'; return; }
+      const qs = questionsCache[id] || [];
+      const TIPE_LABEL = { multiple_choice:'Pilihan Ganda', likert:'Skala 1-4', free_text:'Jawaban Teks', file_upload:'Submission File' };
+      box.innerHTML = !qs.length ? `<p class="text-meta">Belum ada soal.</p>` : qs.map((q,i) => `
+        <div style="border-top:1px solid var(--border); padding:10px 0;">
+          <div class="text-meta" style="margin-bottom:4px;">Soal ${i+1} · ${TIPE_LABEL[q.tipe]||q.tipe}</div>
+          <div style="font-size:13px; margin-bottom:6px;">${q.pertanyaan || '(kosong)'}</div>
+          ${q.tipe === 'multiple_choice' ? (q.pilihan||[]).map(opt => `
+            <div style="font-size:12px; padding:4px 8px; border-radius:6px; margin-bottom:3px; ${opt===q.jawabanBenar ? 'background:var(--green-bg); color:var(--green); font-weight:700;' : 'color:var(--text-2);'}">
+              ${opt===q.jawabanBenar ? iconSvg('check',{size:12}) : ''} ${opt}
+            </div>`).join('') : ''}
+        </div>`).join('');
+      box.style.display = 'block';
+      link.textContent = 'Sembunyikan Soal';
+    }));
 
     el.querySelectorAll('[data-action="approve"]').forEach(btn => btn.addEventListener('click', () => setStatus(btn.dataset.id, 'published')));
     el.querySelectorAll('[data-action="reject"]').forEach(btn => btn.addEventListener('click', () => setStatus(btn.dataset.id, 'rejected')));
