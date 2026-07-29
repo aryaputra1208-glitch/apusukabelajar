@@ -78,10 +78,10 @@
       <label>Link Video YouTube (unlisted)</label>
       <input type="url" id="mVideo" placeholder="https://youtu.be/...">
 
-      <label>File Materi (PPT/PDF)</label>
+      <label>File Materi (PDF — export dari PPT/Word jadi PDF dulu sebelum upload)</label>
       <div id="materiList"></div>
       <div class="dropzone" id="materiDropzone"></div>
-      <input type="file" id="materiFileInput" style="display:none">
+      <input type="file" id="materiFileInput" accept=".pdf" style="display:none">
     </div>
 
     <div class="card">
@@ -237,6 +237,7 @@
 
   async function uploadMateri(file){
     if(!currentUser){ showToast('Anda belum login.'); return; }
+    if(!/\.pdf$/i.test(file.name)){ showToast('Cuma file PDF yang diterima — export dulu dari PPT/Word ke PDF.'); return; }
     const original = dz.innerHTML;
     dz.innerHTML = `⏳ Mengupload ${file.name}...`;
     try{
