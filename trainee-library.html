@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Library Modul — Anteraja LMS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./lms-design-system.css">
+<style>
+  .filter-row { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .module-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+  .module-card { border: 1px solid var(--border); border-radius: var(--r-card); overflow: hidden; text-decoration: none; color: var(--text); display: block; }
+  .module-card:hover { border-color: var(--pink); }
+  .module-thumb { aspect-ratio: 16/9; background: var(--surface-2); display: flex; align-items: center; justify-content: center; color: var(--text-3); }
+  .module-body { padding: 14px; }
+  .avatar { width: 28px; height: 28px; border-radius: 50%; }
+  .user-chip { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); }
+</style>
+</head>
+<body>
+
+<div id="gate" class="locked-state" style="display:none;">
+  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Memuat...</p>
+  <p class="text-sub" id="gateSub"></p>
+</div>
+
+<div id="appShell" style="display:none;">
+  <div class="topbar">
+    <a href="index.html" class="sidebar-logo" style="margin:0; text-decoration:none;">anteraja LMS</a>
+    <div class="user-chip">
+      <img class="avatar" id="userAvatar" src="">
+      <span id="userName"></span>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <h1 class="text-h1">Library Modul</h1>
+    <p class="text-sub" style="margin-bottom:20px;">Semua modul training online yang tersedia untuk Anda.</p>
+
+    <div class="filter-row" id="filterRow">
+      <span class="chip selected" data-kategori="">Semua</span>
+      <span class="chip" data-kategori="Basic/Fundamental">Basic/Fundamental</span>
+      <span class="chip" data-kategori="Core/Mandatory">Core/Mandatory</span>
+      <span class="chip" data-kategori="General">General</span>
+    </div>
+
+    <div class="module-grid" id="moduleGrid"></div>
+    <div class="empty-state" id="emptyState" style="display:none;"></div>
+  </div>
+</div>
+
+<script type="module">
+  import { auth, db, onAuth, ensureUserProfile } from './firebase-shared.js';
+  import { iconSvg } from './lms-icons.js';
+  import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+
+  let currentProfile = null;
+  let allModules = [];
+  let activeKategori = '';
+
+  function youtubeThumb(url){
+    if(!url) return null;
+    const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([a-zA-Z0-9_-]{6,})/);
+    return m ? `https://img.youtube.com/vi/${m[1]}/mqdefault.jpg` : null;
+  }
+
+  function isWajib(m, profile){
+    const divCocok = !m.targetDivisi?.length || m.targetDivisi.some(d => (profile.divisi||'').toLowerCase().includes(d.toLowerCase()));
+    const lvlCocok = !m.targetLevel?.length || m.targetLevel.includes(profile.level);
+    return (m.targetDivisi?.length || m.targetLevel?.length) && divCocok && lvlCocok;
+  }
+
+  function render(){
+    const filtered = allModules.filter(m => !activeKategori || m.kategori === activeKategori);
+    const grid = document.getElementById('moduleGrid');
+    const empty = document.getElementById('emptyState');
+
+    if(!filtered.length){
+      grid.innerHTML = '';
+      empty.style.display = 'block';
+      empty.innerHTML = iconSvg('inbox', {size:28}) + `<p style="margin-top:8px;">Belum ada modul di kategori ini.</p>`;
+      return;
+    }
+    empty.style.display = 'none';
+
+    grid.innerHTML = filtered.map(m => {
+      const thumb = youtubeThumb(m.videoUrl);
+      const wajib = isWajib(m, currentProfile);
+      return `
+      <a class="module-card" href="trainee-learn.html?module=${m.id}">
+        <div class="module-thumb">${thumb ? `<img src="${thumb}" style="width:100%; height:100%; object-fit:cover;">` : iconSvg('player-play',{size:24})}</div>
+        <div class="module-body">
+          ${wajib ? `<span class="badge badge-pink" style="background:var(--pink-bg); color:var(--pink-dark); margin-bottom:8px;">Wajib untuk Anda</span>` : ''}
+          <div style="font-weight:700; font-size:14px; margin-bottom:4px;">${m.judul}</div>
+          <div class="text-meta">${m.kategori} · ${m.durasiMenit||0} menit</div>
+        </div>
+      </a>`;
+    }).join('');
+  }
+
+  document.getElementById('filterRow').addEventListener('click', (e) => {
+    const chip = e.target.closest('.chip');
+    if(!chip) return;
+    document.querySelectorAll('#filterRow .chip').forEach(c => c.classList.remove('selected'));
+    chip.classList.add('selected');
+    activeKategori = chip.dataset.kategori;
+    render();
+  });
+
+  onAuth(async (user) => {
+    const gate = document.getElementById('gate');
+    const shell = document.getElementById('appShell');
+    if(!user){
+      gate.style.display = 'block'; shell.style.display = 'none';
+      document.getElementById('gateTitle').textContent = 'Silakan login';
+      document.getElementById('gateSub').innerHTML = `<a href="index.html">Login dulu di sini</a>.`;
+      return;
+    }
+    currentProfile = await ensureUserProfile(user);
+    gate.style.display = 'none'; shell.style.display = 'block';
+    document.getElementById('userAvatar').src = currentProfile.photoURL;
+    document.getElementById('userName').textContent = currentProfile.displayName;
+
+    const q = query(collection(db, 'modules'), where('status', '==', 'published'));
+    const snap = await getDocs(q);
+    allModules = [];
+    snap.forEach(d => allModules.push({ id: d.id, ...d.data() }));
+    render();
+  });
+</script>
+</body>
+</html>
