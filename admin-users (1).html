@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kelola User — Anteraja LMS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./lms-design-system.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  .avatar { width: 28px; height: 28px; border-radius: 50%; }
+  .avatar-sm { width: 26px; height: 26px; border-radius: 50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; }
+  .user-chip { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); }
+  .u-row { display: grid; grid-template-columns: 2fr 1fr 1.4fr 1fr auto; gap: 10px; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--border); }
+  .u-row:last-child { border-bottom: none; }
+  .u-row input, .u-row select { margin-bottom: 0; }
+  .u-name { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .search-box { max-width: 320px; margin-bottom: 16px; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 18px; }
+  .tab-btn { padding: 8px 16px; border-radius: var(--r-control); font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text-2); }
+  .tab-btn.active { background: var(--pink); border-color: var(--pink); color: #fff; }
+  .add-row { display: grid; grid-template-columns: 1.4fr 1.4fr 1fr 1fr auto; gap: 8px; align-items: end; }
+  .add-row input, .add-row select { margin-bottom: 0; }
+</style>
+</head>
+<body>
+
+<div id="gate" class="locked-state" style="display:none;">
+  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Memuat...</p>
+  <p class="text-sub" id="gateSub"></p>
+</div>
+
+<div id="appShell" style="display:none;">
+  <div class="topbar">
+    <a href="index.html" class="sidebar-logo" style="margin:0; text-decoration:none;">anteraja LMS</a>
+    <div class="user-chip">
+      <img class="avatar" id="userAvatar" src="">
+      <span id="userName"></span>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <h1 class="text-h1">Kelola User</h1>
+    <p class="text-sub" style="margin-bottom:20px;">Daftar orang yang boleh login ke LMS, lengkap dengan Divisi &amp; Level mereka. Bisa ditambah kapan saja — email baru, domain apa saja (@anteraja.id, @gmail, dll).</p>
+
+    <div class="card" style="margin-bottom:16px;">
+      <h2 class="text-h2" style="margin-bottom:6px;">Tambah 1 Orang</h2>
+      <div class="add-row">
+        <div><label>Nama</label><input type="text" id="addNama" placeholder="Nama lengkap"></div>
+        <div><label>Email</label><input type="text" id="addEmail" placeholder="nama@domain.com"></div>
+        <div><label>Divisi</label><input type="text" id="addDivisi" placeholder="mis. OPERATION"></div>
+        <div><label>Level</label><select id="addLevel"></select></div>
+        <button class="btn btn-primary" id="addOneBtn" style="margin-bottom:14px;">Tambah</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px;">
+      <h2 class="text-h2" style="margin-bottom:6px;">Tambah Banyak via Excel</h2>
+      <p class="text-sub" style="margin-bottom:12px;">Upload file .xlsx dengan kolom header: <strong>Nama, Email, Divisi, Level</strong>. Bisa upload berkali-kali — data lama tidak hilang, cuma ditambah/di-update (dicocokkan by email).</p>
+      <div class="dropzone" id="excelDropzone"></div>
+      <input type="file" id="excelFileInput" accept=".xlsx,.xls" style="display:none">
+      <div id="bulkResult" class="text-meta" style="margin-top:10px;"></div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab-btn active" data-tab="all" id="tabAll">Semua Terdaftar</div>
+      <div class="tab-btn" data-tab="active" id="tabActive">Sudah Pernah Login</div>
+      <div class="tab-btn" data-tab="pending" id="tabPending">Belum Pernah Login</div>
+    </div>
+    <input type="text" id="searchBox" class="search-box" placeholder="Cari nama/email...">
+
+    <div class="panel">
+      <div class="u-row" style="background:var(--surface-2); font-size:11px; color:var(--text-3); font-weight:700;">
+        <span>NAMA</span><span>STATUS</span><span>DIVISI</span><span>LEVEL</span><span></span>
+      </div>
+      <div id="userList"></div>
+    </div>
+    <div class="empty-state" id="emptyState" style="display:none;"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { auth, db, onAuth, ensureUserProfile } from './firebase-shared.js';
+  import { iconSvg } from './lms-icons.js';
+  import { collection, getDocs, doc, setDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+
+  const LEVEL_OPTIONS = ['','Admin','Leader','Coordinator','Staff','Supervisor','Section Head','Department Head','AVP','VP','SVP'];
+  document.getElementById('addLevel').innerHTML = LEVEL_OPTIONS.map(l => `<option value="${l}">${l||'- Pilih -'}</option>`).join('');
+
+  // Gabungan 2 sumber: approved_users (pra-daftar) + users (yang sudah login).
+  // 1 baris per email; kalau sudah login, datanya diambil dari users/{uid} (lebih akurat, ada nama Google asli).
+  let merged = [];
+  let activeTab = 'all';
+
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 2500);
+  }
+  function initials(name){ return (name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase(); }
+
+  async function loadAll(){
+    const approvedSnap = await getDocs(collection(db, 'approved_users'));
+    const usersSnap = await getDocs(collection(db, 'users'));
+
+    const byEmail = {};
+    approvedSnap.forEach(d => {
+      const data = d.data();
+      byEmail[d.id] = { email: d.id, nama: data.nama || '', divisi: data.divisi || '', level: data.level || '', active: false, uid: null };
+    });
+    usersSnap.forEach(d => {
+      const data = d.data();
+      const email = data.email;
+      byEmail[email] = {
+        email, nama: data.displayName || byEmail[email]?.nama || '',
+        divisi: data.divisi || byEmail[email]?.divisi || '',
+        level: data.level || byEmail[email]?.level || '',
+        active: true, uid: d.id, role: data.role,
+      };
+    });
+    merged = Object.values(byEmail);
+    render();
+  }
+
+  function render(){
+    const filterText = (document.getElementById('searchBox').value || '').toLowerCase();
+    let rows = merged.filter(u => u.nama.toLowerCase().includes(filterText) || u.email.toLowerCase().includes(filterText));
+    if(activeTab === 'active') rows = rows.filter(u => u.active);
+    if(activeTab === 'pending') rows = rows.filter(u => !u.active);
+
+    const el = document.getElementById('userList');
+    const empty = document.getElementById('emptyState');
+    if(!rows.length){
+      el.innerHTML = '';
+      empty.style.display = 'block';
+      empty.innerHTML = iconSvg('inbox',{size:24}) + `<p style="margin-top:8px;">Tidak ada data.</p>`;
+      return;
+    }
+    empty.style.display = 'none';
+
+    el.innerHTML = rows.map(u => `
+      <div class="u-row" data-email="${u.email}">
+        <div class="u-name">
+          <div class="avatar-sm" style="background:var(--pink-bg); color:var(--pink-dark);">${initials(u.nama)}</div>
+          <div>
+            <div style="font-weight:600;">${u.nama || '(belum ada nama)'}</div>
+            <div class="text-meta">${u.email}</div>
+          </div>
+        </div>
+        ${u.active ? `<span class="badge badge-green">Aktif · ${u.role}</span>` : `<span class="badge badge-amber">Belum login</span>`}
+        <input type="text" data-field="divisi" value="${u.divisi.replace(/"/g,'&quot;')}" placeholder="mis. OPERATION">
+        <select data-field="level">
+          ${LEVEL_OPTIONS.map(l => `<option value="${l}" ${u.level===l?'selected':''}>${l||'- Belum diisi -'}</option>`).join('')}
+        </select>
+        <button class="icon-btn tone-pink" data-action="save" title="Simpan"></button>
+      </div>`).join('');
+
+    el.querySelectorAll('[data-action="save"]').forEach(btn => {
+      btn.innerHTML = iconSvg('device-floppy', {size:15});
+      btn.addEventListener('click', () => {
+        const row = btn.closest('.u-row');
+        const email = row.dataset.email;
+        const divisi = row.querySelector('[data-field="divisi"]').value.trim();
+        const level = row.querySelector('[data-field="level"]').value;
+        saveOne(email, divisi, level);
+      });
+    });
+  }
+
+  /** Simpan ke approved_users (selalu) + ke users/{uid} juga kalau orangnya sudah pernah login. */
+  async function saveOne(email, divisi, level, nama){
+    const existing = merged.find(u => u.email === email);
+    try{
+      await setDoc(doc(db, 'approved_users', email), {
+        nama: nama ?? existing?.nama ?? '', divisi, level, updatedAt: serverTimestamp(),
+      }, { merge: true });
+      if(existing?.active && existing.uid){
+        await updateDoc(doc(db, 'users', existing.uid), { divisi, level });
+      }
+      if(existing){ existing.divisi = divisi; existing.level = level; }
+      showToast('Tersimpan.');
+      render();
+    } catch(err){
+      showToast('Gagal simpan: ' + err.message);
+    }
+  }
+
+  document.getElementById('searchBox').addEventListener('input', render);
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeTab = btn.dataset.tab;
+    render();
+  }));
+
+  /* ===== Tambah 1 orang ===== */
+  document.getElementById('addOneBtn').addEventListener('click', async () => {
+    const nama = document.getElementById('addNama').value.trim();
+    const email = document.getElementById('addEmail').value.trim().toLowerCase();
+    const divisi = document.getElementById('addDivisi').value.trim();
+    const level = document.getElementById('addLevel').value;
+    if(!email){ showToast('Email wajib diisi.'); return; }
+    await saveOne(email, divisi, level, nama);
+    if(!merged.find(u => u.email === email)) merged.push({ email, nama, divisi, level, active:false, uid:null });
+    document.getElementById('addNama').value = '';
+    document.getElementById('addEmail').value = '';
+    document.getElementById('addDivisi').value = '';
+    document.getElementById('addLevel').value = '';
+    render();
+  });
+
+  /* ===== Tambah banyak via Excel ===== */
+  const excelDz = document.getElementById('excelDropzone');
+  const excelInput = document.getElementById('excelFileInput');
+  excelDz.innerHTML = iconSvg('upload', {size:20}) + ' <span>Drag &amp; drop file .xlsx di sini, atau klik untuk pilih</span>';
+  excelDz.addEventListener('click', () => excelInput.click());
+  excelInput.addEventListener('change', e => { if(e.target.files[0]) handleExcelFile(e.target.files[0]); });
+  excelDz.addEventListener('dragover', e => { e.preventDefault(); excelDz.classList.add('drag-over'); });
+  excelDz.addEventListener('dragleave', () => excelDz.classList.remove('drag-over'));
+  excelDz.addEventListener('drop', e => {
+    e.preventDefault(); excelDz.classList.remove('drag-over');
+    if(e.dataTransfer.files[0]) handleExcelFile(e.dataTransfer.files[0]);
+  });
+
+  function handleExcelFile(file){
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try{
+        const wb = XLSX.read(e.target.result, { type: 'binary' });
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+        let count = 0, skipped = 0;
+        for(const row of rows){
+          const email = String(row.Email || row.email || '').trim().toLowerCase();
+          const nama = String(row.Nama || row.nama || '').trim();
+          const divisi = String(row.Divisi || row.divisi || '').trim();
+          const level = String(row.Level || row.level || '').trim();
+          if(!email){ skipped++; continue; }
+          await saveOne(email, divisi, level, nama);
+          if(!merged.find(u => u.email === email)) merged.push({ email, nama, divisi, level, active:false, uid:null });
+          count++;
+        }
+        document.getElementById('bulkResult').textContent =
+          `${count} orang ditambah/di-update.` + (skipped ? ` ${skipped} baris di-skip (email kosong).` : '');
+        render();
+        showToast(`${count} orang ditambah/di-update dari Excel.`);
+      } catch(err){
+        showToast('Gagal baca file: ' + err.message);
+      }
+    };
+    reader.readAsBinaryString(file);
+  }
+
+  onAuth(async (user) => {
+    const gate = document.getElementById('gate');
+    const shell = document.getElementById('appShell');
+    if(!user){
+      gate.style.display = 'block'; shell.style.display = 'none';
+      document.getElementById('gateTitle').textContent = 'Silakan login';
+      document.getElementById('gateSub').innerHTML = `<a href="index.html">Login dulu di sini</a>.`;
+      return;
+    }
+    const profile = await ensureUserProfile(user);
+    if(profile.role !== 'admin'){
+      gate.style.display = 'block'; shell.style.display = 'none';
+      document.getElementById('gateTitle').textContent = 'Akses ditolak';
+      document.getElementById('gateSub').textContent = 'Halaman ini cuma buat Admin.';
+      return;
+    }
+    gate.style.display = 'none'; shell.style.display = 'block';
+    document.getElementById('userAvatar').src = profile.photoURL;
+    document.getElementById('userName').textContent = profile.displayName;
+    loadAll();
+  });
+</script>
+</body>
+</html>
