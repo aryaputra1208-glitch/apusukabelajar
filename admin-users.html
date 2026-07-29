@@ -12,7 +12,7 @@
   .avatar { width: 28px; height: 28px; border-radius: 50%; }
   .avatar-sm { width: 26px; height: 26px; border-radius: 50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; }
   .user-chip { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); }
-  .u-row { display: grid; grid-template-columns: 2fr 1fr 1.4fr 1fr auto; gap: 10px; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--border); }
+  .u-row { display: grid; grid-template-columns: 2fr 1fr 1.2fr 1fr 1fr auto; gap: 10px; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--border); }
   .u-row:last-child { border-bottom: none; }
   .u-row input, .u-row select { margin-bottom: 0; }
   .u-name { display: flex; align-items: center; gap: 8px; font-size: 13px; }
@@ -46,18 +46,25 @@
 
     <div class="card" style="margin-bottom:16px;">
       <h2 class="text-h2" style="margin-bottom:6px;">Tambah 1 Orang</h2>
-      <div class="add-row">
+      <div class="add-row" style="grid-template-columns: 1.4fr 1.4fr 1fr 1fr 1fr auto;">
         <div><label>Nama</label><input type="text" id="addNama" placeholder="Nama lengkap"></div>
         <div><label>Email</label><input type="text" id="addEmail" placeholder="nama@domain.com"></div>
         <div><label>Divisi</label><input type="text" id="addDivisi" placeholder="mis. OPERATION"></div>
         <div><label>Level</label><select id="addLevel"></select></div>
+        <div><label>Role</label>
+          <select id="addRole">
+            <option value="trainee">Trainee</option>
+            <option value="trainer">Trainer</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
         <button class="btn btn-primary" id="addOneBtn" style="margin-bottom:14px;">Tambah</button>
       </div>
     </div>
 
     <div class="card" style="margin-bottom:20px;">
       <h2 class="text-h2" style="margin-bottom:6px;">Tambah Banyak via Excel</h2>
-      <p class="text-sub" style="margin-bottom:12px;">Upload file .xlsx dengan kolom header: <strong>Nama, Email, Divisi, Level</strong>. Bisa upload berkali-kali — data lama tidak hilang, cuma ditambah/di-update (dicocokkan by email).</p>
+      <p class="text-sub" style="margin-bottom:12px;">Upload file .xlsx dengan kolom header: <strong>Nama, Email, Divisi, Level</strong>, dan opsional <strong>Role</strong> (isi: admin/trainer/trainee — kosong = trainee). Bisa upload berkali-kali — data lama tidak hilang, cuma ditambah/di-update (dicocokkan by email).</p>
       <div class="dropzone" id="excelDropzone"></div>
       <input type="file" id="excelFileInput" accept=".xlsx,.xls" style="display:none">
       <div id="bulkResult" class="text-meta" style="margin-top:10px;"></div>
@@ -72,7 +79,7 @@
 
     <div class="panel">
       <div class="u-row" style="background:var(--surface-2); font-size:11px; color:var(--text-3); font-weight:700;">
-        <span>NAMA</span><span>STATUS</span><span>DIVISI</span><span>LEVEL</span><span></span>
+        <span>NAMA</span><span>STATUS</span><span>DIVISI</span><span>LEVEL</span><span>ROLE</span><span></span>
       </div>
       <div id="userList"></div>
     </div>
@@ -85,7 +92,7 @@
 <script type="module">
   import { auth, db, onAuth, ensureUserProfile } from './firebase-shared.js';
   import { iconSvg } from './lms-icons.js';
-  import { collection, getDocs, doc, setDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+  import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const LEVEL_OPTIONS = ['','Admin','Leader','Coordinator','Staff','Supervisor','Section Head','Department Head','AVP','VP','SVP'];
   document.getElementById('addLevel').innerHTML = LEVEL_OPTIONS.map(l => `<option value="${l}">${l||'- Pilih -'}</option>`).join('');
@@ -105,11 +112,17 @@
   async function loadAll(){
     const approvedSnap = await getDocs(collection(db, 'approved_users'));
     const usersSnap = await getDocs(collection(db, 'users'));
+    const adminsSnap = await getDocs(collection(db, 'admins'));
+    const trainersSnap = await getDocs(collection(db, 'trainers'));
+
+    const adminEmails = new Set(); adminsSnap.forEach(d => adminEmails.add(d.id));
+    const trainerEmails = new Set(); trainersSnap.forEach(d => trainerEmails.add(d.id));
+    function roleFor(email){ return adminEmails.has(email) ? 'admin' : (trainerEmails.has(email) ? 'trainer' : 'trainee'); }
 
     const byEmail = {};
     approvedSnap.forEach(d => {
       const data = d.data();
-      byEmail[d.id] = { email: d.id, nama: data.nama || '', divisi: data.divisi || '', level: data.level || '', active: false, uid: null };
+      byEmail[d.id] = { email: d.id, nama: data.nama || '', divisi: data.divisi || '', level: data.level || '', active: false, uid: null, role: roleFor(d.id) };
     });
     usersSnap.forEach(d => {
       const data = d.data();
@@ -118,7 +131,7 @@
         email, nama: data.displayName || byEmail[email]?.nama || '',
         divisi: data.divisi || byEmail[email]?.divisi || '',
         level: data.level || byEmail[email]?.level || '',
-        active: true, uid: d.id, role: data.role,
+        active: true, uid: d.id, role: roleFor(email),
       };
     });
     merged = Object.values(byEmail);
@@ -150,10 +163,15 @@
             <div class="text-meta">${u.email}</div>
           </div>
         </div>
-        ${u.active ? `<span class="badge badge-green">Aktif · ${u.role}</span>` : `<span class="badge badge-amber">Belum login</span>`}
+        ${u.active ? `<span class="badge badge-green">Aktif</span>` : `<span class="badge badge-amber">Belum login</span>`}
         <input type="text" data-field="divisi" value="${u.divisi.replace(/"/g,'&quot;')}" placeholder="mis. OPERATION">
         <select data-field="level">
           ${LEVEL_OPTIONS.map(l => `<option value="${l}" ${u.level===l?'selected':''}>${l||'- Belum diisi -'}</option>`).join('')}
+        </select>
+        <select data-field="role">
+          <option value="trainee" ${u.role==='trainee'?'selected':''}>Trainee</option>
+          <option value="trainer" ${u.role==='trainer'?'selected':''}>Trainer</option>
+          <option value="admin" ${u.role==='admin'?'selected':''}>Admin</option>
         </select>
         <button class="icon-btn tone-pink" data-action="save" title="Simpan"></button>
       </div>`).join('');
@@ -165,22 +183,37 @@
         const email = row.dataset.email;
         const divisi = row.querySelector('[data-field="divisi"]').value.trim();
         const level = row.querySelector('[data-field="level"]').value;
-        saveOne(email, divisi, level);
+        const role = row.querySelector('[data-field="role"]').value;
+        saveOne(email, divisi, level, undefined, role);
       });
     });
   }
 
-  /** Simpan ke approved_users (selalu) + ke users/{uid} juga kalau orangnya sudah pernah login. */
-  async function saveOne(email, divisi, level, nama){
+  /** Simpan ke approved_users (selalu) + admins/trainers (kalau role bukan trainee) + users/{uid} kalau sudah pernah login. */
+  async function saveOne(email, divisi, level, nama, role){
     const existing = merged.find(u => u.email === email);
+    role = role || existing?.role || 'trainee';
     try{
       await setDoc(doc(db, 'approved_users', email), {
         nama: nama ?? existing?.nama ?? '', divisi, level, updatedAt: serverTimestamp(),
       }, { merge: true });
-      if(existing?.active && existing.uid){
-        await updateDoc(doc(db, 'users', existing.uid), { divisi, level });
+
+      // Pastikan cuma ada di 1 whitelist (admins ATAU trainers), sesuai role yang dipilih.
+      if(role === 'admin'){
+        await setDoc(doc(db, 'admins', email), { addedAt: serverTimestamp() });
+        await deleteDoc(doc(db, 'trainers', email)).catch(() => {});
+      } else if(role === 'trainer'){
+        await setDoc(doc(db, 'trainers', email), { addedAt: serverTimestamp() });
+        await deleteDoc(doc(db, 'admins', email)).catch(() => {});
+      } else {
+        await deleteDoc(doc(db, 'admins', email)).catch(() => {});
+        await deleteDoc(doc(db, 'trainers', email)).catch(() => {});
       }
-      if(existing){ existing.divisi = divisi; existing.level = level; }
+
+      if(existing?.active && existing.uid){
+        await updateDoc(doc(db, 'users', existing.uid), { divisi, level, role });
+      }
+      if(existing){ existing.divisi = divisi; existing.level = level; existing.role = role; }
       showToast('Tersimpan.');
       render();
     } catch(err){
@@ -202,13 +235,15 @@
     const email = document.getElementById('addEmail').value.trim().toLowerCase();
     const divisi = document.getElementById('addDivisi').value.trim();
     const level = document.getElementById('addLevel').value;
+    const role = document.getElementById('addRole').value;
     if(!email){ showToast('Email wajib diisi.'); return; }
-    await saveOne(email, divisi, level, nama);
-    if(!merged.find(u => u.email === email)) merged.push({ email, nama, divisi, level, active:false, uid:null });
+    await saveOne(email, divisi, level, nama, role);
+    if(!merged.find(u => u.email === email)) merged.push({ email, nama, divisi, level, role, active:false, uid:null });
     document.getElementById('addNama').value = '';
     document.getElementById('addEmail').value = '';
     document.getElementById('addDivisi').value = '';
     document.getElementById('addLevel').value = '';
+    document.getElementById('addRole').value = 'trainee';
     render();
   });
 
@@ -239,9 +274,11 @@
           const nama = String(row.Nama || row.nama || '').trim();
           const divisi = String(row.Divisi || row.divisi || '').trim();
           const level = String(row.Level || row.level || '').trim();
+          const roleRaw = String(row.Role || row.role || '').trim().toLowerCase();
+          const role = ['admin','trainer','trainee'].includes(roleRaw) ? roleRaw : 'trainee';
           if(!email){ skipped++; continue; }
-          await saveOne(email, divisi, level, nama);
-          if(!merged.find(u => u.email === email)) merged.push({ email, nama, divisi, level, active:false, uid:null });
+          await saveOne(email, divisi, level, nama, role);
+          if(!merged.find(u => u.email === email)) merged.push({ email, nama, divisi, level, role, active:false, uid:null });
           count++;
         }
         document.getElementById('bulkResult').textContent =
