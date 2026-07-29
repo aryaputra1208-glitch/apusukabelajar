@@ -56,6 +56,18 @@
   </div>
 </div>
 
+<div id="previewModal" style="display:none; position:fixed; inset:0; background:rgba(26,26,26,.55); z-index:60; align-items:center; justify-content:center;">
+  <div style="background:#fff; border-radius:var(--r-card); width:800px; max-width:94vw; height:85vh; display:flex; flex-direction:column; overflow:hidden;">
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--border);">
+      <span id="previewTitle" style="font-weight:700; font-size:14px;"></span>
+      <button class="icon-btn" id="closePreviewBtn"></button>
+    </div>
+    <div style="flex:1; background:var(--surface-2);">
+      <iframe id="previewFrame" style="width:100%; height:100%; border:none;"></iframe>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script type="module">
@@ -77,6 +89,39 @@
   function initials(name){
     return (name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
   }
+
+  document.getElementById('closePreviewBtn').innerHTML = iconSvg('x', {size:18});
+  document.getElementById('closePreviewBtn').addEventListener('click', closePreviewModal);
+
+  window.openPreviewModal = function(url, name){
+    const isPdf = /\.pdf($|\?)/i.test(name) || /\.pdf($|\?)/i.test(url);
+    const src = isPdf ? url : `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+    document.getElementById('previewTitle').textContent = name;
+    document.getElementById('previewFrame').src = src;
+    document.getElementById('previewModal').style.display = 'flex';
+  };
+  function closePreviewModal(){
+    document.getElementById('previewModal').style.display = 'none';
+    document.getElementById('previewFrame').src = '';
+  }
+
+  window.downloadFile = async function(url, name, btn){
+    const original = btn.textContent;
+    btn.textContent = '...';
+    try{
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const objUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objUrl; a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(objUrl);
+    } catch(err){
+      showToast('Gagal unduh: ' + err.message);
+    } finally {
+      btn.textContent = original;
+    }
+  };
 
   function youtubeEmbedUrl(url){
     if(!url) return null;
@@ -139,8 +184,8 @@
             ${m.materiFiles.map(f => `
               <div style="display:flex; align-items:center; gap:8px; font-size:13px; padding:8px 10px; background:var(--surface-2); border-radius:var(--r-control);">
                 ${iconSvg('file-text',{size:15})} <span style="flex:1;">${f.nama}</span>
-                <a href="https://docs.google.com/viewer?url=${encodeURIComponent(f.url)}&embedded=true" target="_blank" rel="noopener" style="color:var(--pink); font-weight:700; font-size:12px; text-decoration:none;">Preview</a>
-                <a href="${f.url}" download="${f.nama}" target="_blank" rel="noopener" style="color:var(--text-2); font-weight:700; font-size:12px; text-decoration:none;">Unduh</a>
+                <button onclick="openPreviewModal('${f.url}', '${f.nama.replace(/'/g,"\\'")}')" style="background:none; border:none; color:var(--pink); font-weight:700; font-size:12px; cursor:pointer;">Preview</button>
+                <button onclick="downloadFile('${f.url}', '${f.nama.replace(/'/g,"\\'")}', this)" style="background:none; border:none; color:var(--text-2); font-weight:700; font-size:12px; cursor:pointer;">Unduh</button>
               </div>`).join('')}
           </div>` : ''}
 
