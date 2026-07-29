@@ -52,16 +52,18 @@ export async function ensureUserProfile(user) {
   // Cek status email dia sendiri di whitelist (rules cuma izinkan cek diri sendiri)
   const adminSnap = await getDoc(doc(db, 'admins', user.email));
   const trainerSnap = await getDoc(doc(db, 'trainers', user.email));
+  const approvedSnap = await getDoc(doc(db, 'approved_users', user.email));
   const role = adminSnap.exists() ? 'admin' : (trainerSnap.exists() ? 'trainer' : 'trainee');
+  const approved = approvedSnap.exists() ? approvedSnap.data() : {};
 
   const profile = {
     email: user.email,
-    displayName: user.displayName || '',
+    displayName: user.displayName || approved.nama || '',
     photoURL: user.photoURL || '',
     role,
     jabatan: '',
-    level: '',
-    divisi: '',
+    level: approved.level || '',
+    divisi: approved.divisi || '',
     createdAt: serverTimestamp(),
   };
   await setDoc(ref, profile);
