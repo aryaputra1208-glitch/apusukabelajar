@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buat Modul — Anteraja LMS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./lms-design-system.css">
+<style>
+  /* Cuma layout spesifik halaman ini — token & komponen dasar dari lms-design-system.css */
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .card + .card { margin-top: 18px; }
+  .file-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--surface-2); border-radius: var(--r-control); margin-bottom: 6px; font-size: 13px; }
+  .q-card { border: 1px solid var(--border); border-radius: var(--r-control); padding: 14px; margin-bottom: 12px; }
+  .q-head { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
+  .q-head select { margin-bottom: 0; flex: 0 0 160px; }
+  .q-head input { margin-bottom: 0; flex: 1; }
+  .opt-row { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+  .opt-row input[type=text] { margin-bottom: 0; flex: 1; }
+  .link-add { color: var(--pink); font-weight: 700; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+  .btn-row { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }
+  .avatar { width: 28px; height: 28px; border-radius: 50%; }
+  .user-chip { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); }
+</style>
+</head>
+<body>
+
+<div id="gate" class="locked-state" style="display:none;">
+  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Memuat...</p>
+  <p class="text-sub" id="gateSub"></p>
+</div>
+
+<div id="appShell" style="display:none;">
+  <div class="topbar">
+    <div class="sidebar-logo" style="margin:0;">anteraja LMS</div>
+    <div class="user-chip">
+      <img class="avatar" id="userAvatar" src="">
+      <span id="userName"></span>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <h1 class="text-h1">Buat Modul Baru</h1>
+    <p class="text-sub" style="margin-bottom:24px;">Isi materi dan susun post-test — modul disimpan sebagai draft, kirim ke admin untuk publish saat sudah siap.</p>
+
+    <div class="card">
+      <h2 class="text-h2" style="margin-bottom:14px;">Informasi Modul</h2>
+      <label>Judul Modul</label>
+      <input type="text" id="mJudul" placeholder="mis. Dasar Coaching untuk Section Head">
+
+      <label>Deskripsi Singkat</label>
+      <textarea id="mDeskripsi" rows="2" placeholder="Apa yang akan dipelajari trainee di modul ini"></textarea>
+
+      <div class="row">
+        <div>
+          <label>Kategori</label>
+          <select id="mKategori">
+            <option value="Basic/Fundamental">Basic/Fundamental</option>
+            <option value="Core/Mandatory">Core/Mandatory</option>
+            <option value="General">General</option>
+          </select>
+        </div>
+        <div>
+          <label>Estimasi Durasi (menit)</label>
+          <input type="number" id="mDurasi" placeholder="mis. 15">
+        </div>
+      </div>
+
+      <label>Target Jabatan</label>
+      <div id="chipJabatan" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;"></div>
+      <label>Target Level</label>
+      <div id="chipLevel" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;"></div>
+    </div>
+
+    <div class="card">
+      <h2 class="text-h2" style="margin-bottom:14px;">Materi</h2>
+      <label>Link Video YouTube (unlisted)</label>
+      <input type="url" id="mVideo" placeholder="https://youtu.be/...">
+
+      <label>File Materi (PPT/PDF)</label>
+      <div id="materiList"></div>
+      <div class="dropzone" id="materiDropzone"></div>
+      <input type="file" id="materiFileInput" style="display:none">
+    </div>
+
+    <div class="card">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+        <h2 class="text-h2" style="margin:0;">Soal Post-Test</h2>
+        <span class="link-add" id="addQuestionBtn"></span>
+      </div>
+      <div id="questionList"></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-outline" id="saveDraftBtn">Simpan Draft</button>
+      <button class="btn btn-primary" id="submitApprovalBtn">Kirim ke Admin</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { auth, db, onAuth, ensureUserProfile } from './firebase-shared.js';
+  import { iconSvg } from './lms-icons.js';
+  import {
+    collection, addDoc, doc, updateDoc, serverTimestamp,
+    query, where, getDocs, writeBatch
+  } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+  import {
+    getStorage, ref, uploadBytes, getDownloadURL
+  } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-storage.js";
+  import { getApps } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+
+  const storage = getStorage(getApps()[0]);
+
+  const JABATAN_OPTIONS = ['Staff','Supervisor','Section Head','Department Head','AVP'];
+  const LEVEL_OPTIONS = ['Staff','Supervisor+'];
+
+  let currentUser = null;
+  let currentProfile = null;
+  let moduleId = null;
+  let materiFiles = [];
+  let questions = [];
+  let selectedJabatan = [];
+  let selectedLevel = [];
+
+  document.getElementById('materiDropzone').innerHTML =
+    iconSvg('upload', { size: 20 }) + ' <span>Drag &amp; drop file di sini, atau klik untuk pilih</span>';
+  document.getElementById('addQuestionBtn').innerHTML = iconSvg('plus', { size: 14 }) + ' Tambah soal';
+
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 2500);
+  }
+
+  function renderChips(containerId, options, selectedArr){
+    const el = document.getElementById(containerId);
+    el.innerHTML = options.map(o => `<span class="chip ${selectedArr.includes(o)?'selected':''}" data-val="${o}">${o}</span>`).join('');
+    el.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const val = chip.dataset.val;
+        const idx = selectedArr.indexOf(val);
+        if(idx === -1) selectedArr.push(val); else selectedArr.splice(idx,1);
+        chip.classList.toggle('selected');
+      });
+    });
+  }
+
+  function renderMateriList(){
+    const el = document.getElementById('materiList');
+    if(!materiFiles.length){ el.innerHTML = ''; return; }
+    el.innerHTML = materiFiles.map((f,i) => `
+      <div class="file-item">
+        <span style="display:flex; align-items:center; gap:8px;">${iconSvg('file-text',{size:16})} ${f.nama}</span>
+        <button class="icon-btn" data-i="${i}" title="Hapus">${iconSvg('trash',{size:14})}</button>
+      </div>`).join('');
+    el.querySelectorAll('.icon-btn').forEach(btn => {
+      btn.addEventListener('click', () => { materiFiles.splice(Number(btn.dataset.i),1); renderMateriList(); });
+    });
+  }
+
+  function renderQuestions(){
+    const el = document.getElementById('questionList');
+    if(!questions.length){ el.innerHTML = `<p class="text-meta">Belum ada soal.</p>`; return; }
+    el.innerHTML = questions.map((q,i) => `
+      <div class="q-card">
+        <div class="q-head">
+          <select data-i="${i}" data-f="tipe">
+            <option value="multiple_choice" ${q.tipe==='multiple_choice'?'selected':''}>Pilihan Ganda</option>
+            <option value="likert" ${q.tipe==='likert'?'selected':''}>Skala 1-4</option>
+            <option value="free_text" ${q.tipe==='free_text'?'selected':''}>Jawaban Teks</option>
+            <option value="file_upload" ${q.tipe==='file_upload'?'selected':''}>Submission File</option>
+          </select>
+          <input type="text" data-i="${i}" data-f="pertanyaan" value="${(q.pertanyaan||'').replace(/"/g,'&quot;')}" placeholder="Teks pertanyaan">
+          <button class="icon-btn tone-red" data-i="${i}" data-action="remove">${iconSvg('trash',{size:14})}</button>
+        </div>
+        ${q.tipe === 'multiple_choice' ? `
+          <div id="opts-${i}">
+            ${(q.pilihan||[]).map((opt,oi) => `
+              <div class="opt-row">
+                <input type="radio" name="jawaban-${i}" data-i="${i}" data-oi="${oi}" data-f="jawabanBenar" ${q.jawabanBenar===opt?'checked':''}>
+                <input type="text" data-i="${i}" data-oi="${oi}" data-f="opsi" value="${opt.replace(/"/g,'&quot;')}" placeholder="Pilihan ${oi+1}">
+                <button class="icon-btn" data-i="${i}" data-oi="${oi}" data-action="remove-opsi">${iconSvg('x',{size:13})}</button>
+              </div>`).join('')}
+            <span class="link-add" data-i="${i}" data-action="add-opsi">${iconSvg('plus',{size:12})} Tambah pilihan</span>
+          </div>` : ''}
+        ${q.tipe === 'file_upload' ? `<p class="text-meta">Trainee upload file jawaban — dinilai manual oleh Anda setelah submit.</p>` : ''}
+      </div>`).join('');
+
+    el.querySelectorAll('[data-f="tipe"]').forEach(sel => sel.addEventListener('change', e => {
+      const i = Number(e.target.dataset.i);
+      questions[i].tipe = e.target.value;
+      if(e.target.value === 'multiple_choice' && !questions[i].pilihan) questions[i].pilihan = ['Pilihan 1','Pilihan 2'];
+      renderQuestions();
+    }));
+    el.querySelectorAll('[data-f="pertanyaan"]').forEach(inp => inp.addEventListener('input', e => {
+      questions[Number(e.target.dataset.i)].pertanyaan = e.target.value;
+    }));
+    el.querySelectorAll('[data-action="remove"]').forEach(btn => btn.addEventListener('click', e => {
+      questions.splice(Number(e.currentTarget.dataset.i),1); renderQuestions();
+    }));
+    el.querySelectorAll('[data-f="opsi"]').forEach(inp => inp.addEventListener('input', e => {
+      const i = Number(e.target.dataset.i), oi = Number(e.target.dataset.oi);
+      questions[i].pilihan[oi] = e.target.value;
+    }));
+    el.querySelectorAll('[data-f="jawabanBenar"]').forEach(radio => radio.addEventListener('change', e => {
+      const i = Number(e.target.dataset.i), oi = Number(e.target.dataset.oi);
+      questions[i].jawabanBenar = questions[i].pilihan[oi];
+    }));
+    el.querySelectorAll('[data-action="add-opsi"]').forEach(link => link.addEventListener('click', e => {
+      const i = Number(e.currentTarget.dataset.i);
+      questions[i].pilihan.push(`Pilihan ${questions[i].pilihan.length+1}`);
+      renderQuestions();
+    }));
+    el.querySelectorAll('[data-action="remove-opsi"]').forEach(btn => btn.addEventListener('click', e => {
+      const i = Number(e.currentTarget.dataset.i), oi = Number(e.currentTarget.dataset.oi);
+      questions[i].pilihan.splice(oi,1); renderQuestions();
+    }));
+  }
+
+  document.getElementById('addQuestionBtn').addEventListener('click', () => {
+    questions.push({ tipe:'multiple_choice', pertanyaan:'', pilihan:['Pilihan 1','Pilihan 2'], jawabanBenar:'' });
+    renderQuestions();
+  });
+
+  const dz = document.getElementById('materiDropzone');
+  const fileInput = document.getElementById('materiFileInput');
+  dz.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', e => { if(e.target.files[0]) uploadMateri(e.target.files[0]); });
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault(); dz.classList.remove('drag-over');
+    if(e.dataTransfer.files[0]) uploadMateri(e.dataTransfer.files[0]);
+  });
+
+  async function uploadMateri(file){
+    if(!currentUser){ showToast('Anda belum login.'); return; }
+    const original = dz.innerHTML;
+    dz.innerHTML = `⏳ Mengupload ${file.name}...`;
+    try{
+      const path = `materi/${currentUser.uid}/${Date.now()}_${file.name}`;
+      const fileRef = ref(storage, path);
+      await uploadBytes(fileRef, file);
+      const url = await getDownloadURL(fileRef);
+      materiFiles.push({ nama: file.name, url });
+      renderMateriList();
+      showToast(`${file.name} berhasil diupload.`);
+    } catch(err){
+      showToast('Gagal upload: ' + err.message);
+    } finally {
+      dz.innerHTML = original;
+    }
+  }
+
+  function collectModuleData(status){
+    return {
+      judul: document.getElementById('mJudul').value.trim(),
+      deskripsi: document.getElementById('mDeskripsi').value.trim(),
+      kategori: document.getElementById('mKategori').value,
+      durasiMenit: Number(document.getElementById('mDurasi').value) || 0,
+      videoUrl: document.getElementById('mVideo').value.trim(),
+      targetJabatan: selectedJabatan,
+      targetLevel: selectedLevel,
+      materiFiles,
+      createdBy: currentUser.uid,
+      createdByName: currentProfile.displayName,
+      status,
+      updatedAt: serverTimestamp(),
+    };
+  }
+
+  async function saveQuestions(){
+    const q = query(collection(db, 'questions'), where('moduleId', '==', moduleId));
+    const snap = await getDocs(q);
+    const batch = writeBatch(db);
+    snap.forEach(d => batch.delete(d.ref));
+    questions.forEach((qq, i) => {
+      const ref = doc(collection(db, 'questions'));
+      batch.set(ref, { moduleId, urutan: i, ...qq });
+    });
+    await batch.commit();
+  }
+
+  async function saveModule(status){
+    const judul = document.getElementById('mJudul').value.trim();
+    if(!judul){ showToast('Judul modul wajib diisi.'); return; }
+    try{
+      const data = collectModuleData(status);
+      if(!moduleId){
+        data.createdAt = serverTimestamp();
+        const docRef = await addDoc(collection(db, 'modules'), data);
+        moduleId = docRef.id;
+      } else {
+        await updateDoc(doc(db, 'modules', moduleId), data);
+      }
+      await saveQuestions();
+      showToast(status === 'draft' ? 'Draft tersimpan.' : 'Modul dikirim ke admin untuk approval.');
+    } catch(err){
+      showToast('Gagal simpan: ' + err.message);
+    }
+  }
+
+  document.getElementById('saveDraftBtn').addEventListener('click', () => saveModule('draft'));
+  document.getElementById('submitApprovalBtn').addEventListener('click', () => saveModule('pending_approval'));
+
+  onAuth(async (user) => {
+    const gate = document.getElementById('gate');
+    const shell = document.getElementById('appShell');
+    if(!user){
+      gate.style.display = 'block'; shell.style.display = 'none';
+      document.getElementById('gateTitle').textContent = 'Silakan login';
+      document.getElementById('gateSub').innerHTML = `<a href="login_test.html">Login dulu di sini</a>, baru buka halaman ini lagi.`;
+      return;
+    }
+    currentUser = user;
+    currentProfile = await ensureUserProfile(user);
+    if(currentProfile.role !== 'trainer' && currentProfile.role !== 'admin'){
+      gate.style.display = 'block'; shell.style.display = 'none';
+      document.getElementById('gateTitle').textContent = 'Akses ditolak';
+      document.getElementById('gateSub').textContent = 'Halaman ini cuma buat Trainer/Admin. Akun Anda role-nya: ' + currentProfile.role;
+      return;
+    }
+    gate.style.display = 'none'; shell.style.display = 'block';
+    document.getElementById('userAvatar').src = currentProfile.photoURL;
+    document.getElementById('userName').textContent = currentProfile.displayName;
+    renderChips('chipJabatan', JABATAN_OPTIONS, selectedJabatan);
+    renderChips('chipLevel', LEVEL_OPTIONS, selectedLevel);
+    renderQuestions();
+    renderMateriList();
+  });
+</script>
+</body>
+</html>
