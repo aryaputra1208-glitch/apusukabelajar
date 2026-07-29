@@ -67,8 +67,8 @@
         </div>
       </div>
 
-      <label>Target Jabatan</label>
-      <div id="chipJabatan" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;"></div>
+      <label>Target Divisi</label>
+      <input type="text" id="mDivisi" placeholder="Pisahkan koma kalau lebih dari 1, mis. OPERATION, HUMAN CAPITAL">
       <label>Target Level</label>
       <div id="chipLevel" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;"></div>
     </div>
@@ -115,15 +115,13 @@
 
   const storage = getStorage(getApps()[0]);
 
-  const JABATAN_OPTIONS = ['Staff','Supervisor','Section Head','Department Head','AVP'];
-  const LEVEL_OPTIONS = ['Staff','Supervisor+'];
+  const LEVEL_OPTIONS = ['Admin','Leader','Coordinator','Staff','Supervisor','Section Head','Department Head','AVP','VP','SVP'];
 
   let currentUser = null;
   let currentProfile = null;
   let moduleId = null;
   let materiFiles = [];
   let questions = [];
-  let selectedJabatan = [];
   let selectedLevel = [];
 
   document.getElementById('materiDropzone').innerHTML =
@@ -263,7 +261,7 @@
       kategori: document.getElementById('mKategori').value,
       durasiMenit: Number(document.getElementById('mDurasi').value) || 0,
       videoUrl: document.getElementById('mVideo').value.trim(),
-      targetJabatan: selectedJabatan,
+      targetDivisi: document.getElementById('mDivisi').value.split(',').map(s => s.trim()).filter(Boolean),
       targetLevel: selectedLevel,
       materiFiles,
       createdBy: currentUser.uid,
@@ -327,7 +325,6 @@
     gate.style.display = 'none'; shell.style.display = 'block';
     document.getElementById('userAvatar').src = currentProfile.photoURL;
     document.getElementById('userName').textContent = currentProfile.displayName;
-    renderChips('chipJabatan', JABATAN_OPTIONS, selectedJabatan);
     renderChips('chipLevel', LEVEL_OPTIONS, selectedLevel);
     renderQuestions();
     renderMateriList();
