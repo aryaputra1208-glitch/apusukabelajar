@@ -26,6 +26,7 @@
     <div class="logo-big">anteraja LMS</div>
     <p class="text-sub" style="margin-bottom:20px;">Login pakai akun Google untuk melanjutkan</p>
     <button class="btn btn-primary" id="loginBtn" style="width:100%;">Login dengan Google</button>
+    <button class="btn btn-outline" id="loginMsBtn" style="width:100%; margin-top:8px;">Login dengan Microsoft</button>
     <p class="field-error" id="errMsg" style="display:none; margin-top:12px;"></p>
   </div>
 </div>
@@ -48,7 +49,7 @@
 </div>
 
 <script type="module">
-  import { auth, onAuth, loginWithGoogle, logout, ensureUserProfile } from './firebase-shared.js';
+  import { auth, onAuth, loginWithGoogle, loginWithMicrosoft, logout, ensureUserProfile } from './firebase-shared.js';
   import { iconSvg } from './lms-icons.js';
 
   const MENU_BY_ROLE = {
@@ -69,6 +70,12 @@
     const err = document.getElementById('errMsg');
     err.style.display = 'none';
     try { await loginWithGoogle(); }
+    catch (e) { err.textContent = 'Gagal login: ' + e.message; err.style.display = 'block'; }
+  });
+  document.getElementById('loginMsBtn').addEventListener('click', async () => {
+    const err = document.getElementById('errMsg');
+    err.style.display = 'none';
+    try { await loginWithMicrosoft(); }
     catch (e) { err.textContent = 'Gagal login: ' + e.message; err.style.display = 'block'; }
   });
   document.getElementById('logoutBtn').addEventListener('click', () => logout());
