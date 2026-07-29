@@ -105,22 +105,10 @@
     document.getElementById('previewFrame').src = '';
   }
 
-  window.downloadFile = async function(url, name, btn){
-    const original = btn.textContent;
-    btn.textContent = '...';
-    try{
-      const res = await fetch(url);
-      const blob = await res.blob();
-      const objUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = objUrl; a.download = name;
-      document.body.appendChild(a); a.click(); a.remove();
-      URL.revokeObjectURL(objUrl);
-    } catch(err){
-      showToast('Gagal unduh: ' + err.message);
-    } finally {
-      btn.textContent = original;
-    }
+  window.downloadFile = function(url, name){
+    const a = document.createElement('a');
+    a.href = url; a.download = name; a.target = '_blank'; a.rel = 'noopener';
+    document.body.appendChild(a); a.click(); a.remove();
   };
 
   function youtubeEmbedUrl(url){
@@ -185,7 +173,7 @@
               <div style="display:flex; align-items:center; gap:8px; font-size:13px; padding:8px 10px; background:var(--surface-2); border-radius:var(--r-control);">
                 ${iconSvg('file-text',{size:15})} <span style="flex:1;">${f.nama}</span>
                 <button onclick="openPreviewModal('${f.url}', '${f.nama.replace(/'/g,"\\'")}')" style="background:none; border:none; color:var(--pink); font-weight:700; font-size:12px; cursor:pointer;">Preview</button>
-                <button onclick="downloadFile('${f.url}', '${f.nama.replace(/'/g,"\\'")}', this)" style="background:none; border:none; color:var(--text-2); font-weight:700; font-size:12px; cursor:pointer;">Unduh</button>
+                <button onclick="downloadFile('${f.url}', '${f.nama.replace(/'/g,"\\'")}')" style="background:none; border:none; color:var(--text-2); font-weight:700; font-size:12px; cursor:pointer;">Unduh</button>
               </div>`).join('')}
           </div>` : ''}
 
