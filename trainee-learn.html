@@ -29,7 +29,7 @@
   .pdf-nav { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 10px; margin-top: 10px; }
   .pdf-nav button { background: var(--pink-bg); color: var(--pink-dark); border: none; border-radius: var(--r-control); width: 34px; height: 34px; cursor: pointer; display:flex; align-items:center; justify-content:center; }
   .pdf-nav button:disabled { background: var(--surface-2); color: var(--text-3); cursor: not-allowed; }
-  .pdf-canvas-wrap { overflow: auto; display: flex; align-items: flex-start; justify-content: center; background: var(--surface-2); border-radius: var(--r-card); padding: 16px; max-height: 60vh; }
+  .pdf-canvas-wrap { overflow: auto; display: flex; align-items: flex-start; justify-content: center; background: var(--surface-2); border-radius: var(--r-card); padding: 16px; max-height: 78vh; }
   .pdf-canvas-wrap canvas { box-shadow: 0 1px 4px rgba(0,0,0,.15); max-width: 100%; }
   .btn-row { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
   .file-row { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 8px 10px; background: var(--surface-2); border-radius: var(--r-control); margin-bottom: 6px; }
@@ -51,7 +51,7 @@
     </div>
   </div>
 
-  <div class="wrap" style="max-width:700px;">
+  <div class="wrap" style="max-width:920px;">
     <div class="steps-bar" id="stepsBar"></div>
     <div id="stepContent"></div>
   </div>
@@ -210,7 +210,11 @@
     const page = await pdfDoc.getPage(num);
     const canvas = document.getElementById('pdfCanvas');
     const ctx = canvas.getContext('2d');
-    const viewport = page.getViewport({ scale: 1.3 });
+    const wrapEl = canvas.closest('.pdf-canvas-wrap');
+    const baseViewport = page.getViewport({ scale: 1 });
+    const availableWidth = (wrapEl.clientWidth || 900) - 32; // dikurangi padding
+    const dynamicScale = Math.max(1.2, Math.min(3, availableWidth / baseViewport.width));
+    const viewport = page.getViewport({ scale: dynamicScale });
     canvas.width = viewport.width; canvas.height = viewport.height;
     await page.render({ canvasContext: ctx, viewport }).promise;
     document.getElementById('pdfPageIndicator').textContent = `Halaman ${num} dari ${pdfDoc.numPages}`;
