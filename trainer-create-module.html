@@ -7,11 +7,18 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./lms-design-system.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
   /* Cuma layout spesifik halaman ini — token & komponen dasar dari lms-design-system.css */
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   .card + .card { margin-top: 18px; }
   .file-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--surface-2); border-radius: var(--r-control); margin-bottom: 6px; font-size: 13px; }
+  .audio-slots { border: 1px solid var(--border); border-radius: var(--r-control); padding: 10px 12px; margin-bottom: 10px; }
+  .audio-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 12px; }
+  .audio-row .halaman { width: 70px; color: var(--text-2); flex-shrink: 0; }
+  .audio-row input[type=file] { display: none; }
+  .audio-row .audio-btn { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-control); padding: 5px 10px; font-size: 11px; cursor: pointer; }
+  .audio-row audio { height: 28px; max-width: 160px; }
   .q-card { border: 1px solid var(--border); border-radius: var(--r-control); padding: 14px; margin-bottom: 12px; }
   .q-head { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
   .q-head select { margin-bottom: 0; flex: 0 0 160px; }
@@ -152,12 +159,61 @@
     if(!materiFiles.length){ el.innerHTML = ''; return; }
     el.innerHTML = materiFiles.map((f,i) => `
       <div class="file-item">
-        <span style="display:flex; align-items:center; gap:8px;">${iconSvg('file-text',{size:16})} ${f.nama}</span>
+        <span style="display:flex; align-items:center; gap:8px;">${iconSvg('file-text',{size:16})} ${f.nama} <span class="text-meta">(${f.pageCount||'?'} halaman)</span></span>
         <button class="icon-btn" data-i="${i}" title="Hapus">${iconSvg('trash',{size:14})}</button>
-      </div>`).join('');
+      </div>
+      <div class="audio-slots" id="audioSlots-${i}"></div>`).join('');
     el.querySelectorAll('.icon-btn').forEach(btn => {
       btn.addEventListener('click', () => { materiFiles.splice(Number(btn.dataset.i),1); renderMateriList(); });
     });
+    materiFiles.forEach((f,i) => renderAudioSlots(i));
+  }
+
+  function renderAudioSlots(fileIdx){
+    const f = materiFiles[fileIdx];
+    const el = document.getElementById(`audioSlots-${fileIdx}`);
+    if(!el) return;
+    const pages = Array.from({length: f.pageCount||1}, (_,i) => i+1);
+    el.innerHTML = `<div class="text-meta" style="margin-bottom:6px; font-weight:600;">🔊 Audio narasi per halaman (opsional)</div>` +
+      pages.map(p => {
+        const a = f.audio && f.audio[p];
+        return `<div class="audio-row">
+          <span class="halaman">Hal. ${p}</span>
+          ${a ? `<audio controls src="${a.url}"></audio><button class="audio-btn" data-file="${fileIdx}" data-page="${p}" data-action="remove-audio">Hapus</button>`
+              : `<button class="audio-btn" data-file="${fileIdx}" data-page="${p}" data-action="upload-audio">Upload audio</button>`}
+          <input type="file" accept="audio/*" data-file="${fileIdx}" data-page="${p}" id="audioInput-${fileIdx}-${p}">
+        </div>`;
+      }).join('');
+
+    el.querySelectorAll('[data-action="upload-audio"]').forEach(btn => {
+      btn.addEventListener('click', () => document.getElementById(`audioInput-${btn.dataset.file}-${btn.dataset.page}`).click());
+    });
+    el.querySelectorAll('input[type=file][data-file]').forEach(input => {
+      input.addEventListener('change', (e) => {
+        if(e.target.files[0]) uploadAudio(Number(input.dataset.file), Number(input.dataset.page), e.target.files[0]);
+      });
+    });
+    el.querySelectorAll('[data-action="remove-audio"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        delete materiFiles[Number(btn.dataset.file)].audio[btn.dataset.page];
+        renderAudioSlots(Number(btn.dataset.file));
+      });
+    });
+  }
+
+  async function uploadAudio(fileIdx, page, audioFile){
+    if(!currentUser){ showToast('Anda belum login.'); return; }
+    try{
+      const path = `materi-audio/${currentUser.uid}/${Date.now()}_hal${page}_${audioFile.name}`;
+      const audioRef = ref(storage, path);
+      await uploadBytes(audioRef, audioFile);
+      const url = await getDownloadURL(audioRef);
+      materiFiles[fileIdx].audio[page] = { url, nama: audioFile.name };
+      renderAudioSlots(fileIdx);
+      showToast(`Audio halaman ${page} terupload.`);
+    } catch(err){
+      showToast('Gagal upload audio: ' + err.message);
+    }
   }
 
   function renderQuestions(){
@@ -245,7 +301,12 @@
       const fileRef = ref(storage, path);
       await uploadBytes(fileRef, file);
       const url = await getDownloadURL(fileRef);
-      materiFiles.push({ nama: file.name, url });
+      let pageCount = 1;
+      try{
+        const pdf = await pdfjsLib.getDocument(url).promise;
+        pageCount = pdf.numPages;
+      } catch(e){ /* biarkan default 1 kalau gagal deteksi */ }
+      materiFiles.push({ nama: file.name, url, pageCount, audio: {} });
       renderMateriList();
       showToast(`${file.name} berhasil diupload.`);
     } catch(err){
