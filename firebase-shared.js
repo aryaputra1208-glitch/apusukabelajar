@@ -3,7 +3,7 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
 import {
-  getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
+  getAuth, GoogleAuthProvider, OAuthProvider, signInWithPopup, signOut, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
 import {
   getFirestore, doc, getDoc, setDoc, serverTimestamp
@@ -23,9 +23,17 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
+const msProvider = new OAuthProvider('microsoft.com');
+// Kalau nanti dapat Tenant ID Anteraja dari IT, aktifkan baris ini supaya
+// cuma akun Microsoft dalam tenant Anteraja yang muncul di picker login:
+// msProvider.setCustomParameters({ tenant: 'GANTI_DENGAN_TENANT_ID_ANTERAJA' });
 
 export function loginWithGoogle() {
   return signInWithPopup(auth, provider);
+}
+
+export function loginWithMicrosoft() {
+  return signInWithPopup(auth, msProvider);
 }
 
 export function logout() {
