@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Belajar — Anteraja LMS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./lms-design-system.css">
+<style>
+  .avatar { width: 28px; height: 28px; border-radius: 50%; }
+  .user-chip { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); }
+  .video-wrap { position: relative; aspect-ratio: 16/9; background: #000; border-radius: var(--r-card); overflow: hidden; margin-bottom: 14px; }
+  .video-wrap iframe { width: 100%; height: 100%; border: none; }
+  .file-row { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 8px 10px; background: var(--surface-2); border-radius: var(--r-control); margin-bottom: 6px; }
+  .lock-note { display: flex; align-items: center; gap: 10px; padding: 14px 16px; background: var(--amber-bg); color: #92400E; border-radius: var(--r-control); font-size: 13px; font-weight: 600; }
+  .q-block { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
+  .q-block:last-child { border-bottom: none; }
+  .q-num { font-size: 11px; color: var(--pink); font-weight: 700; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .03em; }
+  .q-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+  .opt { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--r-control); margin-bottom: 8px; cursor: pointer; }
+  .opt.selected { border-color: var(--pink); background: var(--pink-bg); }
+  .scale-row { display: flex; gap: 8px; }
+  .scale-opt { flex: 1; text-align: center; padding: 12px 0; border: 1px solid var(--border); border-radius: var(--r-control); cursor: pointer; font-weight: 700; color: var(--text-2); }
+  .scale-opt.selected { border-color: var(--pink); background: var(--pink); color: #fff; }
+</style>
+</head>
+<body>
+
+<div id="gate" class="locked-state" style="display:none;">
+  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Memuat...</p>
+  <p class="text-sub" id="gateSub"></p>
+</div>
+
+<div id="appShell" style="display:none;">
+  <div class="topbar">
+    <a href="trainee-library.html" class="sidebar-logo" style="margin:0; text-decoration:none;">anteraja LMS</a>
+    <div class="user-chip">
+      <img class="avatar" id="userAvatar" src="">
+      <span id="userName"></span>
+    </div>
+  </div>
+
+  <div class="wrap" style="max-width:760px;">
+    <h1 class="text-h1" id="moduleTitle"></h1>
+    <p class="text-sub" id="moduleMeta" style="margin-bottom:22px;"></p>
+
+    <div class="card" style="margin-bottom:18px;">
+      <h2 class="text-h2" style="margin-bottom:12px;">Materi</h2>
+      <div id="videoContainer"></div>
+      <div id="materiFilesList"></div>
+    </div>
+
+    <div class="card" id="postTestCard">
+      <h2 class="text-h2" style="margin-bottom:6px;">Post-Test</h2>
+      <div id="postTestBody"></div>
+    </div>
+  </div>
+</div>
+
+<div id="previewModal" style="display:none; position:fixed; inset:0; background:rgba(26,26,26,.55); z-index:60; align-items:center; justify-content:center;">
+  <div style="background:#fff; border-radius:var(--r-card); width:800px; max-width:94vw; height:85vh; display:flex; flex-direction:column; overflow:hidden;">
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--border);">
+      <span id="previewTitle" style="font-weight:700; font-size:14px;"></span>
+      <button class="icon-btn" id="closePreviewBtn"></button>
+    </div>
+    <div style="flex:1; background:var(--surface-2);"><iframe id="previewFrame" style="width:100%; height:100%; border:none;"></iframe></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script type="module">
+  import { auth, db, onAuth, ensureUserProfile } from './firebase-shared.js';
+  import { iconSvg } from './lms-icons.js';
+  import {
+    doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-storage.js";
+  import { getApps } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+
+  const storage = getStorage(getApps()[0]);
+  const params = new URLSearchParams(window.location.search);
+  const moduleId = params.get('module');
+
+  let currentUser = null, currentProfile = null, moduleData = null, questions = [];
+  let videoWatched = false;
+  let ytPlayer = null;
+  let answers = {}; // questionIndex -> jawaban
+  let uploadedFiles = {}; // questionIndex -> {url, nama}
+
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 2500);
+  }
+
+  window.openPreviewModal = function(url, name){
+    const isPdf = /\.pdf($|\?)/i.test(name) || /\.pdf($|\?)/i.test(url);
+    const src = isPdf ? url : `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+    document.getElementById('previewTitle').textContent = name;
+    document.getElementById('previewFrame').src = src;
+    document.getElementById('previewModal').style.display = 'flex';
+  };
+  document.getElementById('closePreviewBtn').innerHTML = iconSvg('x', {size:18});
+  document.getElementById('closePreviewBtn').addEventListener('click', () => {
+    document.getElementById('previewModal').style.display = 'none';
+    document.getElementById('previewFrame').src = '';
+  });
+  window.downloadFile = async function(url, name, btn){
+    const original = btn.textContent; btn.textContent = '...';
+    try{
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const objUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = objUrl; a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(objUrl);
+    } catch(err){ showToast('Gagal unduh: ' + err.message); }
+    finally { btn.textContent = original; }
+  };
+
+  function youtubeId(url){
+    if(!url) return null;
+    const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([a-zA-Z0-9_-]{6,})/);
+    return m ? m[1] : null;
+  }
+
+  function renderMateri(){
+    document.getElementById('moduleTitle').textContent = moduleData.judul;
+    document.getElementById('moduleMeta').textContent = `${moduleData.kategori} · ${moduleData.durasiMenit||0} menit`;
+
+    const vid = youtubeId(moduleData.videoUrl);
+    const videoBox = document.getElementById('videoContainer');
+    if(vid){
+      videoBox.innerHTML = `<div class="video-wrap"><div id="ytPlayer"></div></div>`;
+      initYoutubePlayer(vid);
+    } else {
+      videoBox.innerHTML = `<p class="text-meta" style="margin-bottom:12px;">${iconSvg('file-off',{size:14})} Tidak ada video untuk modul ini.</p>`;
+      videoWatched = true; // tidak ada video = tidak ada gerbang
+    }
+
+    const filesBox = document.getElementById('materiFilesList');
+    filesBox.innerHTML = (moduleData.materiFiles||[]).map(f => `
+      <div class="file-row">
+        ${iconSvg('file-text',{size:15})} <span style="flex:1;">${f.nama}</span>
+        <button onclick="openPreviewModal('${f.url}', '${f.nama.replace(/'/g,"\\'")}')" style="background:none; border:none; color:var(--pink); font-weight:700; font-size:12px; cursor:pointer;">Preview</button>
+        <button onclick="downloadFile('${f.url}', '${f.nama.replace(/'/g,"\\'")}', this)" style="background:none; border:none; color:var(--text-2); font-weight:700; font-size:12px; cursor:pointer;">Unduh</button>
+      </div>`).join('') || `<p class="text-meta">Tidak ada file materi.</p>`;
+  }
+
+  function initYoutubePlayer(videoId){
+    function create(){
+      ytPlayer = new YT.Player('ytPlayer', {
+        videoId,
+        events: {
+          onStateChange: (e) => {
+            if(e.data === YT.PlayerState.ENDED){
+              videoWatched = true;
+              renderPostTest();
+              showToast('Video selesai ditonton — Post-Test terbuka.');
+            }
+          }
+        }
+      });
+    }
+    if(window.YT && window.YT.Player) create();
+    else window.onYouTubeIframeAPIReady = create;
+  }
+
+  function renderPostTest(){
+    const box = document.getElementById('postTestBody');
+    if(!videoWatched){
+      box.innerHTML = `<div class="lock-note">${iconSvg('lock',{size:16})} Selesaikan video di atas dulu untuk membuka Post-Test.</div>`;
+      return;
+    }
+    if(!questions.length){
+      box.innerHTML = `<p class="text-sub">Tidak ada soal post-test untuk modul ini.</p>`;
+      return;
+    }
+    box.innerHTML = questions.map((q,i) => `
+      <div class="q-block">
+        <div class="q-num">Soal ${i+1} dari ${questions.length} · ${{multiple_choice:'Pilihan Ganda',likert:'Skala 1-4',free_text:'Jawaban Teks',file_upload:'Submission File'}[q.tipe]||q.tipe}</div>
+        <div class="q-title">${q.pertanyaan}</div>
+        ${q.tipe === 'multiple_choice' ? (q.pilihan||[]).map(opt => `
+          <div class="opt" data-i="${i}" data-value="${opt.replace(/"/g,'&quot;')}">
+            <input type="radio" name="q-${i}"> <span>${opt}</span>
+          </div>`).join('') : ''}
+        ${q.tipe === 'likert' ? `
+          <div class="scale-row">
+            ${[1,2,3,4].map(v => `<div class="scale-opt" data-i="${i}" data-value="${v}">${v}</div>`).join('')}
+          </div>` : ''}
+        ${q.tipe === 'free_text' ? `<textarea data-i="${i}" rows="3" placeholder="Jawaban Anda..."></textarea>` : ''}
+        ${q.tipe === 'file_upload' ? `
+          <div class="dropzone" data-i="${i}" id="fdz-${i}">${iconSvg('upload',{size:18})} <span>Klik untuk upload file jawaban</span></div>
+          <input type="file" data-i="${i}" id="finput-${i}" style="display:none">
+          <div id="fresult-${i}" class="text-meta" style="margin-top:6px;"></div>` : ''}
+      </div>`).join('') + `<button class="btn btn-primary" id="submitPtBtn" style="width:100%; margin-top:6px;">Kirim Jawaban</button>`;
+
+    box.querySelectorAll('.opt').forEach(el => el.addEventListener('click', () => {
+      const i = el.dataset.i;
+      answers[i] = el.dataset.value;
+      box.querySelectorAll(`.opt[data-i="${i}"]`).forEach(o => o.classList.remove('selected'));
+      el.classList.add('selected');
+      el.querySelector('input').checked = true;
+    }));
+    box.querySelectorAll('.scale-opt').forEach(el => el.addEventListener('click', () => {
+      const i = el.dataset.i;
+      answers[i] = Number(el.dataset.value);
+      box.querySelectorAll(`.scale-opt[data-i="${i}"]`).forEach(o => o.classList.remove('selected'));
+      el.classList.add('selected');
+    }));
+    box.querySelectorAll('textarea[data-i]').forEach(el => el.addEventListener('input', () => { answers[el.dataset.i] = el.value; }));
+    box.querySelectorAll('.dropzone[data-i]').forEach(dz => {
+      const i = dz.dataset.i;
+      const input = document.getElementById(`finput-${i}`);
+      dz.addEventListener('click', () => input.click());
+      input.addEventListener('change', async (e) => {
+        if(!e.target.files[0]) return;
+        const file = e.target.files[0];
+        const resultEl = document.getElementById(`fresult-${i}`);
+        resultEl.textContent = 'Mengupload...';
+        try{
+          const path = `submissions/${moduleId}/${currentUser.uid}/${Date.now()}_${file.name}`;
+          const fileRef = ref(storage, path);
+          await uploadBytes(fileRef, file);
+          const url = await getDownloadURL(fileRef);
+          uploadedFiles[i] = { url, nama: file.name };
+          resultEl.textContent = `✓ ${file.name} terupload.`;
+        } catch(err){ resultEl.textContent = 'Gagal upload: ' + err.message; }
+      });
+    });
+
+    document.getElementById('submitPtBtn').addEventListener('click', submitPostTest);
+  }
+
+  async function submitPostTest(){
+    const btn = document.getElementById('submitPtBtn');
+    btn.disabled = true; btn.textContent = 'Mengirim...';
+    try{
+      let correct = 0, gradable = 0;
+      questions.forEach((q,i) => {
+        if(q.tipe === 'multiple_choice'){
+          gradable++;
+          if(answers[i] === q.jawabanBenar) correct++;
+        }
+      });
+      const score = gradable ? Math.round((correct/gradable)*100) : null;
+
+      await addDoc(collection(db, 'attempts'), {
+        moduleId, uid: currentUser.uid, nama: currentProfile.displayName, email: currentProfile.email,
+        score, answers, submittedAt: serverTimestamp(),
+      });
+
+      for(const i of Object.keys(uploadedFiles)){
+        await addDoc(collection(db, 'submissions'), {
+          moduleId, questionId: i, uid: currentUser.uid,
+          fileUrl: uploadedFiles[i].url, fileName: uploadedFiles[i].nama,
+          score: null, submittedAt: serverTimestamp(),
+        });
+      }
+
+      document.getElementById('postTestBody').innerHTML = `
+        <div style="text-align:center; padding:24px 0;">
+          ${iconSvg('check',{size:32})}
+          <p style="font-weight:700; font-size:16px; margin:12px 0 4px;">Terima kasih, ${currentProfile.displayName.split(' ')[0]}!</p>
+          ${score!=null ? `<p class="text-sub">Skor Post-Test Anda: <strong>${score}</strong></p>` : `<p class="text-sub">Jawaban Anda tersimpan.</p>`}
+          ${Object.keys(uploadedFiles).length ? `<p class="text-sub">File submission akan dinilai manual oleh trainer.</p>` : ''}
+        </div>`;
+    } catch(err){
+      showToast('Gagal kirim: ' + err.message);
+      btn.disabled = false; btn.textContent = 'Kirim Jawaban';
+    }
+  }
+
+  onAuth(async (user) => {
+    const gate = document.getElementById('gate');
+    const shell = document.getElementById('appShell');
+    if(!moduleId){
+      gate.style.display = 'block'; shell.style.display = 'none';
+      document.getElementById('gateTitle').textContent = 'Link tidak lengkap';
+      document.getElementById('gateSub').innerHTML = `<a href="trainee-library.html">Kembali ke Library</a>.`;
+      return;
+    }
+    if(!user){
+      gate.style.display = 'block'; shell.style.display = 'none';
+      document.getElementById('gateTitle').textContent = 'Silakan login';
+      document.getElementById('gateSub').innerHTML = `<a href="index.html">Login dulu di sini</a>.`;
+      return;
+    }
+    currentUser = user;
+    currentProfile = await ensureUserProfile(user);
+
+    const modSnap = await getDoc(doc(db, 'modules', moduleId));
+    if(!modSnap.exists() || (modSnap.data().status !== 'published' && modSnap.data().createdBy !== user.uid && currentProfile.role !== 'admin')){
+      gate.style.display = 'block'; shell.style.display = 'none';
+      document.getElementById('gateTitle').textContent = 'Modul tidak ditemukan';
+      document.getElementById('gateSub').innerHTML = `<a href="trainee-library.html">Kembali ke Library</a>.`;
+      return;
+    }
+    moduleData = modSnap.data();
+
+    const qSnap = await getDocs(query(collection(db, 'questions'), where('moduleId', '==', moduleId)));
+    questions = [];
+    qSnap.forEach(d => questions.push(d.data()));
+    questions.sort((a,b) => (a.urutan||0) - (b.urutan||0));
+
+    gate.style.display = 'none'; shell.style.display = 'block';
+    document.getElementById('userAvatar').src = currentProfile.photoURL;
+    document.getElementById('userName').textContent = currentProfile.displayName;
+
+    renderMateri();
+    renderPostTest();
+  });
+</script>
+</body>
+</html>
