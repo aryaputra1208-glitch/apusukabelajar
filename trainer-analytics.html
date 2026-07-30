@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analitik Modul — Anteraja LMS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./lms-design-system.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  .avatar { width: 28px; height: 28px; border-radius: 50%; }
+  .user-chip { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); }
+  .mod-select { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .mod-chip { padding: 8px 14px; border-radius: var(--r-pill); border: 1px solid var(--border); font-size: 13px; cursor: pointer; background: var(--surface); }
+  .mod-chip.active { background: var(--pink); border-color: var(--pink); color: #fff; }
+  .kpi-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 22px; }
+  .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); padding: 16px; border-top: 3px solid var(--pink); }
+  .kpi-label { font-size: 11px; color: var(--text-3); font-weight: 700; letter-spacing: .03em; margin-bottom: 4px; }
+  .kpi-value { font-size: 24px; font-weight: 700; color: var(--pink); }
+</style>
+</head>
+<body>
+
+<div id="gate" class="locked-state" style="display:none;">
+  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Memuat...</p>
+  <p class="text-sub" id="gateSub"></p>
+</div>
+
+<div id="appShell" style="display:none;">
+  <div class="topbar">
+    <a href="index.html" class="sidebar-logo" style="margin:0; text-decoration:none;">anteraja LMS</a>
+    <div class="user-chip">
+      <img class="avatar" id="userAvatar" src="">
+      <span id="userName"></span>
+    </div>
+  </div>
+
+  <div class="wrap" style="max-width:900px;">
+    <h1 class="text-h1">Analitik Modul</h1>
+    <p class="text-sub" style="margin-bottom:20px;">Performa post-test peserta per modul yang Anda buat.</p>
+
+    <div class="mod-select" id="modSelect"></div>
+    <div id="analyticsBody"></div>
+    <div class="empty-state" id="emptyState" style="display:none;"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { auth, db, onAuth, ensureUserProfile } from './firebase-shared.js';
+  import { iconSvg } from './lms-icons.js';
+  import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+
+  let currentProfile = null;
+  let myModules = [];
+  let activeModuleId = null;
+  let chartInstance = null;
+
+  function initials(name){ return (name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase(); }
+
+  function renderModSelect(){
+    const el = document.getElementById('modSelect');
+    el.innerHTML = myModules.map(m => `<span class="mod-chip ${m.id===activeModuleId?'active':''}" data-id="${m.id}">${m.judul}</span>`).join('');
+    el.querySelectorAll('.mod-chip').forEach(chip => chip.addEventListener('click', () => {
+      activeModuleId = chip.dataset.id;
+      renderModSelect();
+      loadAnalytics(activeModuleId);
+    }));
+  }
+
+  async function loadAnalytics(moduleId){
+    const body = document.getElementById('analyticsBody');
+    const empty = document.getElementById('emptyState');
+    body.innerHTML = `<p class="text-meta">Memuat...</p>`;
+    empty.style.display = 'none';
+
+    const q = query(collection(db, 'attempts'), where('moduleId', '==', moduleId));
+    const snap = await getDocs(q);
+    const attempts = [];
+    snap.forEach(d => attempts.push(d.data()));
+
+    if(!attempts.length){
+      body.innerHTML = '';
+      empty.style.display = 'block';
+      empty.innerHTML = iconSvg('inbox',{size:28}) + `<p style="margin-top:8px;">Belum ada trainee yang mengerjakan post-test modul ini.</p>`;
+      return;
+    }
+
+    const scored = attempts.filter(a => a.score != null);
+    const avg = scored.length ? Math.round(scored.reduce((s,a)=>s+a.score,0)/scored.length) : null;
+    const max = scored.length ? Math.max(...scored.map(a=>a.score)) : null;
+    const min = scored.length ? Math.min(...scored.map(a=>a.score)) : null;
+
+    body.innerHTML = `
+      <div class="kpi-row">
+        <div class="kpi-card"><div class="kpi-label">TOTAL PESERTA</div><div class="kpi-value">${attempts.length}</div></div>
+        <div class="kpi-card"><div class="kpi-label">RATA-RATA SKOR</div><div class="kpi-value">${avg ?? '-'}</div></div>
+        <div class="kpi-card"><div class="kpi-label">SKOR TERTINGGI</div><div class="kpi-value">${max ?? '-'}</div></div>
+        <div class="kpi-card"><div class="kpi-label">SKOR TERENDAH</div><div class="kpi-value">${min ?? '-'}</div></div>
+      </div>
+      <div class="panel" style="padding:18px 20px; margin-bottom:20px;">
+        <h3 class="text-h2" style="margin-bottom:12px;">Distribusi Skor</h3>
+        <div style="height:220px;"><canvas id="scoreChart"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h3>Daftar Peserta</h3></div>
+        <table class="data-table">
+          <thead><tr><th>Nama</th><th>Email</th><th>Skor</th><th>Tanggal</th></tr></thead>
+          <tbody>
+            ${attempts.sort((a,b)=>(b.submittedAt?.seconds||0)-(a.submittedAt?.seconds||0)).map(a => `
+              <tr>
+                <td>${a.nama||'-'}</td>
+                <td class="text-meta">${a.email||'-'}</td>
+                <td>${a.score ?? '-'}</td>
+                <td class="text-meta">${a.submittedAt ? new Date(a.submittedAt.seconds*1000).toLocaleDateString('id-ID') : '-'}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+
+    const buckets = [0,0,0,0,0]; // <60, 60-69, 70-79, 80-89, 90-100
+    scored.forEach(a => {
+      const s = a.score;
+      if(s < 60) buckets[0]++;
+      else if(s < 70) buckets[1]++;
+      else if(s < 80) buckets[2]++;
+      else if(s < 90) buckets[3]++;
+      else buckets[4]++;
+    });
+    if(chartInstance) chartInstance.destroy();
+    chartInstance = new Chart(document.getElementById('scoreChart'), {
+      type: 'bar',
+      data: {
+        labels: ['<60','60-69','70-79','80-89','90-100'],
+        datasets: [{ data: buckets, backgroundColor: '#E6007A', borderRadius: 4, maxBarThickness: 40 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, ticks: { stepSize: 1, color: '#9C9A92', font:{size:10} }, grid: { color: '#ECEAE3' } },
+          x: { grid: { display: false }, ticks: { color: '#9C9A92', font:{size:10} } }
+        }
+      }
+    });
+  }
+
+  onAuth(async (user) => {
+    const gate = document.getElementById('gate');
+    const shell = document.getElementById('appShell');
+    if(!user){
+      gate.style.display = 'block'; shell.style.display = 'none';
+      document.getElementById('gateTitle').textContent = 'Silakan login';
+      document.getElementById('gateSub').innerHTML = `<a href="index.html">Login dulu di sini</a>.`;
+      return;
+    }
+    currentProfile = await ensureUserProfile(user);
+    if(currentProfile.role !== 'trainer' && currentProfile.role !== 'admin'){
+      gate.style.display = 'block'; shell.style.display = 'none';
+      document.getElementById('gateTitle').textContent = 'Akses ditolak';
+      document.getElementById('gateSub').textContent = 'Halaman ini cuma buat Trainer/Admin.';
+      return;
+    }
+    gate.style.display = 'none'; shell.style.display = 'block';
+    document.getElementById('userAvatar').src = currentProfile.photoURL;
+    document.getElementById('userName').textContent = currentProfile.displayName;
+
+    const modQ = currentProfile.role === 'admin'
+      ? await getDocs(collection(db, 'modules'))
+      : await getDocs(query(collection(db, 'modules'), where('createdBy', '==', user.uid)));
+    myModules = [];
+    modQ.forEach(d => myModules.push({ id: d.id, judul: d.data().judul }));
+
+    if(!myModules.length){
+      document.getElementById('emptyState').style.display = 'block';
+      document.getElementById('emptyState').innerHTML = iconSvg('inbox',{size:28}) + `<p style="margin-top:8px;">Anda belum punya modul.</p>`;
+      return;
+    }
+    activeModuleId = myModules[0].id;
+    renderModSelect();
+    loadAnalytics(activeModuleId);
+  });
+</script>
+</body>
+</html>
