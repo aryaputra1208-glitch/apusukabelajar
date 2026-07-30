@@ -52,7 +52,7 @@
   </div>
 
   <div class="wrap">
-    <h1 class="text-h1">Buat Modul Baru</h1>
+    <h1 class="text-h1" id="pageTitle">Buat Modul Baru</h1>
     <p class="text-sub" style="margin-bottom:24px;">Isi materi dan susun post-test — modul disimpan sebagai draft, kirim ke admin untuk publish saat sudah siap.</p>
 
     <div class="card">
@@ -153,7 +153,7 @@
   import { auth, db, onAuth, ensureUserProfile } from './firebase-shared.js';
   import { iconSvg } from './lms-icons.js';
   import {
-    collection, addDoc, doc, updateDoc, serverTimestamp,
+    collection, addDoc, doc, getDoc, updateDoc, serverTimestamp,
     query, where, getDocs, writeBatch
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
   import {
@@ -177,15 +177,15 @@
   let rosterRows = [];
 
   document.getElementById('addSesiBtn').innerHTML = iconSvg('plus', { size: 12 }) + ' Tambah sesi';
+  function setMode(newMode, skipAutoSesi){
+    mode = newMode;
+    document.querySelectorAll('#chipMode .chip').forEach(c => c.classList.toggle('selected', c.dataset.mode === newMode));
+    document.getElementById('cardOffline').style.display = mode === 'offline' ? 'block' : 'none';
+    document.getElementById('videoField').style.display = mode === 'online' ? 'block' : 'none';
+    if(mode === 'offline' && !sesiRows.length && !skipAutoSesi) addSesiRow();
+  }
   document.querySelectorAll('#chipMode .chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      mode = chip.dataset.mode;
-      document.querySelectorAll('#chipMode .chip').forEach(c => c.classList.remove('selected'));
-      chip.classList.add('selected');
-      document.getElementById('cardOffline').style.display = mode === 'offline' ? 'block' : 'none';
-      document.getElementById('videoField').style.display = mode === 'online' ? 'block' : 'none';
-      if(mode === 'offline' && !sesiRows.length) addSesiRow();
-    });
+    chip.addEventListener('click', () => setMode(chip.dataset.mode));
   });
 
   function renderSesiList(){
@@ -548,6 +548,61 @@
   document.getElementById('saveDraftBtn').addEventListener('click', () => saveModule('draft'));
   document.getElementById('submitApprovalBtn').addEventListener('click', () => saveModule('pending_approval'));
 
+  const editId = new URLSearchParams(window.location.search).get('edit');
+
+  async function loadForEdit(id){
+    const snap = await getDoc(doc(db, 'modules', id));
+    if(!snap.exists()){ showToast('Training tidak ditemukan.'); return; }
+    const m = snap.data();
+    if(m.createdBy !== currentUser.uid && currentProfile.role !== 'admin'){
+      document.getElementById('gate').style.display = 'block';
+      document.getElementById('appShell').style.display = 'none';
+      document.getElementById('gateTitle').textContent = 'Akses ditolak';
+      document.getElementById('gateSub').textContent = 'Anda bukan pembuat training ini.';
+      return;
+    }
+    moduleId = id;
+    document.getElementById('pageTitle').textContent = 'Edit Training';
+    document.getElementById('mJudul').value = m.judul || '';
+    document.getElementById('mDeskripsi').value = m.deskripsi || '';
+    document.getElementById('mKategori').value = m.kategori || 'Basic/Fundamental';
+    document.getElementById('mDurasi').value = m.durasiMenit || '';
+    document.getElementById('mDivisi').value = (m.targetDivisi||[]).join(', ');
+    document.getElementById('mVideo').value = m.videoUrl || '';
+    if(document.getElementById('mTglMulai')) document.getElementById('mTglMulai').value = m.tanggalMulai || '';
+    if(document.getElementById('mTglSelesai')) document.getElementById('mTglSelesai').value = m.tanggalSelesai || '';
+
+    selectedLevel = [...(m.targetLevel||[])];
+    renderChips('chipLevel', LEVEL_OPTIONS, selectedLevel);
+
+    materiFiles = [...(m.materiFiles||[])];
+    renderMateriList();
+
+    setMode(m.mode || 'online', true);
+
+    if(m.mode === 'offline'){
+      const sSnap = await getDocs(query(collection(db, 'sessions'), where('trainingId', '==', id)));
+      sesiRows = [];
+      sSnap.forEach(d => sesiRows.push(d.data()));
+      sesiRows.sort((a,b) => (a.sesiKe||0) - (b.sesiKe||0));
+      renderSesiList();
+
+      const rSnap = await getDocs(query(collection(db, 'roster'), where('trainingId', '==', id)));
+      rosterRows = [];
+      rSnap.forEach(d => rosterRows.push(d.data()));
+      renderRosterList();
+      if(rosterRows.length) document.getElementById('rosterResult').textContent = `${rosterRows.length} peserta (tersimpan sebelumnya).`;
+
+      showLinkForm();
+    }
+
+    const qSnap = await getDocs(query(collection(db, 'questions'), where('moduleId', '==', id)));
+    questions = [];
+    qSnap.forEach(d => questions.push(d.data()));
+    questions.sort((a,b) => (a.urutan||0) - (b.urutan||0));
+    renderQuestions();
+  }
+
   onAuth(async (user) => {
     const gate = document.getElementById('gate');
     const shell = document.getElementById('appShell');
@@ -568,9 +623,14 @@
     gate.style.display = 'none'; shell.style.display = 'block';
     document.getElementById('userAvatar').src = currentProfile.photoURL;
     document.getElementById('userName').textContent = currentProfile.displayName;
-    renderChips('chipLevel', LEVEL_OPTIONS, selectedLevel);
-    renderQuestions();
-    renderMateriList();
+
+    if(editId){
+      await loadForEdit(editId);
+    } else {
+      renderChips('chipLevel', LEVEL_OPTIONS, selectedLevel);
+      renderQuestions();
+      renderMateriList();
+    }
   });
 </script>
 </body>
