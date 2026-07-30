@@ -63,7 +63,7 @@
 <script type="module">
   import { auth, db, onAuth, ensureUserProfile } from './firebase-shared.js';
   import { iconSvg } from './lms-icons.js';
-  import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+  import { collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const FORMS_BASE_URL = ''; // TODO: sama seperti di trainer-create-module.html, isi setelah Forms baru deploy
 
@@ -106,10 +106,23 @@
         <td>
           <div style="display:flex; gap:6px;">
             <a class="icon-btn row-action ra-gray" href="trainer-create-module.html?edit=${m.id}" title="Edit">${iconSvg('settings',{size:14})}</a>
+            ${m.mode==='offline' ? `<button class="icon-btn row-action ${m.postTestOpen?'ra-green':'ra-gray'}" data-id="${m.id}" data-open="${!m.postTestOpen}" data-action="toggle-posttest" title="${m.postTestOpen?'Post-Test terbuka — klik untuk tutup':'Buka Post-Test'}">${iconSvg(m.postTestOpen?'lock-open':'lock',{size:14})}</button>` : ''}
             ${m.mode==='offline' ? `<button class="icon-btn row-action ra-blue" data-id="${m.id}" data-judul="${(m.judul||'').replace(/"/g,'&quot;')}" data-action="copy-link" title="Copy Link Form">${iconSvg('link',{size:14})}</button>` : ''}
           </div>
         </td>
       </tr>`).join('');
+
+    body.querySelectorAll('[data-action="toggle-posttest"]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        try{
+          await updateDoc(doc(db, 'modules', btn.dataset.id), { postTestOpen: btn.dataset.open === 'true' });
+          showToast('Status Post-Test diubah.');
+          const m = allModules.find(x => x.id === btn.dataset.id);
+          if(m) m.postTestOpen = btn.dataset.open === 'true';
+          render();
+        } catch(err){ showToast('Gagal ubah: ' + err.message); }
+      });
+    });
 
     body.querySelectorAll('[data-action="copy-link"]').forEach(btn => {
       btn.addEventListener('click', () => {
