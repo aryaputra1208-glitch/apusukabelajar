@@ -56,6 +56,11 @@
 
     <div class="card">
       <h2 class="text-h2" style="margin-bottom:14px;">Informasi Modul</h2>
+      <label>Mode Training</label>
+      <div class="chip-group" id="chipMode" style="display:flex; gap:8px; margin-bottom:14px;">
+        <span class="chip selected" data-mode="online">Online (LMS)</span>
+        <span class="chip" data-mode="offline">Offline (tatap muka)</span>
+      </div>
       <label>Judul Modul</label>
       <input type="text" id="mJudul" placeholder="mis. Dasar Coaching untuk Section Head">
 
@@ -83,10 +88,36 @@
       <div id="chipLevel" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;"></div>
     </div>
 
+    <div class="card" id="cardOffline" style="display:none;">
+      <h2 class="text-h2" style="margin-bottom:14px;">Jadwal & Sesi (Offline)</h2>
+      <div class="row">
+        <div><label>Tanggal Mulai</label><input type="date" id="mTglMulai"></div>
+        <div><label>Tanggal Selesai</label><input type="date" id="mTglSelesai"></div>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+        <label style="margin:0;">Sesi & Trainer</label>
+        <span class="link-add" id="addSesiBtn"></span>
+      </div>
+      <div id="sesiList" style="display:flex; flex-direction:column; gap:8px; margin-bottom:14px;"></div>
+
+      <label>Roster Peserta (paste dari Excel — kolom: NIK, Nama, Divisi, Departemen, Jabatan, Level)</label>
+      <textarea id="mRoster" rows="5" placeholder="10047430&#9;ANDRIAN&#9;OPERATION&#9;QA OPERATIONAL&#9;QA Supervisor&#9;Staff"></textarea>
+
+      <div id="linkFormBox" style="display:none; margin-top:6px;">
+        <label>Link Form Trainee</label>
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="linkFormOutput" readonly style="flex:1;">
+          <button class="btn btn-outline btn-sm" id="copyLinkBtn">Copy</button>
+        </div>
+      </div>
+    </div>
+
     <div class="card">
       <h2 class="text-h2" style="margin-bottom:14px;">Materi</h2>
-      <label>Link Video YouTube (unlisted)</label>
-      <input type="url" id="mVideo" placeholder="https://youtu.be/...">
+      <div id="videoField">
+        <label>Link Video YouTube (unlisted)</label>
+        <input type="url" id="mVideo" placeholder="https://youtu.be/...">
+      </div>
 
       <label>File Materi (PDF — export dari PPT/Word jadi PDF dulu sebelum upload)</label>
       <div id="materiList"></div>
@@ -124,6 +155,7 @@
   import { getApps } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
 
   const storage = getStorage(getApps()[0]);
+  const FORMS_BASE_URL = ''; // TODO: isi setelah Forms baru (offline) di-deploy
 
   const LEVEL_OPTIONS = ['Admin','Leader','Coordinator','Staff','Supervisor','Section Head','Department Head','AVP','VP','SVP'];
 
@@ -133,6 +165,46 @@
   let materiFiles = [];
   let questions = [];
   let selectedLevel = [];
+  let mode = 'online';
+  let sesiRows = [];
+
+  document.getElementById('addSesiBtn').innerHTML = iconSvg('plus', { size: 12 }) + ' Tambah sesi';
+  document.querySelectorAll('#chipMode .chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      mode = chip.dataset.mode;
+      document.querySelectorAll('#chipMode .chip').forEach(c => c.classList.remove('selected'));
+      chip.classList.add('selected');
+      document.getElementById('cardOffline').style.display = mode === 'offline' ? 'block' : 'none';
+      document.getElementById('videoField').style.display = mode === 'online' ? 'block' : 'none';
+      if(mode === 'offline' && !sesiRows.length) addSesiRow();
+    });
+  });
+
+  function renderSesiList(){
+    const el = document.getElementById('sesiList');
+    el.innerHTML = sesiRows.map((s,i) => `
+      <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:8px; border:1px solid var(--border); border-radius:8px;">
+        <input class="q-text" style="flex:1 1 140px; margin-bottom:0;" placeholder="Nama Sesi" data-i="${i}" data-f="namaSesi" value="${s.namaSesi||''}">
+        <input class="q-text" style="flex:1 1 100px; margin-bottom:0;" placeholder="NIK Trainer" data-i="${i}" data-f="trainerNik" value="${s.trainerNik||''}">
+        <input class="q-text" style="flex:1 1 120px; margin-bottom:0;" placeholder="Nama Trainer" data-i="${i}" data-f="trainerNama" value="${s.trainerNama||''}">
+        <input class="q-text" style="flex:1 1 120px; margin-bottom:0;" type="date" data-i="${i}" data-f="tanggal" value="${s.tanggal||''}">
+        <input class="q-text" style="flex:0 1 70px; margin-bottom:0;" type="number" step="0.5" placeholder="Jam" data-i="${i}" data-f="durasiJam" value="${s.durasiJam||''}">
+        <button class="icon-btn tone-red" data-i="${i}" data-action="remove-sesi">${iconSvg('trash',{size:13})}</button>
+      </div>`).join('');
+    el.querySelectorAll('input[data-f]').forEach(inp => inp.addEventListener('input', () => {
+      sesiRows[Number(inp.dataset.i)][inp.dataset.f] = inp.value;
+    }));
+    el.querySelectorAll('[data-action="remove-sesi"]').forEach(btn => btn.addEventListener('click', () => {
+      sesiRows.splice(Number(btn.dataset.i),1); renderSesiList();
+    }));
+  }
+  function addSesiRow(){ sesiRows.push({ namaSesi:'', trainerNik:'', trainerNama:'', tanggal:'', durasiJam:'' }); renderSesiList(); }
+  document.getElementById('addSesiBtn').addEventListener('click', addSesiRow);
+
+  document.getElementById('copyLinkBtn').addEventListener('click', () => {
+    const val = document.getElementById('linkFormOutput').value;
+    navigator.clipboard.writeText(val).then(() => showToast('Link disalin.')).catch(() => {});
+  });
 
   document.getElementById('materiDropzone').innerHTML =
     iconSvg('upload', { size: 20 }) + ' <span>Drag &amp; drop file di sini, atau klik untuk pilih</span>';
@@ -321,11 +393,14 @@
 
   function collectModuleData(status){
     return {
+      mode,
       judul: document.getElementById('mJudul').value.trim(),
       deskripsi: document.getElementById('mDeskripsi').value.trim(),
       kategori: document.getElementById('mKategori').value,
       durasiMenit: Number(document.getElementById('mDurasi').value) || 0,
-      videoUrl: document.getElementById('mVideo').value.trim(),
+      videoUrl: mode === 'online' ? document.getElementById('mVideo').value.trim() : '',
+      tanggalMulai: mode === 'offline' ? document.getElementById('mTglMulai').value : '',
+      tanggalSelesai: mode === 'offline' ? document.getElementById('mTglSelesai').value : '',
       targetDivisi: document.getElementById('mDivisi').value.split(',').map(s => s.trim()).filter(Boolean),
       targetLevel: selectedLevel,
       materiFiles,
@@ -348,6 +423,44 @@
     await batch.commit();
   }
 
+  async function saveSesiAndRoster(){
+    if(mode !== 'offline') return;
+
+    const sq = query(collection(db, 'sessions'), where('trainingId', '==', moduleId));
+    const sSnap = await getDocs(sq);
+    const sBatch = writeBatch(db);
+    sSnap.forEach(d => sBatch.delete(d.ref));
+    sesiRows.forEach((s,i) => {
+      const ref = doc(collection(db, 'sessions'));
+      sBatch.set(ref, { trainingId: moduleId, sesiKe: i+1, ...s });
+    });
+    await sBatch.commit();
+
+    const rosterText = document.getElementById('mRoster').value;
+    const rows = rosterText.split('\n').map(l => l.trim()).filter(Boolean).map(line => {
+      const c = line.split('\t').map(x => x.trim());
+      return { nik: c[0]||'', nama: c[1]||'', divisi: c[2]||'', departemen: c[3]||'', jabatan: c[4]||'', level: c[5]||'' };
+    }).filter(r => r.nik);
+    if(rows.length){
+      const rq = query(collection(db, 'roster'), where('trainingId', '==', moduleId));
+      const rSnap = await getDocs(rq);
+      const rBatch = writeBatch(db);
+      rSnap.forEach(d => rBatch.delete(d.ref));
+      rows.forEach(r => {
+        const ref = doc(collection(db, 'roster'));
+        rBatch.set(ref, { trainingId: moduleId, ...r });
+      });
+      await rBatch.commit();
+    }
+  }
+
+  function showLinkForm(){
+    if(mode !== 'offline') return;
+    const base = FORMS_BASE_URL || '[FORMS_BASE_URL belum di-setup]';
+    document.getElementById('linkFormOutput').value = `${base}?training=${moduleId}`;
+    document.getElementById('linkFormBox').style.display = 'block';
+  }
+
   async function saveModule(status){
     const judul = document.getElementById('mJudul').value.trim();
     if(!judul){ showToast('Judul modul wajib diisi.'); return; }
@@ -361,6 +474,8 @@
         await updateDoc(doc(db, 'modules', moduleId), data);
       }
       await saveQuestions();
+      await saveSesiAndRoster();
+      showLinkForm();
       showToast(status === 'draft' ? 'Draft tersimpan.' : 'Modul dikirim ke admin untuk approval.');
     } catch(err){
       showToast('Gagal simpan: ' + err.message);
