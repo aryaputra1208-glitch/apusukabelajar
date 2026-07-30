@@ -104,7 +104,10 @@
         <td class="text-meta">${m.createdByName||'-'}</td>
         <td>${statusBadge(m.status)}</td>
         <td>
-          ${m.mode==='offline' ? `<button class="icon-btn row-action ra-blue" data-id="${m.id}" data-judul="${(m.judul||'').replace(/"/g,'&quot;')}" data-action="copy-link" title="Copy Link Form">${iconSvg('link',{size:14})}</button>` : ''}
+          <div style="display:flex; gap:6px;">
+            <a class="icon-btn row-action ra-gray" href="trainer-create-module.html?edit=${m.id}" title="Edit">${iconSvg('settings',{size:14})}</a>
+            ${m.mode==='offline' ? `<button class="icon-btn row-action ra-blue" data-id="${m.id}" data-judul="${(m.judul||'').replace(/"/g,'&quot;')}" data-action="copy-link" title="Copy Link Form">${iconSvg('link',{size:14})}</button>` : ''}
+          </div>
         </td>
       </tr>`).join('');
 
