@@ -3,7 +3,7 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
 import {
-  getAuth, GoogleAuthProvider, OAuthProvider, signInWithPopup, signOut, onAuthStateChanged
+  getAuth, GoogleAuthProvider, OAuthProvider, signInWithPopup, signInAnonymously, signOut, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
 import {
   getFirestore, doc, getDoc, setDoc, serverTimestamp
@@ -34,6 +34,11 @@ export function loginWithGoogle() {
 
 export function loginWithMicrosoft() {
   return signInWithPopup(auth, msProvider);
+}
+
+/** Dipakai Forms offline — login diam-diam di background, trainee tidak lihat apapun. */
+export function loginAnonymously() {
+  return signInAnonymously(auth);
 }
 
 export function logout() {
