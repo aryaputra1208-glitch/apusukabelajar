@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./lms-design-system.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   /* Cuma layout spesifik halaman ini — token & komponen dasar dari lms-design-system.css */
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -100,8 +101,14 @@
       </div>
       <div id="sesiList" style="display:flex; flex-direction:column; gap:8px; margin-bottom:14px;"></div>
 
-      <label>Roster Peserta (paste dari Excel — kolom: NIK, Nama, Divisi, Departemen, Jabatan, Level)</label>
-      <textarea id="mRoster" rows="5" placeholder="10047430&#9;ANDRIAN&#9;OPERATION&#9;QA OPERATIONAL&#9;QA Supervisor&#9;Staff"></textarea>
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+        <label style="margin:0;">Roster Peserta</label>
+        <span class="link-add" id="downloadTemplateBtn">Download Template Excel</span>
+      </div>
+      <div id="rosterList" style="display:flex; flex-direction:column; gap:6px; margin-bottom:8px;"></div>
+      <div class="dropzone" id="rosterDropzone"></div>
+      <input type="file" id="rosterFileInput" accept=".xlsx,.xls" style="display:none">
+      <div id="rosterResult" class="text-meta" style="margin-top:6px;"></div>
 
       <div id="linkFormBox" style="display:none; margin-top:6px;">
         <label>Link Form Trainee</label>
@@ -167,6 +174,7 @@
   let selectedLevel = [];
   let mode = 'online';
   let sesiRows = [];
+  let rosterRows = [];
 
   document.getElementById('addSesiBtn').innerHTML = iconSvg('plus', { size: 12 }) + ' Tambah sesi';
   document.querySelectorAll('#chipMode .chip').forEach(chip => {
@@ -205,6 +213,66 @@
     const val = document.getElementById('linkFormOutput').value;
     navigator.clipboard.writeText(val).then(() => showToast('Link disalin.')).catch(() => {});
   });
+
+  /* ===== Roster: template download + upload Excel ===== */
+  document.getElementById('downloadTemplateBtn').addEventListener('click', () => {
+    const wb = XLSX.utils.book_new();
+    const data = [
+      ['NIK','Nama','Divisi','Departemen','Jabatan','Level'],
+      ['10047430','ANDRIAN','OPERATION','QA OPERATIONAL','QA Supervisor','Staff'],
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    ws['!cols'] = [{wch:12},{wch:20},{wch:16},{wch:20},{wch:20},{wch:12}];
+    XLSX.utils.book_append_sheet(wb, ws, 'Roster');
+    XLSX.writeFile(wb, 'Template_Roster_Peserta.xlsx');
+  });
+
+  const rosterDz = document.getElementById('rosterDropzone');
+  const rosterInput = document.getElementById('rosterFileInput');
+  rosterDz.innerHTML = iconSvg('upload', {size:18}) + ' <span>Drag &amp; drop file Excel roster, atau klik untuk pilih</span>';
+  rosterDz.addEventListener('click', () => rosterInput.click());
+  rosterInput.addEventListener('change', e => { if(e.target.files[0]) handleRosterFile(e.target.files[0]); });
+  rosterDz.addEventListener('dragover', e => { e.preventDefault(); rosterDz.classList.add('drag-over'); });
+  rosterDz.addEventListener('dragleave', () => rosterDz.classList.remove('drag-over'));
+  rosterDz.addEventListener('drop', e => {
+    e.preventDefault(); rosterDz.classList.remove('drag-over');
+    if(e.dataTransfer.files[0]) handleRosterFile(e.dataTransfer.files[0]);
+  });
+
+  function handleRosterFile(file){
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try{
+        const wb = XLSX.read(e.target.result, { type: 'binary' });
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+        rosterRows = rows.map(r => ({
+          nik: String(r.NIK || r.nik || '').trim(),
+          nama: String(r.Nama || r.nama || '').trim(),
+          divisi: String(r.Divisi || r.divisi || '').trim(),
+          departemen: String(r.Departemen || r.departemen || '').trim(),
+          jabatan: String(r.Jabatan || r.jabatan || '').trim(),
+          level: String(r.Level || r.level || '').trim(),
+        })).filter(r => r.nik);
+        renderRosterList();
+        document.getElementById('rosterResult').textContent = `${rosterRows.length} peserta terbaca dari file.`;
+        showToast(`${rosterRows.length} peserta terbaca.`);
+      } catch(err){
+        showToast('Gagal baca file: ' + err.message);
+      }
+    };
+    reader.readAsBinaryString(file);
+  }
+
+  function renderRosterList(){
+    const el = document.getElementById('rosterList');
+    if(!rosterRows.length){ el.innerHTML = ''; return; }
+    el.innerHTML = `<div class="file-item">${iconSvg('users',{size:16})} <span>${rosterRows.length} peserta ter-upload</span>
+      <button class="icon-btn" id="clearRosterBtn" title="Hapus semua">${iconSvg('trash',{size:14})}</button></div>`;
+    document.getElementById('clearRosterBtn').addEventListener('click', () => {
+      rosterRows = []; document.getElementById('rosterResult').textContent = ''; renderRosterList();
+    });
+  }
 
   document.getElementById('materiDropzone').innerHTML =
     iconSvg('upload', { size: 20 }) + ' <span>Drag &amp; drop file di sini, atau klik untuk pilih</span>';
@@ -436,17 +504,12 @@
     });
     await sBatch.commit();
 
-    const rosterText = document.getElementById('mRoster').value;
-    const rows = rosterText.split('\n').map(l => l.trim()).filter(Boolean).map(line => {
-      const c = line.split('\t').map(x => x.trim());
-      return { nik: c[0]||'', nama: c[1]||'', divisi: c[2]||'', departemen: c[3]||'', jabatan: c[4]||'', level: c[5]||'' };
-    }).filter(r => r.nik);
-    if(rows.length){
+    if(rosterRows.length){
       const rq = query(collection(db, 'roster'), where('trainingId', '==', moduleId));
       const rSnap = await getDocs(rq);
       const rBatch = writeBatch(db);
       rSnap.forEach(d => rBatch.delete(d.ref));
-      rows.forEach(r => {
+      rosterRows.forEach(r => {
         const ref = doc(collection(db, 'roster'));
         rBatch.set(ref, { trainingId: moduleId, ...r });
       });
