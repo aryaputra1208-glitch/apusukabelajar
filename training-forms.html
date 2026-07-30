@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Form Training — Anteraja</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./lms-design-system.css">
+<style>
+  body{ display:flex; justify-content:center; }
+  .wrap{ max-width:480px; width:100%; padding:20px 16px 60px; }
+  .logo{ font-size:19px; font-weight:700; color:var(--pink); text-align:center; padding:18px 0 6px; }
+  .training-title{ text-align:center; font-size:13px; color:var(--text-2); margin-bottom:16px; }
+  .tabbar{ display:flex; gap:8px; margin-bottom:18px; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-card); padding:4px; }
+  .tab-btn{ flex:1; text-align:center; padding:10px; border-radius:calc(var(--r-card) - 4px); font-size:13px; font-weight:700; cursor:pointer; color:var(--text-2); }
+  .tab-btn.active{ background:var(--pink); color:#fff; }
+  .name-opt{ padding:12px 14px; border:1px solid var(--border); border-radius:var(--r-control); margin-bottom:8px; cursor:pointer; }
+  .name-opt:hover{ border-color:var(--pink); background:var(--pink-bg); }
+  .session-row{ display:flex; align-items:center; justify-content:space-between; padding:14px; border:1px solid var(--border); border-radius:var(--r-control); margin-bottom:10px; }
+  .btn-absen{ padding:9px 16px; border-radius:var(--r-control); border:none; background:var(--pink); color:#fff; font-weight:700; font-size:13px; cursor:pointer; }
+  .btn-absen:disabled{ background:var(--green-bg); color:var(--green); cursor:default; }
+  .q-block{ margin-bottom:22px; }
+  .opt{ display:flex; align-items:center; gap:10px; padding:12px 14px; border:1px solid var(--border); border-radius:var(--r-control); margin-bottom:8px; cursor:pointer; }
+  .opt.selected{ border-color:var(--pink); background:var(--pink-bg); }
+  .scale-row{ display:flex; gap:8px; }
+  .scale-opt{ flex:1; text-align:center; padding:14px 0; border:1px solid var(--border); border-radius:var(--r-control); cursor:pointer; font-weight:700; color:var(--text-2); }
+  .scale-opt.selected{ border-color:var(--pink); background:var(--pink); color:#fff; }
+  .trainer-name{ font-size:13px; font-weight:700; color:var(--pink); text-transform:uppercase; letter-spacing:.03em; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--border); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo">anteraja</div>
+  <div class="training-title" id="trainingTitle"></div>
+  <div class="tabbar" id="tabbar" style="display:none">
+    <div class="tab-btn active" id="tabAbsensiBtn">Absensi</div>
+    <div class="tab-btn" id="tabPostTestBtn">Post-Test &amp; CSI</div>
+  </div>
+  <div id="app"></div>
+</div>
+
+<script type="module">
+  import { db, onAuth, loginAnonymously } from './firebase-shared.js';
+  import {
+    doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+
+  const params = new URLSearchParams(window.location.search);
+  const trainingId = params.get('training');
+
+  let currentUid = null;
+  let training = null, sessions = [], roster = [], postQuestions = [], csiQuestions = [], trainers = [];
+  let activeTab = 'absensi';
+  let peserta = null;
+  let attendedSet = new Set();
+  let pendingSesi = null;
+  let postTestAnswers = {}, csiAnswers = {};
+  let ptStep = 0;
+
+  function app(){ return document.getElementById('app'); }
+
+  async function init(){
+    if(!trainingId){
+      app().innerHTML = emptyCard('Link tidak lengkap', 'Buka form ini lewat link training yang dibagikan panitia.');
+      return;
+    }
+    await loginAnonymously();
+    onAuth(async (user) => {
+      if(!user) return; // akan segera resolve lagi otomatis
+      currentUid = user.uid;
+      await loadTraining();
+    });
+  }
+
+  function emptyCard(title, sub){
+    return `<div class="card" style="text-align:center;"><h1 class="text-h1">${title}</h1><p class="text-sub" style="margin-top:8px;">${sub}</p></div>`;
+  }
+
+  async function loadTraining(){
+    const snap = await getDoc(doc(db, 'modules', trainingId));
+    if(!snap.exists() || snap.data().mode !== 'offline'){
+      app().innerHTML = emptyCard('Training tidak ditemukan', 'Cek lagi link yang Anda buka.');
+      return;
+    }
+    training = { id: trainingId, ...snap.data() };
+    document.getElementById('trainingTitle').textContent = training.judul;
+    document.getElementById('tabbar').style.display = 'flex';
+    document.getElementById('tabPostTestBtn').style.opacity = training.postTestOpen ? '1' : '.55';
+
+    const sSnap = await getDocs(query(collection(db, 'sessions'), where('trainingId', '==', trainingId)));
+    sessions = []; sSnap.forEach(d => sessions.push(d.data()));
+    sessions.sort((a,b) => (a.sesiKe||0) - (b.sesiKe||0));
+    trainers = [...new Map(sessions.map(s => [s.trainerNik, { nik: s.trainerNik, nama: s.trainerNama }])).values()].filter(t => t.nik);
+
+    const rSnap = await getDocs(query(collection(db, 'roster'), where('trainingId', '==', trainingId)));
+    roster = []; rSnap.forEach(d => roster.push(d.data()));
+
+    const qSnap = await getDocs(query(collection(db, 'questions'), where('moduleId', '==', trainingId)));
+    const allQ = []; qSnap.forEach(d => allQ.push(d.data()));
+    allQ.sort((a,b) => (a.urutan||0) - (b.urutan||0));
+    postQuestions = allQ.filter(q => q.tipe !== 'csi_rating');
+    csiQuestions = allQ.filter(q => q.tipe === 'csi_rating');
+    if(!csiQuestions.length) csiQuestions = [{ pertanyaan: 'Seberapa jelas materi disampaikan trainer ini?' }]; // default kalau trainer belum bikin soal CSI khusus
+
+    document.getElementById('tabAbsensiBtn').addEventListener('click', () => switchTab('absensi'));
+    document.getElementById('tabPostTestBtn').addEventListener('click', () => switchTab('posttest'));
+    renderTab();
+  }
+
+  function switchTab(tab){
+    activeTab = tab;
+    document.getElementById('tabAbsensiBtn').classList.toggle('active', tab==='absensi');
+    document.getElementById('tabPostTestBtn').classList.toggle('active', tab==='posttest');
+    renderTab();
+  }
+  function renderTab(){
+    if(activeTab === 'absensi') renderAbsensi();
+    else renderPostTestTab();
+  }
+
+  /* ===== Identity picker (dipakai bareng 2 tab) ===== */
+  function renderNamePicker(onPicked){
+    app().innerHTML = `
+      <div class="card">
+        <h1 class="text-h1">Siapa Anda?</h1>
+        <p class="text-sub" style="margin-bottom:16px;">Pilih nama Anda dari daftar peserta training ini</p>
+        <input type="text" id="nameSearch" placeholder="Cari nama...">
+        <div id="nameList"></div>
+        <p class="text-sub" id="notInListBtn" style="color:var(--pink); font-weight:700; cursor:pointer; margin-top:10px;">Nama saya tidak ada di list →</p>
+      </div>`;
+    const listEl = document.getElementById('nameList');
+    function renderList(filter){
+      const f = (filter||'').toLowerCase();
+      const rows = roster.filter(r => (r.nama||'').toLowerCase().includes(f));
+      listEl.innerHTML = rows.length ? rows.map(r => `
+        <div class="name-opt" data-nik="${r.nik}">
+          <div style="font-weight:700; font-size:14px;">${r.nama}</div>
+          <div class="text-meta">${r.jabatan||'-'} · ${r.divisi||'-'}</div>
+        </div>`).join('') : `<p class="text-sub">Nama tidak ditemukan.</p>`;
+      listEl.querySelectorAll('.name-opt').forEach(el => el.addEventListener('click', () => {
+        peserta = { ...roster.find(x => x.nik === el.dataset.nik), isWalkin: false };
+        onPicked();
+      }));
+    }
+    renderList('');
+    document.getElementById('nameSearch').addEventListener('input', e => renderList(e.target.value));
+    document.getElementById('notInListBtn').addEventListener('click', () => renderManualEntry(onPicked));
+  }
+
+  function renderManualEntry(onPicked){
+    app().innerHTML = `
+      <div class="card">
+        <h1 class="text-h1">Isi Data Diri</h1>
+        <p class="text-sub" style="margin-bottom:16px;">Nama Anda belum terdaftar di roster training ini</p>
+        <label>NIK</label><input type="text" id="mNik">
+        <label>Nama Lengkap</label><input type="text" id="mNama">
+        <label>Divisi</label><input type="text" id="mDivisi">
+        <label>Departemen</label><input type="text" id="mDept">
+        <label>Jabatan</label><input type="text" id="mJabatan">
+        <label>Level</label><input type="text" id="mLevel">
+        <div class="field-error" id="mErr" style="display:none;">Mohon lengkapi NIK dan Nama.</div>
+        <button class="btn btn-primary" id="mNext" style="width:100%;">Lanjut</button>
+      </div>`;
+    document.getElementById('mNext').addEventListener('click', () => {
+      const nik = document.getElementById('mNik').value.trim();
+      const nama = document.getElementById('mNama').value.trim();
+      if(!nik || !nama){ document.getElementById('mErr').style.display = 'block'; return; }
+      peserta = {
+        nik, nama,
+        divisi: document.getElementById('mDivisi').value.trim(),
+        departemen: document.getElementById('mDept').value.trim(),
+        jabatan: document.getElementById('mJabatan').value.trim(),
+        level: document.getElementById('mLevel').value.trim(),
+        isWalkin: true,
+      };
+      onPicked();
+    });
+  }
+
+  /* ===== Tab: Absensi ===== */
+  async function renderAbsensi(){
+    if(peserta){ await loadAttendedThenRenderAbsensi(); return; }
+    renderSessionPickerUnidentified();
+  }
+  function renderSessionPickerUnidentified(){
+    app().innerHTML = `
+      <div class="card">
+        <h1 class="text-h1">Absensi</h1>
+        <p class="text-sub" style="margin-bottom:16px;">Pilih sesi yang sedang/baru saja Anda ikuti</p>
+        <div id="sessionList"></div>
+        ${!sessions.length ? '<p class="text-sub">Belum ada sesi terdaftar untuk training ini.</p>' : ''}
+      </div>`;
+    document.getElementById('sessionList').innerHTML = sessions.map(s => `
+      <div class="session-row">
+        <div>
+          <div style="font-weight:700; font-size:14px;">Sesi ${s.sesiKe}: ${s.namaSesi || '-'}</div>
+          <div class="text-meta">${s.trainerNama||'-'} · ${s.tanggal||''}</div>
+        </div>
+        <button class="btn-absen" data-sesi="${s.sesiKe}" data-nama="${(s.namaSesi||'').replace(/"/g,'&quot;')}">Absen</button>
+      </div>`).join('');
+    document.querySelectorAll('.btn-absen').forEach(btn => btn.addEventListener('click', () => {
+      pendingSesi = { sesiKe: btn.dataset.sesi, namaSesi: btn.dataset.nama };
+      renderNamePicker(submitPendingSesiThenShowList);
+    }));
+  }
+  async function submitPendingSesiThenShowList(){
+    if(pendingSesi){
+      try{
+        await addDoc(collection(db, 'attendanceLog'), {
+          trainingId, sesiKe: pendingSesi.sesiKe, namaSesi: pendingSesi.namaSesi,
+          nik: peserta.nik, nama: peserta.nama, isWalkin: !!peserta.isWalkin, timestamp: serverTimestamp(),
+        });
+      } catch(err){ alert('Gagal absen: ' + err.message); }
+      pendingSesi = null;
+    }
+    await loadAttendedThenRenderAbsensi();
+  }
+  async function loadAttendedThenRenderAbsensi(){
+    try{
+      const q = query(collection(db, 'attendanceLog'), where('trainingId','==',trainingId), where('nik','==',peserta.nik));
+      const snap = await getDocs(q);
+      attendedSet = new Set(); snap.forEach(d => attendedSet.add(String(d.data().sesiKe)));
+    } catch(e){ attendedSet = new Set(); }
+    renderAbsensiList();
+  }
+  function renderAbsensiList(){
+    const allDone = sessions.length > 0 && sessions.every(s => attendedSet.has(String(s.sesiKe)));
+    app().innerHTML = `
+      <div class="card">
+        <h1 class="text-h1">Absensi</h1>
+        <p class="text-sub" style="margin-bottom:16px;">Halo <strong>${peserta.nama}</strong> — pilih sesi yang sedang/baru saja Anda ikuti</p>
+        <div id="sessionList"></div>
+        ${allDone ? `<div style="background:var(--green-bg); color:var(--green); border-radius:var(--r-control); padding:12px 14px; font-size:13px; font-weight:600; margin-top:10px;">✓ Semua sesi sudah diabsen. Post-Test &amp; CSI akan aktif setelah dibuka tim training.</div>` : ''}
+        <p class="text-sub" id="switchPersonBtn" style="color:var(--pink); font-weight:700; cursor:pointer; margin-top:10px;">Bukan Anda? Ganti nama →</p>
+      </div>`;
+    document.getElementById('sessionList').innerHTML = sessions.map(s => {
+      const done = attendedSet.has(String(s.sesiKe));
+      return `<div class="session-row">
+        <div>
+          <div style="font-weight:700; font-size:14px;">Sesi ${s.sesiKe}: ${s.namaSesi || '-'}</div>
+          <div class="text-meta">${s.trainerNama||'-'} · ${s.tanggal||''}</div>
+        </div>
+        <button class="btn-absen" data-sesi="${s.sesiKe}" data-nama="${(s.namaSesi||'').replace(/"/g,'&quot;')}" ${done?'disabled':''}>${done?'✓ Hadir':'Absen'}</button>
+      </div>`;
+    }).join('');
+    document.querySelectorAll('.btn-absen:not(:disabled)').forEach(btn => btn.addEventListener('click', async () => {
+      btn.disabled = true; btn.textContent = '...';
+      try{
+        await addDoc(collection(db, 'attendanceLog'), {
+          trainingId, sesiKe: btn.dataset.sesi, namaSesi: btn.dataset.nama,
+          nik: peserta.nik, nama: peserta.nama, isWalkin: !!peserta.isWalkin, timestamp: serverTimestamp(),
+        });
+        attendedSet.add(String(btn.dataset.sesi));
+        renderAbsensiList();
+      } catch(err){ alert('Gagal absen: ' + err.message); btn.disabled = false; btn.textContent = 'Absen'; }
+    }));
+    document.getElementById('switchPersonBtn').addEventListener('click', () => { peserta = null; renderAbsensi(); });
+  }
+
+  /* ===== Tab: Post-Test & CSI ===== */
+  function renderPostTestTab(){
+    if(!training.postTestOpen){
+      app().innerHTML = `<div class="card" style="text-align:center;">
+        <h1 class="text-h1">Belum dibuka</h1>
+        <p class="text-sub" style="margin-top:8px;">Post-Test &amp; CSI akan dibuka oleh tim training setelah semua sesi selesai. Silakan cek kembali nanti.</p>
+      </div>`;
+      return;
+    }
+    if(!peserta){ renderNamePicker(() => { ptStep = 0; renderPtStep(); }); return; }
+    ptStep = 0; renderPtStep();
+  }
+
+  function renderPtStep(){
+    const hasPost = postQuestions.length > 0;
+    const csiStart = hasPost ? 1 : 0;
+    const csiEnd = csiStart + trainers.length - 1;
+    if(hasPost && ptStep === 0){ app().innerHTML = renderPostQuestions(); bindPtEvents(); return; }
+    if(ptStep >= csiStart && ptStep <= csiEnd){ app().innerHTML = renderCsi(trainers[ptStep-csiStart]); bindPtEvents(); return; }
+    app().innerHTML = renderReview(); bindSubmit();
+  }
+
+  function renderPostQuestions(){
+    return `<div class="card">
+      <h1 class="text-h1">Post-Test</h1>
+      <p class="text-sub" style="margin-bottom:16px;">Halo ${peserta.nama} — jawab sesuai materi yang disampaikan</p>
+      ${postQuestions.map((q,i) => `
+        <div class="q-block">
+          <div class="text-meta" style="margin-bottom:4px;">Soal ${i+1} dari ${postQuestions.length}</div>
+          <div style="font-weight:600; font-size:15px; margin-bottom:10px;">${q.pertanyaan}</div>
+          ${q.tipe==='multiple_choice' ? (q.pilihan||[]).map(opt => `
+            <label class="opt ${postTestAnswers[i]===opt?'selected':''}" data-i="${i}" data-value="${opt.replace(/"/g,'&quot;')}">
+              <input type="radio" name="pt-${i}" ${postTestAnswers[i]===opt?'checked':''}><span>${opt}</span>
+            </label>`).join('') : `<textarea data-i="${i}" rows="3" placeholder="Jawaban Anda..."></textarea>`}
+        </div>`).join('')}
+      <button class="btn btn-primary" id="nextFromPT" style="width:100%;">Lanjut</button>
+    </div>`;
+  }
+  function renderCsi(trainer){
+    return `<div class="card">
+      <h1 class="text-h1">Trainer Satisfaction Index</h1>
+      <div class="trainer-name">${trainer.nama}</div>
+      ${csiQuestions.map((q,i) => `
+        <div class="q-block">
+          <div style="font-weight:600; font-size:15px; margin-bottom:10px;">${q.pertanyaan}</div>
+          <div class="scale-row">
+            ${[1,2,3,4].map(v => `<div class="scale-opt" data-trainer="${trainer.nik}" data-i="${i}" data-value="${v}">${v}</div>`).join('')}
+          </div>
+        </div>`).join('')}
+      <div style="display:flex; gap:10px;">
+        <button class="btn btn-outline" id="backPt" style="flex:1;">Kembali</button>
+        <button class="btn btn-primary" id="nextPt" style="flex:1;">Lanjut</button>
+      </div>
+    </div>`;
+  }
+  function renderReview(){
+    return `<div class="card">
+      <h1 class="text-h1">Siap dikirim</h1>
+      <p class="text-sub" style="margin-bottom:16px;">Jawaban tidak bisa diubah setelah dikirim.</p>
+      <div style="background:var(--stat-bg); border-radius:var(--r-control); padding:14px; margin-bottom:16px; font-size:13px; color:var(--text-2);">
+        <div><strong>${peserta.nama}</strong> (${peserta.nik})</div>
+        <div>${peserta.jabatan||'-'} · ${peserta.divisi||'-'}</div>
+      </div>
+      <button class="btn btn-outline" id="backReview" style="width:100%; margin-bottom:8px;">Kembali</button>
+      <button class="btn btn-primary" id="submitBtn" style="width:100%;">Kirim Jawaban</button>
+    </div>`;
+  }
+  function bindPtEvents(){
+    document.querySelectorAll('.opt').forEach(el => el.addEventListener('click', () => {
+      const i = el.dataset.i;
+      postTestAnswers[i] = el.dataset.value;
+      document.querySelectorAll(`.opt[data-i="${i}"]`).forEach(o => o.classList.remove('selected'));
+      el.classList.add('selected'); el.querySelector('input').checked = true;
+    }));
+    document.querySelectorAll('textarea[data-i]').forEach(el => el.addEventListener('input', () => { postTestAnswers[el.dataset.i] = el.value; }));
+    document.querySelectorAll('.scale-opt').forEach(el => el.addEventListener('click', () => {
+      const t = el.dataset.trainer, i = el.dataset.i, v = Number(el.dataset.value);
+      csiAnswers[t] = csiAnswers[t] || {}; csiAnswers[t][i] = v;
+      document.querySelectorAll(`.scale-opt[data-trainer="${t}"][data-i="${i}"]`).forEach(o => o.classList.remove('selected'));
+      el.classList.add('selected');
+    }));
+    const nextPT = document.getElementById('nextFromPT'); if(nextPT) nextPT.addEventListener('click', () => { ptStep++; renderPtStep(); });
+    const backPt = document.getElementById('backPt'); if(backPt) backPt.addEventListener('click', () => { ptStep--; renderPtStep(); });
+    const nextPt = document.getElementById('nextPt'); if(nextPt) nextPt.addEventListener('click', () => { ptStep++; renderPtStep(); });
+  }
+  function bindSubmit(){
+    document.getElementById('backReview').addEventListener('click', () => { ptStep--; renderPtStep(); });
+    document.getElementById('submitBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true; btn.textContent = 'Mengirim...';
+      try{
+        let correct = 0, gradable = 0;
+        postQuestions.forEach((q,i) => { if(q.tipe==='multiple_choice'){ gradable++; if(postTestAnswers[i]===q.jawabanBenar) correct++; } });
+        const score = gradable ? Math.round((correct/gradable)*100) : null;
+
+        await addDoc(collection(db, 'attempts'), {
+          moduleId: trainingId, uid: currentUid, nama: peserta.nama, nik: peserta.nik,
+          score, answers: postTestAnswers, submittedAt: serverTimestamp(),
+        });
+        for(const t of trainers){
+          const vals = Object.values(csiAnswers[t.nik] || {});
+          if(!vals.length) continue;
+          const avg = Math.round((vals.reduce((a,b)=>a+b,0)/vals.length) * 100) / 100;
+          await addDoc(collection(db, 'csiResponses'), {
+            trainingId, trainerNik: t.nik, nikPeserta: peserta.nik, csiScore: avg, submittedAt: serverTimestamp(),
+          });
+        }
+        app().innerHTML = `<div class="card" style="text-align:center;">
+          <h1 class="text-h1">Terima kasih, ${peserta.nama.split(' ')[0]}!</h1>
+          <p class="text-sub" style="margin-top:8px;">Jawaban Anda sudah tersimpan.</p>
+        </div>`;
+        document.getElementById('tabbar').style.display = 'none';
+      } catch(err){
+        alert('Gagal mengirim: ' + err.message);
+        btn.disabled = false; btn.textContent = 'Kirim Jawaban';
+      }
+    });
+  }
+
+  init();
+</script>
+</body>
+</html>
