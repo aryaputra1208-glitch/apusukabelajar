@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daftar Training — Anteraja LMS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./lms-design-system.css">
+<style>
+  .avatar { width: 28px; height: 28px; border-radius: 50%; }
+  .user-chip { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); }
+  .tabs { display: flex; gap: 6px; margin-bottom: 18px; }
+  .tab-btn { padding: 8px 16px; border-radius: var(--r-control); font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text-2); }
+  .tab-btn.active { background: var(--pink); border-color: var(--pink); color: #fff; }
+  .search-box { max-width: 320px; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+
+<div id="gate" class="locked-state" style="display:none;">
+  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Memuat...</p>
+  <p class="text-sub" id="gateSub"></p>
+</div>
+
+<div id="appShell" style="display:none;">
+  <div class="topbar">
+    <div style="display:flex; align-items:center; gap:16px;">
+      <a href="index.html" class="sidebar-logo" style="margin:0; text-decoration:none;">anteraja LMS</a>
+      <a href="index.html" class="text-sub" style="text-decoration:none; display:flex; align-items:center; gap:4px;">← Menu Utama</a>
+    </div>
+    <div class="user-chip">
+      <img class="avatar" id="userAvatar" src="">
+      <span id="userName"></span>
+    </div>
+  </div>
+
+  <div class="wrap" style="max-width:1000px;">
+    <h1 class="text-h1">Daftar Training</h1>
+    <p class="text-sub" style="margin-bottom:20px;">Semua training (online & offline) dari semua trainer.</p>
+
+    <div class="tabs">
+      <div class="tab-btn active" data-mode="all">Semua</div>
+      <div class="tab-btn" data-mode="online">Online</div>
+      <div class="tab-btn" data-mode="offline">Offline</div>
+    </div>
+    <input type="text" id="searchBox" class="search-box" placeholder="Cari judul training...">
+
+    <div class="panel">
+      <table class="data-table">
+        <thead><tr>
+          <th>Judul</th><th>Mode</th><th>Kategori</th><th>Trainer</th><th>Status</th><th>Aksi</th>
+        </tr></thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <div class="empty-state" id="emptyState" style="display:none;"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { auth, db, onAuth, ensureUserProfile } from './firebase-shared.js';
+  import { iconSvg } from './lms-icons.js';
+  import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+
+  const FORMS_BASE_URL = ''; // TODO: sama seperti di trainer-create-module.html, isi setelah Forms baru deploy
+
+  let allModules = [];
+  let activeMode = 'all';
+
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 2500);
+  }
+  function statusBadge(s){
+    const map = { draft:'badge-gray', pending_approval:'badge-amber', published:'badge-green', rejected:'badge-red' };
+    const label = { draft:'Draft', pending_approval:'Menunggu', published:'Published', rejected:'Ditolak' };
+    return `<span class="badge ${map[s]||'badge-gray'}">${label[s]||s}</span>`;
+  }
+
+  function render(){
+    const filterText = (document.getElementById('searchBox').value || '').toLowerCase();
+    let rows = allModules.filter(m => (m.judul||'').toLowerCase().includes(filterText));
+    if(activeMode !== 'all') rows = rows.filter(m => (m.mode||'online') === activeMode);
+
+    const body = document.getElementById('tableBody');
+    const empty = document.getElementById('emptyState');
+    if(!rows.length){
+      body.innerHTML = '';
+      empty.style.display = 'block';
+      empty.innerHTML = iconSvg('inbox',{size:24}) + `<p style="margin-top:8px;">Tidak ada training.</p>`;
+      return;
+    }
+    empty.style.display = 'none';
+
+    body.innerHTML = rows.map(m => `
+      <tr>
+        <td><strong>${m.judul}</strong><div class="text-meta">${m.kategori||'-'}</div></td>
+        <td><span class="badge ${m.mode==='offline'?'badge-purple':'badge-blue'}">${m.mode==='offline'?'Offline':'Online'}</span></td>
+        <td class="text-meta">${m.kategori||'-'}</td>
+        <td class="text-meta">${m.createdByName||'-'}</td>
+        <td>${statusBadge(m.status)}</td>
+        <td>
+          ${m.mode==='offline' ? `<button class="icon-btn row-action ra-blue" data-id="${m.id}" data-judul="${(m.judul||'').replace(/"/g,'&quot;')}" data-action="copy-link" title="Copy Link Form">${iconSvg('link',{size:14})}</button>` : ''}
+        </td>
+      </tr>`).join('');
+
+    body.querySelectorAll('[data-action="copy-link"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const base = FORMS_BASE_URL || '[FORMS_BASE_URL belum di-setup]';
+        const link = `${base}?training=${btn.dataset.id}`;
+        navigator.clipboard.writeText(link).then(() => showToast('Link disalin: ' + link)).catch(() => {
+          prompt('Copy link ini manual:', link);
+        });
+      });
+    });
+  }
+
+  document.getElementById('searchBox').addEventListener('input', render);
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeMode = btn.dataset.mode;
+    render();
+  }));
+
+  onAuth(async (user) => {
+    const gate = document.getElementById('gate');
+    const shell = document.getElementById('appShell');
+    if(!user){
+      gate.style.display = 'block'; shell.style.display = 'none';
+      document.getElementById('gateTitle').textContent = 'Silakan login';
+      document.getElementById('gateSub').innerHTML = `<a href="index.html">Login dulu di sini</a>.`;
+      return;
+    }
+    const profile = await ensureUserProfile(user);
+    if(profile.role !== 'admin'){
+      gate.style.display = 'block'; shell.style.display = 'none';
+      document.getElementById('gateTitle').textContent = 'Akses ditolak';
+      document.getElementById('gateSub').textContent = 'Halaman ini cuma buat Admin.';
+      return;
+    }
+    gate.style.display = 'none'; shell.style.display = 'block';
+    document.getElementById('userAvatar').src = profile.photoURL;
+    document.getElementById('userName').textContent = profile.displayName;
+
+    const snap = await getDocs(collection(db, 'modules'));
+    allModules = [];
+    snap.forEach(d => allModules.push({ id: d.id, ...d.data() }));
+    render();
+  });
+</script>
+</body>
+</html>
