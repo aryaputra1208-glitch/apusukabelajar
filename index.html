@@ -21,7 +21,11 @@
 </head>
 <body>
 
-<div id="loggedOut" class="center-wrap">
+<div id="loadingState" class="center-wrap">
+  <p class="text-sub">Memuat...</p>
+</div>
+
+<div id="loggedOut" class="center-wrap" style="display:none;">
   <div class="card login-card">
     <div class="logo-big">anteraja LMS</div>
     <p class="text-sub" style="margin-bottom:20px;">Login pakai akun Google untuk melanjutkan</p>
@@ -86,6 +90,7 @@
   document.getElementById('logoutBtn').addEventListener('click', () => logout());
 
   onAuth(async (user) => {
+    document.getElementById('loadingState').style.display = 'none';
     const out = document.getElementById('loggedOut');
     const inn = document.getElementById('loggedIn');
     if(!user){ out.style.display = 'flex'; inn.style.display = 'none'; return; }
