@@ -58,6 +58,17 @@
   let postTestAnswers = {}, csiAnswers = {};
   let ptStep = 0;
 
+  function storageKey(){ return `formsPeserta_${trainingId}`; }
+  function rememberPeserta(){
+    try{ localStorage.setItem(storageKey(), JSON.stringify(peserta)); } catch(e){ /* browser blokir storage, tidak fatal */ }
+  }
+  function forgetPeserta(){
+    try{ localStorage.removeItem(storageKey()); } catch(e){}
+  }
+  function recallPeserta(){
+    try{ const raw = localStorage.getItem(storageKey()); return raw ? JSON.parse(raw) : null; } catch(e){ return null; }
+  }
+
   function app(){ return document.getElementById('app'); }
 
   async function init(){
@@ -114,6 +125,8 @@
 
     document.getElementById('tabAbsensiBtn').addEventListener('click', () => switchTab('absensi'));
     document.getElementById('tabPostTestBtn').addEventListener('click', () => switchTab('posttest'));
+    const remembered = recallPeserta();
+    if(remembered) peserta = remembered;
     renderTab();
   }
 
@@ -149,6 +162,7 @@
         </div>`).join('') : `<p class="text-sub">Nama tidak ditemukan.</p>`;
       listEl.querySelectorAll('.name-opt').forEach(el => el.addEventListener('click', () => {
         peserta = { ...roster.find(x => x.nik === el.dataset.nik), isWalkin: false };
+        rememberPeserta();
         onPicked();
       }));
     }
@@ -183,6 +197,7 @@
         level: document.getElementById('mLevel').value.trim(),
         isWalkin: true,
       };
+      rememberPeserta();
       onPicked();
     });
   }
@@ -264,7 +279,7 @@
         renderAbsensiList();
       } catch(err){ alert('Gagal absen: ' + err.message); btn.disabled = false; btn.textContent = 'Absen'; }
     }));
-    document.getElementById('switchPersonBtn').addEventListener('click', () => { peserta = null; renderAbsensi(); });
+    document.getElementById('switchPersonBtn').addEventListener('click', () => { peserta = null; forgetPeserta(); renderAbsensi(); });
   }
 
   /* ===== Tab: Post-Test & CSI ===== */
