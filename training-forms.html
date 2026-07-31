@@ -245,7 +245,7 @@
       const q = query(collection(db, 'attendanceLog'), where('trainingId','==',trainingId), where('nik','==',peserta.nik));
       const snap = await getDocs(q);
       attendedSet = new Set(); snap.forEach(d => attendedSet.add(String(d.data().sesiKe)));
-    } catch(e){ attendedSet = new Set(); }
+    } catch(e){ console.error('Gagal baca attendanceLog:', e); attendedSet = new Set(); }
     renderAbsensiList();
   }
   function renderAbsensiList(){
