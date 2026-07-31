@@ -45,8 +45,21 @@ export function logout() {
   return signOut(auth);
 }
 
+/**
+ * Dipakai halaman LMS (index, trainer-*, admin-*, trainee-*) — SENGAJA
+ * mengabaikan sesi anonim (yang dipakai khusus Forms offline). Kalau
+ * Firebase masih "inget" sesi anonim dari kunjungan ke training-forms.html
+ * sebelumnya, halaman LMS akan menganggap itu "belum login", bukan crash
+ * waktu coba cari profil buat akun tanpa email.
+ */
 export function onAuth(callback) {
-  return onAuthStateChanged(auth, callback);
+  return onAuthStateChanged(auth, (user) => {
+    if (user && user.isAnonymous) {
+      signOut(auth).finally(() => callback(null));
+      return;
+    }
+    callback(user);
+  });
 }
 
 /**
