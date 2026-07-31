@@ -207,6 +207,19 @@
     if(peserta){ await loadAttendedThenRenderAbsensi(); return; }
     renderSessionPickerUnidentified();
   }
+  function sessionIsOpen(s){
+    if(!s.tanggal){ return true; } // tidak ada tanggal diset = tidak dikunci
+    const jam = s.jamMulai || '00:00';
+    const target = new Date(`${s.tanggal}T${jam}`);
+    return new Date() >= target;
+  }
+  function sessionOpensLabel(s){
+    if(!s.tanggal) return '';
+    const jam = s.jamMulai || '00:00';
+    const target = new Date(`${s.tanggal}T${jam}`);
+    return target.toLocaleString('id-ID', { dateStyle:'medium', timeStyle:'short' });
+  }
+
   function renderSessionPickerUnidentified(){
     app().innerHTML = `
       <div class="card">
@@ -215,15 +228,19 @@
         <div id="sessionList"></div>
         ${!sessions.length ? '<p class="text-sub">Belum ada sesi terdaftar untuk training ini.</p>' : ''}
       </div>`;
-    document.getElementById('sessionList').innerHTML = sessions.map(s => `
+    document.getElementById('sessionList').innerHTML = sessions.map(s => {
+      const open = sessionIsOpen(s);
+      return `
       <div class="session-row">
         <div>
           <div style="font-weight:700; font-size:14px;">Sesi ${s.sesiKe}: ${s.namaSesi || '-'}</div>
-          <div class="text-meta">${s.trainerNama||'-'} · ${s.tanggal||''}</div>
+          <div class="text-meta">${s.trainerNama||'-'} · ${s.tanggal||''}${s.jamMulai?' '+s.jamMulai:''}</div>
+          ${!open ? `<div class="text-meta" style="color:var(--amber);">Buka mulai ${sessionOpensLabel(s)}</div>` : ''}
         </div>
-        <button class="btn-absen" data-sesi="${s.sesiKe}" data-nama="${(s.namaSesi||'').replace(/"/g,'&quot;')}">Absen</button>
-      </div>`).join('');
-    document.querySelectorAll('.btn-absen').forEach(btn => btn.addEventListener('click', () => {
+        <button class="btn-absen" data-sesi="${s.sesiKe}" data-nama="${(s.namaSesi||'').replace(/"/g,'&quot;')}" ${open?'':'disabled'}>${open?'Absen':'Belum dimulai'}</button>
+      </div>`;
+    }).join('');
+    document.querySelectorAll('.btn-absen:not(:disabled)').forEach(btn => btn.addEventListener('click', () => {
       pendingSesi = { sesiKe: btn.dataset.sesi, namaSesi: btn.dataset.nama };
       renderNamePicker(submitPendingSesiThenShowList);
     }));
@@ -260,12 +277,15 @@
       </div>`;
     document.getElementById('sessionList').innerHTML = sessions.map(s => {
       const done = attendedSet.has(String(s.sesiKe));
+      const open = sessionIsOpen(s);
+      const label = done ? '✓ Hadir' : (open ? 'Absen' : 'Belum dimulai');
       return `<div class="session-row">
         <div>
           <div style="font-weight:700; font-size:14px;">Sesi ${s.sesiKe}: ${s.namaSesi || '-'}</div>
-          <div class="text-meta">${s.trainerNama||'-'} · ${s.tanggal||''}</div>
+          <div class="text-meta">${s.trainerNama||'-'} · ${s.tanggal||''}${s.jamMulai?' '+s.jamMulai:''}</div>
+          ${!done && !open ? `<div class="text-meta" style="color:var(--amber);">Buka mulai ${sessionOpensLabel(s)}</div>` : ''}
         </div>
-        <button class="btn-absen" data-sesi="${s.sesiKe}" data-nama="${(s.namaSesi||'').replace(/"/g,'&quot;')}" ${done?'disabled':''}>${done?'✓ Hadir':'Absen'}</button>
+        <button class="btn-absen" data-sesi="${s.sesiKe}" data-nama="${(s.namaSesi||'').replace(/"/g,'&quot;')}" ${(done||!open)?'disabled':''}>${label}</button>
       </div>`;
     }).join('');
     document.querySelectorAll('.btn-absen:not(:disabled)').forEach(btn => btn.addEventListener('click', async () => {
