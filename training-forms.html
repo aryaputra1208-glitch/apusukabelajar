@@ -65,11 +65,20 @@
       app().innerHTML = emptyCard('Link tidak lengkap', 'Buka form ini lewat link training yang dibagikan panitia.');
       return;
     }
-    await loginAnonymously();
+    try{
+      await loginAnonymously();
+    } catch(err){
+      app().innerHTML = emptyCard('Gagal memuat', 'Login gagal: ' + err.message + ' — kemungkinan Anonymous Auth belum diaktifkan di Firebase Console.');
+      return;
+    }
     onAuth(async (user) => {
       if(!user) return; // akan segera resolve lagi otomatis
       currentUid = user.uid;
-      await loadTraining();
+      try{
+        await loadTraining();
+      } catch(err){
+        app().innerHTML = emptyCard('Gagal memuat training', err.message);
+      }
     });
   }
 
