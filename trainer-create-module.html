@@ -196,6 +196,7 @@
         <input class="q-text" style="flex:1 1 100px; margin-bottom:0;" placeholder="NIK Trainer" data-i="${i}" data-f="trainerNik" value="${s.trainerNik||''}">
         <input class="q-text" style="flex:1 1 120px; margin-bottom:0;" placeholder="Nama Trainer" data-i="${i}" data-f="trainerNama" value="${s.trainerNama||''}">
         <input class="q-text" style="flex:1 1 120px; margin-bottom:0;" type="date" data-i="${i}" data-f="tanggal" value="${s.tanggal||''}">
+        <input class="q-text" style="flex:0 1 100px; margin-bottom:0;" type="time" data-i="${i}" data-f="jamMulai" value="${s.jamMulai||''}">
         <input class="q-text" style="flex:0 1 70px; margin-bottom:0;" type="number" step="0.5" placeholder="Jam" data-i="${i}" data-f="durasiJam" value="${s.durasiJam||''}">
         <button class="icon-btn tone-red" data-i="${i}" data-action="remove-sesi">${iconSvg('trash',{size:13})}</button>
       </div>`).join('');
@@ -206,7 +207,7 @@
       sesiRows.splice(Number(btn.dataset.i),1); renderSesiList();
     }));
   }
-  function addSesiRow(){ sesiRows.push({ namaSesi:'', trainerNik:'', trainerNama:'', tanggal:'', durasiJam:'' }); renderSesiList(); }
+  function addSesiRow(){ sesiRows.push({ namaSesi:'', trainerNik:'', trainerNama:'', tanggal:'', jamMulai:'', durasiJam:'' }); renderSesiList(); }
   document.getElementById('addSesiBtn').addEventListener('click', addSesiRow);
 
   document.getElementById('copyLinkBtn').addEventListener('click', () => {
