@@ -41,7 +41,8 @@
 </div>
 
 <script type="module">
-  import { db, onAuth, loginAnonymously } from './firebase-shared.js';
+  import { auth, db, loginAnonymously } from './firebase-shared.js';
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
   import {
     doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
@@ -82,7 +83,7 @@
       app().innerHTML = emptyCard('Gagal memuat', 'Login gagal: ' + err.message + ' — kemungkinan Anonymous Auth belum diaktifkan di Firebase Console.');
       return;
     }
-    onAuth(async (user) => {
+    onAuthStateChanged(auth, async (user) => {
       if(!user) return; // akan segera resolve lagi otomatis
       currentUid = user.uid;
       try{
