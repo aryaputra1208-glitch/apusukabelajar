@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Training Dashboard — Anteraja</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./lms-design-system.css">
+<style>
+  body{ font-size:14px; }
+  .app{display:flex; min-height:100vh;}
+  .sidebar{width:260px; background:var(--surface); border-right:1px solid var(--border); padding:24px 20px; flex-shrink:0;}
+  .logo{font-size:22px; font-weight:700; color:var(--pink); font-family:var(--font-display);}
+  .logo span{font-family:var(--font-body); font-size:11px; font-weight:500; color:var(--text-3); margin-left:6px;}
+  .menu-label{font-size:11px; color:var(--text-3); letter-spacing:.06em; margin:24px 0 10px; font-weight:700;}
+  .menu-item{display:flex; align-items:center; gap:10px; padding:11px 12px; border-radius:10px; color:var(--text-2); cursor:pointer; font-size:14px; margin-bottom:4px; font-weight:500;}
+  .menu-item:hover{background:var(--surface-2);}
+  .menu-item.active{background:var(--pink-bg); color:var(--pink-dark); font-weight:700;}
+  .sidebar-info{margin-top:20px; padding-top:16px; border-top:1px solid var(--border); font-size:12px; color:var(--text-3); line-height:1.6;}
+  .main{flex:1; display:flex; flex-direction:column; min-width:0;}
+  .topbar{display:flex; align-items:center; gap:12px; padding:16px 32px; border-bottom:1px solid var(--border); background:var(--surface);}
+  .spacer{flex:1;}
+  .content{padding:28px 32px; overflow-y:auto;}
+  .subtitle{color:var(--text-2); font-size:13px; margin-top:4px; margin-bottom:26px;}
+  .module-row{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:28px;}
+  .module-card{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:22px; border-top:4px solid var(--accent,var(--pink)); display:flex; flex-direction:column;}
+  .module-icon{width:44px; height:44px; border-radius:12px; background:var(--accent-bg,var(--pink-bg)); color:var(--accent,var(--pink)); display:flex; align-items:center; justify-content:center; margin-bottom:14px;}
+  .module-label{font-size:11px; color:var(--text-3); letter-spacing:.05em; font-weight:700; margin-bottom:8px;}
+  .big-num{font-size:34px; font-weight:700; color:var(--accent,var(--pink)); line-height:1; font-family:var(--font-display);}
+  .module-sub{font-size:12px; color:var(--text-2); margin-top:4px; margin-bottom:14px;}
+  .progress-track{height:8px; background:var(--surface-2); border-radius:99px; overflow:hidden; margin-bottom:16px;}
+  .progress-fill{height:100%; border-radius:99px; background:var(--accent,var(--pink));}
+  .mini-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px;}
+  .mini-stat{background:var(--stat-bg); border-radius:10px; padding:10px 12px;}
+  .mini-num{font-weight:700; font-size:16px; color:var(--accent,var(--pink)); font-family:var(--font-display);}
+  .mini-label{font-size:11px; color:var(--text-2); margin-top:1px;}
+  .detail-link{color:var(--accent,var(--pink)); font-weight:700; font-size:13px; cursor:pointer; margin-top:auto;}
+  .kpi-row{display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin-bottom:28px;}
+  .kpi-card2{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; border-top:3px solid var(--accent,var(--pink));}
+  .kpi-label2{font-size:11px; color:var(--text-3); letter-spacing:.04em; font-weight:700; margin-bottom:6px;}
+  .kpi-value2{font-size:28px; font-weight:700; color:var(--accent,var(--pink)); font-family:var(--font-display);}
+  .kpi-sub{font-size:12px; color:var(--text-2); margin-top:2px;}
+  .tab-page{display:none;}
+  .tab-page.active{display:block;}
+</style>
+</head>
+<body>
+
+<div id="gate" class="locked-state" style="display:none;">
+  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Memuat...</p>
+  <p class="text-sub" id="gateSub"></p>
+</div>
+
+<div class="app" id="appShell" style="display:none;">
+  <div class="sidebar">
+    <div class="logo">anteraja <span>Training Dashboard</span></div>
+    <div class="menu-label">MENU</div>
+    <div class="menu-item active" data-tab="home"><span id="icHome"></span> Dashboard</div>
+    <div class="menu-label">MODUL</div>
+    <div class="menu-item" data-tab="training"><span id="icTraining"></span> Training</div>
+    <div class="menu-item" data-tab="attendance"><span id="icAttendance"></span> Attendance</div>
+    <div class="menu-item" data-tab="trainerpool"><span id="icTrainerpool"></span> Trainer Pool</div>
+    <div class="sidebar-info">
+      <div id="lastSync">Memuat data...</div>
+      <div style="margin-top:6px">Set Training baru? Buka <a href="index.html" style="color:var(--pink);">Anteraja LMS</a></div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <h2 style="font-size:15px;">Training Dashboard</h2>
+      <div class="spacer"></div>
+      <span class="badge badge-gray" id="syncPill">Data per —</span>
+      <button class="btn btn-outline btn-sm" id="refreshBtn">Refresh Data</button>
+      <button class="btn btn-outline btn-sm" id="exportBtn">Export PPTX</button>
+      <div class="user-chip"><img class="avatar" id="userAvatar" src=""><span id="userName"></span></div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD HOME -->
+      <div class="tab-page active" id="page-home">
+        <h1 class="text-h1">Selamat datang, Tim Training</h1>
+        <div class="subtitle">Ringkasan status Training Dashboard</div>
+
+        <div class="module-row">
+          <div class="module-card" style="--accent:var(--pink); --accent-bg:var(--pink-bg)">
+            <div class="module-icon" id="modIconTraining"></div>
+            <div class="module-label">TRAINING (OFFLINE)</div>
+            <div class="big-num" id="homeCompletionRate">-</div>
+            <div class="module-sub">Completion rate</div>
+            <div class="progress-track"><div class="progress-fill" id="homeTrainingBar" style="width:0%"></div></div>
+            <div class="mini-grid">
+              <div class="mini-stat"><div class="mini-num" id="homeTotalTraining">-</div><div class="mini-label">Total Training</div></div>
+              <div class="mini-stat"><div class="mini-num" id="homePeserta">-</div><div class="mini-label">Total Peserta</div></div>
+            </div>
+            <div class="detail-link" data-goto="training">Lihat Detail Training →</div>
+          </div>
+
+          <div class="module-card" style="--accent:var(--blue); --accent-bg:var(--blue-bg)">
+            <div class="module-icon" id="modIconTrainer" style="background:var(--blue-bg); color:var(--blue);"></div>
+            <div class="module-label">TRAINER POOL</div>
+            <div class="big-num" id="homePromosiRate">-</div>
+            <div class="module-sub">Siap naik level</div>
+            <div class="progress-track"><div class="progress-fill" id="homeTrainerBar" style="width:0%; background:var(--blue)"></div></div>
+            <div class="mini-grid">
+              <div class="mini-stat"><div class="mini-num" style="color:var(--blue)" id="homeTotalTrainer">-</div><div class="mini-label">Total Trainer</div></div>
+              <div class="mini-stat"><div class="mini-num" style="color:var(--blue)" id="homeSeniorMaster">-</div><div class="mini-label">Senior + Master</div></div>
+            </div>
+            <div class="detail-link" style="color:var(--blue)" data-goto="trainerpool">Lihat Detail Trainer Pool →</div>
+          </div>
+
+          <div class="module-card" style="--accent:var(--amber); --accent-bg:var(--amber-bg)">
+            <div class="module-icon" id="modIconAtt" style="background:var(--amber-bg); color:var(--amber);"></div>
+            <div class="module-label">ATTENDANCE</div>
+            <div class="big-num" id="homeAttRate">-</div>
+            <div class="module-sub">Avg attendance rate</div>
+            <div class="progress-track"><div class="progress-fill" id="homeAttBar" style="width:0%; background:var(--amber)"></div></div>
+            <div class="mini-grid">
+              <div class="mini-stat"><div class="mini-num" style="color:var(--amber)" id="homeAttTraining">-</div><div class="mini-label">Training Punya Roster</div></div>
+              <div class="mini-stat"><div class="mini-num" style="color:var(--amber)" id="homeAttAttended">-</div><div class="mini-label">Total Hadir</div></div>
+            </div>
+            <div class="detail-link" style="color:var(--amber)" data-goto="attendance">Lihat Detail Attendance →</div>
+          </div>
+        </div>
+
+        <div class="panel" style="padding:18px 20px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+            <h3 class="text-h2">Kalender training <span id="calYearHome" style="color:var(--text-3); font-weight:500;"></span></h3>
+            <div style="display:flex; gap:14px; font-size:11px; color:var(--text-2);">
+              <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:4px;"></span>Done</span>
+              <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--blue);margin-right:4px;"></span>Planned</span>
+              <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red);margin-right:4px;"></span>Outstanding</span>
+            </div>
+          </div>
+          <div id="calGridHome" style="display:grid; grid-template-columns:repeat(6,1fr); gap:8px;"></div>
+        </div>
+      </div>
+
+      <!-- TRAINING TAB -->
+      <div class="tab-page" id="page-training">
+        <h1 class="text-h1">Training (Offline)</h1>
+        <div class="subtitle">Read-only — untuk bikin/edit training, buka <a href="index.html" style="color:var(--pink);">Anteraja LMS</a></div>
+
+        <div class="kpi-row">
+          <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">TOTAL TRAINING</div><div class="kpi-value2" id="kpiTotalTraining">-</div><div class="kpi-sub">Tahun berjalan</div></div>
+          <div class="kpi-card2" style="--accent:var(--green)"><div class="kpi-label2">COMPLETION RATE</div><div class="kpi-value2" id="kpiCompletionRate">-</div><div class="kpi-sub">Done / (Total - Rejected)</div></div>
+          <div class="kpi-card2" style="--accent:var(--amber)"><div class="kpi-label2">OUTSTANDING BULAN INI</div><div class="kpi-value2" id="kpiOutMonth">-</div><div class="kpi-sub">Lewat tanggal, belum ada post-test</div></div>
+          <div class="kpi-card2" style="--accent:var(--red)"><div class="kpi-label2">OUTSTANDING TAHUN INI</div><div class="kpi-value2" id="kpiOutYear">-</div><div class="kpi-sub">Semua bulan</div></div>
+        </div>
+
+        <div class="panel" style="margin-bottom:20px; padding:18px 20px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+            <h3 class="text-h2">Kalender training <span id="calYear" style="color:var(--text-3); font-weight:500;"></span></h3>
+          </div>
+          <div id="calGrid" style="display:grid; grid-template-columns:repeat(6,1fr); gap:8px;"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h3>Daftar Training</h3></div>
+          <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead><tr>
+              <th>Judul</th><th>Kategori</th><th>Tanggal</th><th>Divisi</th>
+              <th>Trainer</th><th>Peserta</th><th>Avg Post-Test</th><th>Status</th>
+            </tr></thead>
+            <tbody id="trainingTableBody"></tbody>
+          </table>
+          </div>
+          <div id="trainingEmpty" class="empty-state" style="display:none"></div>
+        </div>
+      </div>
+
+      <!-- ATTENDANCE TAB -->
+      <div class="tab-page" id="page-attendance">
+        <h1 class="text-h1">Attendance</h1>
+        <div class="subtitle">Tingkat kehadiran per training — roster vs yang submit post-test</div>
+
+        <div class="kpi-row">
+          <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">AVG ATTENDANCE RATE</div><div class="kpi-value2" id="kpiAttRate">-</div><div class="kpi-sub">Rata-rata semua training</div></div>
+          <div class="kpi-card2" style="--accent:var(--blue)"><div class="kpi-label2">TRAINING PUNYA ROSTER</div><div class="kpi-value2" id="kpiAttTrainingCount">-</div><div class="kpi-sub">Sudah diisi daftar peserta</div></div>
+          <div class="kpi-card2" style="--accent:var(--purple)"><div class="kpi-label2">TOTAL TERDAFTAR</div><div class="kpi-value2" id="kpiAttRosterTotal">-</div><div class="kpi-sub">Semua training</div></div>
+          <div class="kpi-card2" style="--accent:var(--green)"><div class="kpi-label2">TOTAL HADIR</div><div class="kpi-value2" id="kpiAttAttendedTotal">-</div><div class="kpi-sub">Submit post-test</div></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h3>Attendance per Training</h3></div>
+          <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead><tr><th>Judul</th><th>Tanggal</th><th>Terdaftar</th><th>Hadir</th><th>Attendance Rate</th></tr></thead>
+            <tbody id="attendanceTableBody"></tbody>
+          </table>
+          </div>
+          <div id="attendanceEmpty" class="empty-state" style="display:none"></div>
+        </div>
+      </div>
+
+      <!-- TRAINER POOL TAB -->
+      <div class="tab-page" id="page-trainerpool">
+        <h1 class="text-h1">Trainer Pool</h1>
+        <div class="subtitle">Level dan score trainer berdasarkan semester terakhir</div>
+
+        <div class="kpi-row">
+          <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">TOTAL TRAINER</div><div class="kpi-value2" id="kpiTotalTrainer">-</div><div class="kpi-sub">Semua level</div></div>
+          <div class="kpi-card2" style="--accent:var(--green)"><div class="kpi-label2">SIAP NAIK LEVEL</div><div class="kpi-value2" id="kpiPromosi">-</div><div class="kpi-sub">Eligible &gt; level sekarang</div></div>
+          <div class="kpi-card2" style="--accent:var(--blue)"><div class="kpi-label2">SENIOR + MASTER</div><div class="kpi-value2" id="kpiSeniorMaster">-</div><div class="kpi-sub">Trainer level atas</div></div>
+          <div class="kpi-card2" style="--accent:var(--amber)"><div class="kpi-label2">NEW COMER</div><div class="kpi-value2" id="kpiNewComer">-</div><div class="kpi-sub">Baru mulai</div></div>
+        </div>
+
+        <div class="card" style="margin-bottom:20px;">
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <div>
+              <h2 class="text-h2" style="margin-bottom:4px;">Recalculate Score</h2>
+              <p class="text-sub">Hitung ulang Trainer Score sekarang juga (biasanya otomatis tiap malam jam 1).</p>
+            </div>
+            <button class="btn btn-primary" id="recalcBtn">Recalculate Sekarang</button>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:20px;">
+          <h2 class="text-h2" style="margin-bottom:6px;">Tambah / Assign Level Trainer</h2>
+          <p class="text-sub" style="margin-bottom:12px;">Set Level Saat Ini per NIK trainer — dipakai sebagai bobot formula Trainer Score.</p>
+          <div style="display:grid; grid-template-columns:1fr 1.4fr 1fr auto; gap:8px; align-items:end;">
+            <div><label>NIK</label><input type="text" id="tpNik"></div>
+            <div><label>Nama</label><input type="text" id="tpNama"></div>
+            <div><label>Level</label>
+              <select id="tpLevel">
+                <option>New Comer</option><option>Junior Trainer</option><option>Intermediate Trainer</option>
+                <option>Senior Trainer</option><option>Master Trainer</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" id="tpSaveBtn" style="margin-bottom:14px;">Simpan</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h3>Daftar Trainer</h3></div>
+          <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead><tr>
+              <th>Nama</th><th>NIK</th><th>Level Saat Ini</th>
+              <th>Semester Terakhir</th><th>Total Score</th><th>Eligible</th>
+            </tr></thead>
+            <tbody id="trainerTableBody"></tbody>
+          </table>
+          </div>
+          <div id="trainerEmpty" class="empty-state" style="display:none"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+<script type="module">
+  import { auth, db, onAuth, ensureUserProfile } from './firebase-shared.js';
+  import { iconSvg } from './lms-icons.js';
+  import { collection, getDocs, doc, setDoc, query, where, getApps as _ga } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+  import { getApps } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+  import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-functions.js";
+
+  const LEVEL_ORDER = ['New Comer','Junior Trainer','Intermediate Trainer','Senior Trainer','Master Trainer'];
+
+  ['icHome','icTraining','icAttendance','icTrainerpool'].forEach((id, i) => {
+    document.getElementById(id).innerHTML = iconSvg(['home','books','check','users'][i], {size:16});
+  });
+  document.getElementById('modIconTraining').innerHTML = iconSvg('books', {size:20});
+  document.getElementById('modIconTrainer').innerHTML = iconSvg('users', {size:20});
+  document.getElementById('modIconAtt').innerHTML = iconSvg('check', {size:20});
+
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 2500);
+  }
+  function chunks(arr, size){
+    const out = []; for(let i=0;i<arr.length;i+=size) out.push(arr.slice(i,i+size)); return out;
+  }
+  async function getAllWhereIn(colName, field, ids){
+    const results = [];
+    for(const idsChunk of chunks(ids, 30)){
+      if(!idsChunk.length) continue;
+      const snap = await getDocs(query(collection(db, colName), where(field, 'in', idsChunk)));
+      snap.forEach(d => results.push({ id: d.id, ...d.data() }));
+    }
+    return results;
+  }
+
+  let state = { trainings:[], sessions:[], roster:[], attendance:[], attempts:[], trainers:[], today:new Date() };
+
+  async function loadAll(){
+    document.getElementById('lastSync').textContent = 'Memuat data...';
+    try{
+      const modSnap = await getDocs(query(collection(db, 'modules'), where('mode', '==', 'offline')));
+      const trainings = []; modSnap.forEach(d => trainings.push({ id: d.id, ...d.data() }));
+      state.trainings = trainings;
+      const ids = trainings.map(t => t.id);
+
+      state.sessions = await getAllWhereIn('sessions', 'trainingId', ids);
+      state.roster = await getAllWhereIn('roster', 'trainingId', ids);
+      state.attendanceLog = await getAllWhereIn('attendanceLog', 'trainingId', ids);
+      state.attempts = await getAllWhereIn('attempts', 'moduleId', ids);
+
+      const scoreSnap = await getDocs(collection(db, 'trainerScoreSemester'));
+      const scores = []; scoreSnap.forEach(d => scores.push({ id: d.id, ...d.data() }));
+      const profSnap = await getDocs(collection(db, 'trainerProfiles'));
+      const profiles = {}; profSnap.forEach(d => { profiles[d.id] = d.data(); });
+
+      const latestByNik = {};
+      scores.forEach(s => {
+        const cur = latestByNik[s.trainerNik];
+        if(!cur || s.semester > cur.semester) latestByNik[s.trainerNik] = s;
+      });
+      state.trainers = Object.keys(profiles).map(nik => {
+        const latest = latestByNik[nik];
+        return {
+          nik, nama: profiles[nik].nama || nik, levelSaatIni: profiles[nik].levelSaatIni || 'New Comer',
+          semester: latest?.semester, totalScore: latest?.totalScore, levelEligible: latest?.levelBaruEligible,
+        };
+      });
+      // trainer yang punya score tapi belum ada di trainerProfiles — tetap ditampilkan, default New Comer
+      Object.keys(latestByNik).forEach(nik => {
+        if(!profiles[nik]){
+          const latest = latestByNik[nik];
+          state.trainers.push({ nik, nama: nik, levelSaatIni: 'New Comer', semester: latest.semester, totalScore: latest.totalScore, levelEligible: latest.levelBaruEligible });
+        }
+      });
+
+      state.today = new Date();
+      const now = state.today.toLocaleString('id-ID');
+      document.getElementById('lastSync').textContent = 'Live • ' + now;
+      document.getElementById('syncPill').textContent = 'Data per ' + now;
+    } catch(err){
+      document.getElementById('lastSync').textContent = 'Gagal memuat: ' + err.message;
+      showToast('Gagal memuat data: ' + err.message);
+    }
+    renderHome(); renderTraining(); renderAttendance(); renderTrainerPool();
+  }
+
+  function trainingMeta(t){
+    const sess = state.sessions.filter(s => s.trainingId === t.id);
+    const trainerNames = [...new Set(sess.map(s => s.trainerNama).filter(Boolean))];
+    const rosterCount = state.roster.filter(r => r.trainingId === t.id).length;
+    const attemptRows = state.attempts.filter(a => a.moduleId === t.id);
+    const attendedNiks = new Set(attemptRows.map(a => a.nik).filter(Boolean));
+    const scores = attemptRows.filter(a => a.score != null).map(a => a.score);
+    const avgPost = scores.length ? Math.round(scores.reduce((s,v)=>s+v,0)/scores.length) : null;
+    return { trainerNames, rosterCount, attendedCount: attendedNiks.size, avgPost, pesertaCount: attemptRows.length };
+  }
+
+  function getComputedStatus(t, meta, today){
+    if(t.status === 'rejected') return 'Cancelled';
+    if(meta.attendedCount > 0 || meta.pesertaCount > 0) return 'Done';
+    const start = new Date(t.tanggalMulai);
+    return start > today ? 'Planned' : 'Outstanding';
+  }
+  function statusBadgeCls(status){
+    const map = {Done:'badge-green', Planned:'badge-blue', Outstanding:'badge-red', Cancelled:'badge-gray'};
+    return map[status] || 'badge-gray';
+  }
+
+  function computeHomeStats(){
+    const today = state.today, thisYear = today.getFullYear(), thisMonth = today.getMonth()+1;
+    const enriched = state.trainings.map(t => { const meta = trainingMeta(t); return { t, meta, status: getComputedStatus(t, meta, today) }; });
+    const thisYearRows = enriched.filter(r => new Date(r.t.tanggalMulai).getFullYear() === thisYear);
+    const done = thisYearRows.filter(r=>r.status==='Done').length;
+    const cancelled = thisYearRows.filter(r=>r.status==='Cancelled').length;
+    const denom = thisYearRows.length - cancelled;
+    const completionRate = denom>0 ? Math.round(done/denom*100) : 0;
+    const totalPeserta = state.trainings.reduce((s,t)=>s+trainingMeta(t).pesertaCount,0);
+
+    const promosi = state.trainers.filter(r => r.levelEligible && LEVEL_ORDER.indexOf(r.levelEligible) > LEVEL_ORDER.indexOf(r.levelSaatIni)).length;
+    const promosiRate = state.trainers.length ? Math.round(promosi/state.trainers.length*100) : 0;
+    const seniorMaster = state.trainers.filter(r=>r.levelSaatIni==='Senior Trainer'||r.levelSaatIni==='Master Trainer').length;
+
+    const attRows = state.trainings.map(t => trainingMeta(t)).filter(m => m.rosterCount>0);
+    const attRate = attRows.length ? Math.round(attRows.reduce((s,m)=>s+(m.attendedCount/m.rosterCount*100),0)/attRows.length) : 0;
+    const attAttended = attRows.reduce((s,m)=>s+m.attendedCount,0);
+
+    return { totalTraining: thisYearRows.length, completionRate, totalPeserta, totalTrainer: state.trainers.length,
+      promosi, promosiRate, seniorMaster, attRate, attTrainingCount: attRows.length, attAttended,
+      thisYearRows, thisYear, thisMonth };
+  }
+
+  function renderHome(){
+    const s = computeHomeStats();
+    document.getElementById('homeCompletionRate').textContent = s.completionRate+'%';
+    document.getElementById('homeTrainingBar').style.width = s.completionRate+'%';
+    document.getElementById('homeTotalTraining').textContent = s.totalTraining;
+    document.getElementById('homePeserta').textContent = s.totalPeserta;
+    document.getElementById('homePromosiRate').textContent = s.promosiRate+'%';
+    document.getElementById('homeTrainerBar').style.width = s.promosiRate+'%';
+    document.getElementById('homeTotalTrainer').textContent = s.totalTrainer;
+    document.getElementById('homeSeniorMaster').textContent = s.seniorMaster;
+    document.getElementById('homeAttRate').textContent = s.attRate+'%';
+    document.getElementById('homeAttBar').style.width = s.attRate+'%';
+    document.getElementById('homeAttTraining').textContent = s.attTrainingCount;
+    document.getElementById('homeAttAttended').textContent = s.attAttended;
+    renderCalendar(s.thisYearRows, s.thisYear, 'calYearHome', 'calGridHome');
+  }
+
+  function renderTraining(){
+    const today = state.today, thisYear = today.getFullYear(), thisMonth = today.getMonth()+1;
+    const enriched = state.trainings.map(t => { const meta = trainingMeta(t); return { t, meta, status: getComputedStatus(t, meta, today) }; });
+    const thisYearRows = enriched.filter(r => new Date(r.t.tanggalMulai).getFullYear() === thisYear);
+    const done = thisYearRows.filter(r=>r.status==='Done').length;
+    const cancelled = thisYearRows.filter(r=>r.status==='Cancelled').length;
+    const denom = thisYearRows.length - cancelled;
+    document.getElementById('kpiTotalTraining').textContent = thisYearRows.length;
+    document.getElementById('kpiCompletionRate').textContent = (denom>0?Math.round(done/denom*100):0)+'%';
+    document.getElementById('kpiOutMonth').textContent = thisYearRows.filter(r=>r.status==='Outstanding' && new Date(r.t.tanggalMulai).getMonth()+1===thisMonth).length;
+    document.getElementById('kpiOutYear').textContent = thisYearRows.filter(r=>r.status==='Outstanding').length;
+
+    document.getElementById('trainingTableBody').innerHTML = enriched.map(({t,meta,status}) => `
+      <tr>
+        <td><strong>${t.judul}</strong><div class="text-meta">${t.id}</div></td>
+        <td>${t.kategori||'-'}</td>
+        <td>${t.tanggalMulai||'-'}${t.tanggalSelesai && t.tanggalSelesai!==t.tanggalMulai ? ' – '+t.tanggalSelesai : ''}</td>
+        <td>${(t.targetDivisi||[]).join(', ')||'-'}</td>
+        <td>${meta.trainerNames.join(', ')||'-'}</td>
+        <td>${meta.pesertaCount}</td>
+        <td>${meta.avgPost ?? '-'}</td>
+        <td><span class="badge ${statusBadgeCls(status)}">${status}</span></td>
+      </tr>`).join('');
+    document.getElementById('trainingEmpty').style.display = enriched.length ? 'none' : 'block';
+    document.getElementById('trainingEmpty').innerHTML = iconSvg('inbox',{size:24}) + '<p style="margin-top:8px;">Belum ada data training offline.</p>';
+    renderCalendar(thisYearRows, thisYear, 'calYear', 'calGrid');
+  }
+
+  function renderCalendar(rows, year, yearElId, gridElId){
+    const MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    document.getElementById(yearElId).textContent = year;
+    const byMonth = Array.from({length:12}, () => ({Done:0,Planned:0,Outstanding:0,Cancelled:0}));
+    rows.forEach(r => { const m = new Date(r.t.tanggalMulai).getMonth(); if(!isNaN(m)) byMonth[m][r.status] = (byMonth[m][r.status]||0)+1; });
+    const colorFor = m => m.Outstanding>0?'var(--red)':m.Planned>0?'var(--blue)':m.Done>0?'var(--green)':null;
+    const bgFor = c => c==='var(--red)'?'var(--red-bg)':c==='var(--blue)'?'var(--blue-bg)':c==='var(--green)'?'var(--green-bg)':'var(--stat-bg)';
+    document.getElementById(gridElId).innerHTML = byMonth.map((m,i) => {
+      const total = m.Done+m.Planned+m.Outstanding+m.Cancelled, c = colorFor(m);
+      return `<div style="background:${bgFor(c)}; border-radius:10px; padding:10px 6px; text-align:center;">
+        <div style="font-size:11px; color:var(--text-2); margin-bottom:4px;">${MONTHS[i]}</div>
+        <div style="font-size:16px; font-weight:700; color:${c||'var(--text-3)'};">${total||'-'}</div></div>`;
+    }).join('');
+  }
+
+  function renderAttendance(){
+    const rows = state.trainings.map(t => ({ t, meta: trainingMeta(t) })).filter(r => r.meta.rosterCount > 0);
+    const avgRate = rows.length ? (rows.reduce((s,r)=>s+(r.meta.attendedCount/r.meta.rosterCount*100),0)/rows.length).toFixed(1) : '-';
+    document.getElementById('kpiAttRate').textContent = rows.length ? avgRate+'%' : '-';
+    document.getElementById('kpiAttTrainingCount').textContent = rows.length;
+    document.getElementById('kpiAttRosterTotal').textContent = rows.reduce((s,r)=>s+r.meta.rosterCount,0);
+    document.getElementById('kpiAttAttendedTotal').textContent = rows.reduce((s,r)=>s+r.meta.attendedCount,0);
+    document.getElementById('attendanceTableBody').innerHTML = rows.map(({t,meta}) => `
+      <tr><td><strong>${t.judul}</strong><div class="text-meta">${t.id}</div></td><td>${t.tanggalMulai||'-'}</td>
+        <td>${meta.rosterCount}</td><td>${meta.attendedCount}</td>
+        <td>${Math.round(meta.attendedCount/meta.rosterCount*100)}%</td></tr>`).join('');
+    document.getElementById('attendanceEmpty').style.display = rows.length ? 'none' : 'block';
+    document.getElementById('attendanceEmpty').innerHTML = iconSvg('inbox',{size:24}) + '<p style="margin-top:8px;">Belum ada training dengan roster peserta.</p>';
+  }
+
+  function levelBadgeCls(level){
+    const map = {'New Comer':'badge-gray','Junior Trainer':'badge-blue','Intermediate Trainer':'badge-purple','Senior Trainer':'badge-amber','Master Trainer':'badge-green'};
+    return map[level] || 'badge-gray';
+  }
+  function renderTrainerPool(){
+    const rows = state.trainers;
+    document.getElementById('kpiTotalTrainer').textContent = rows.length;
+    document.getElementById('kpiPromosi').textContent = rows.filter(r => r.levelEligible && LEVEL_ORDER.indexOf(r.levelEligible) > LEVEL_ORDER.indexOf(r.levelSaatIni)).length;
+    document.getElementById('kpiSeniorMaster').textContent = rows.filter(r=>r.levelSaatIni==='Senior Trainer'||r.levelSaatIni==='Master Trainer').length;
+    document.getElementById('kpiNewComer').textContent = rows.filter(r=>r.levelSaatIni==='New Comer').length;
+    document.getElementById('trainerTableBody').innerHTML = rows.map(r => {
+      const promo = r.levelEligible && LEVEL_ORDER.indexOf(r.levelEligible) > LEVEL_ORDER.indexOf(r.levelSaatIni);
+      return `<tr>
+        <td><strong>${r.nama}</strong></td><td>${r.nik}</td>
+        <td><span class="badge ${levelBadgeCls(r.levelSaatIni)}">${r.levelSaatIni}</span></td>
+        <td>${r.semester||'-'}</td><td>${r.totalScore ?? '-'}</td>
+        <td>${r.levelEligible ? `<span class="badge ${promo?'badge-green':'badge-gray'}">${r.levelEligible}${promo?' ↑':''}</span>` : '-'}</td>
+      </tr>`;
+    }).join('');
+    document.getElementById('trainerEmpty').style.display = rows.length ? 'none' : 'block';
+    document.getElementById('trainerEmpty').innerHTML = iconSvg('inbox',{size:24}) + '<p style="margin-top:8px;">Belum ada data trainer.</p>';
+  }
+
+  document.getElementById('tpSaveBtn').addEventListener('click', async () => {
+    const nik = document.getElementById('tpNik').value.trim();
+    const nama = document.getElementById('tpNama').value.trim();
+    const level = document.getElementById('tpLevel').value;
+    if(!nik || !nama){ showToast('NIK dan Nama wajib diisi.'); return; }
+    try{
+      await setDoc(doc(db, 'trainerProfiles', nik), { nama, levelSaatIni: level }, { merge: true });
+      document.getElementById('tpNik').value = ''; document.getElementById('tpNama').value = '';
+      showToast('Trainer tersimpan.');
+      await loadAll();
+    } catch(err){ showToast('Gagal simpan: ' + err.message); }
+  });
+
+  document.getElementById('recalcBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('recalcBtn');
+    btn.disabled = true; btn.textContent = 'Menghitung...';
+    try{
+      const functions = getFunctions(getApps()[0]);
+      const recalc = httpsCallable(functions, 'recalculateTrainerScoresNow');
+      const result = await recalc();
+      showToast(`Selesai — ${result.data.updated} baris di-update.`);
+      await loadAll();
+    } catch(err){
+      showToast('Gagal recalculate: ' + err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Recalculate Sekarang';
+    }
+  });
+
+  document.getElementById('refreshBtn').addEventListener('click', loadAll);
+
+  function goToTab(tabName){
+    document.querySelectorAll('.menu-item[data-tab]').forEach(m=>m.classList.remove('active'));
+    document.querySelector(`.menu-item[data-tab="${tabName}"]`).classList.add('active');
+    document.querySelectorAll('.tab-page').forEach(p=>p.classList.remove('active'));
+    document.getElementById('page-'+tabName).classList.add('active');
+  }
+  document.querySelectorAll('.menu-item[data-tab]').forEach(item => item.addEventListener('click', () => goToTab(item.dataset.tab)));
+  document.querySelectorAll('.detail-link[data-goto]').forEach(link => link.addEventListener('click', () => goToTab(link.dataset.goto)));
+
+  /* ===== Export PPTX (ringkas — Dashboard + Training + Attendance + Trainer Pool) ===== */
+  const PINK='E6007A', PINK_BG='FCE7F1', BLUE='2563EB', BLUE_BG='DBEAFE', GREEN='16A34A', DARK='1A1A1A', GRAY='6B6B6B', BORDER='ECEAE3';
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    if(typeof PptxGenJS === 'undefined'){ showToast('Library PPTX gagal dimuat.'); return; }
+    const pptx = new PptxGenJS();
+    pptx.defineLayout({ name:'WIDE', width:10, height:5.63 }); pptx.layout = 'WIDE';
+    const s0 = pptx.addSlide(); s0.background = { color: PINK };
+    s0.addShape('roundRect', { x:0.6, y:1.55, w:8.8, h:2.55, fill:{color:'FFFFFF'}, rectRadius:0.12, line:{type:'none'} });
+    s0.addText('anteraja', { x:0.6, y:1.85, w:8.8, h:0.6, fontSize:30, bold:true, color:PINK, align:'center', fontFace:'Arial' });
+    s0.addText('Training Dashboard Report', { x:0.6, y:2.5, w:8.8, h:0.55, fontSize:19, bold:true, color:DARK, align:'center', fontFace:'Arial' });
+    s0.addText('Dibuat ' + new Date().toLocaleString('id-ID'), { x:0.6, y:3.15, w:8.8, h:0.4, fontSize:11, color:GRAY, align:'center', fontFace:'Arial' });
+
+    const s1 = pptx.addSlide(); s1.background = { color:'FFFFFF' };
+    s1.addShape('rect', { x:0, y:0, w:10, h:1.15, fill:{color:PINK} });
+    s1.addText('Training', { x:0.5, y:0.18, w:9, h:0.55, fontSize:24, bold:true, color:'FFFFFF', fontFace:'Arial' });
+    const hs = computeHomeStats();
+    s1.addTable([[
+      {text:'Metrik', options:{bold:true, color:'FFFFFF', fill:{color:PINK}, fontSize:10}},
+      {text:'Nilai', options:{bold:true, color:'FFFFFF', fill:{color:PINK}, fontSize:10}},
+    ], ...[
+      ['Total Training', hs.totalTraining], ['Completion Rate', hs.completionRate+'%'],
+      ['Total Peserta', hs.totalPeserta], ['Total Trainer', hs.totalTrainer],
+      ['Avg Attendance Rate', hs.attRate+'%'],
+    ].map(r => r.map(c => ({text:String(c), options:{fontSize:11, color:DARK}})))],
+      { x:0.5, y:1.5, w:6, colW:[3,3], fontFace:'Arial', border:{type:'solid', color:BORDER, pt:0.5} });
+
+    pptx.writeFile({ fileName: `Training_Dashboard_Report_${new Date().toISOString().slice(0,10)}.pptx` });
+  });
+
+  onAuth(async (user) => {
+    const gate = document.getElementById('gate');
+    const shell = document.getElementById('appShell');
+    if(!user){
+      gate.style.display = 'block'; shell.style.display = 'none';
+      document.getElementById('gateTitle').textContent = 'Silakan login';
+      document.getElementById('gateSub').innerHTML = `<a href="index.html">Login dulu di sini</a>.`;
+      return;
+    }
+    const profile = await ensureUserProfile(user);
+    if(profile.role !== 'admin'){
+      gate.style.display = 'block'; shell.style.display = 'none';
+      document.getElementById('gateTitle').textContent = 'Akses ditolak';
+      document.getElementById('gateSub').textContent = 'Halaman ini cuma buat Admin (Tim Training).';
+      return;
+    }
+    gate.style.display = 'none'; shell.style.display = 'flex';
+    document.getElementById('userAvatar').src = profile.photoURL;
+    document.getElementById('userName').textContent = profile.displayName;
+    loadAll();
+  });
+</script>
+</body>
+</html>
