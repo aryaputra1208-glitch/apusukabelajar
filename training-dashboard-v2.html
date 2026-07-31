@@ -43,6 +43,11 @@
   .kpi-sub{font-size:12px; color:var(--text-2); margin-top:2px;}
   .tab-page{display:none;}
   .tab-page.active{display:block;}
+  .avatar{width:28px; height:28px; border-radius:50%; object-fit:cover;}
+  .user-chip{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-2);}
+  .tabs{display:flex; gap:6px;}
+  .tab-btn{padding:8px 16px; border-radius:var(--r-control); font-size:13px; font-weight:600; cursor:pointer; border:1px solid var(--border); background:var(--surface); color:var(--text-2);}
+  .tab-btn.active{background:var(--pink); border-color:var(--pink); color:#fff;}
 </style>
 </head>
 <body>
@@ -60,8 +65,9 @@
     <div class="menu-label">MODUL</div>
     <div class="menu-item" data-tab="training"><span id="icTraining"></span> Training</div>
     <div class="menu-item" data-tab="attendance"><span id="icAttendance"></span> Attendance</div>
-    <div class="menu-item" data-tab="trainerpool"><span id="icTrainerpool"></span> Trainer Pool</div>
+    <div class="menu-item" data-tab="analytics"><span id="icTrainerpool"></span> Analytics</div>
     <div class="sidebar-info">
+      <a href="index.html" style="color:var(--pink); text-decoration:none; font-weight:700; display:flex; align-items:center; gap:6px; margin-bottom:14px;">← Kembali ke Menu Utama</a>
       <div id="lastSync">Memuat data...</div>
       <div style="margin-top:6px">Set Training baru? Buka <a href="index.html" style="color:var(--pink);">Anteraja LMS</a></div>
     </div>
@@ -108,7 +114,7 @@
               <div class="mini-stat"><div class="mini-num" style="color:var(--blue)" id="homeTotalTrainer">-</div><div class="mini-label">Total Trainer</div></div>
               <div class="mini-stat"><div class="mini-num" style="color:var(--blue)" id="homeSeniorMaster">-</div><div class="mini-label">Senior + Master</div></div>
             </div>
-            <div class="detail-link" style="color:var(--blue)" data-goto="trainerpool">Lihat Detail Trainer Pool →</div>
+            <div class="detail-link" style="color:var(--blue)" data-goto="analytics">Lihat Detail Analytics →</div>
           </div>
 
           <div class="module-card" style="--accent:var(--amber); --accent-bg:var(--amber-bg)">
@@ -196,11 +202,17 @@
         </div>
       </div>
 
-      <!-- TRAINER POOL TAB -->
-      <div class="tab-page" id="page-trainerpool">
-        <h1 class="text-h1">Trainer Pool</h1>
-        <div class="subtitle">Level dan score trainer berdasarkan semester terakhir</div>
+      <!-- ANALYTICS TAB (Trainer Pool + Course Analytics) -->
+      <div class="tab-page" id="page-analytics">
+        <h1 class="text-h1">Analytics</h1>
+        <div class="subtitle">Trainer Pool (training offline) dan Course Analytics (course online)</div>
 
+        <div class="tabs" style="margin-bottom:20px;">
+          <div class="tab-btn active" data-subtab="trainerpool" id="subtabTrainerpool">Trainer Pool</div>
+          <div class="tab-btn" data-subtab="courses" id="subtabCourses">Course Analytics</div>
+        </div>
+
+        <div id="subpage-trainerpool">
         <div class="kpi-row">
           <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">TOTAL TRAINER</div><div class="kpi-value2" id="kpiTotalTrainer">-</div><div class="kpi-sub">Semua level</div></div>
           <div class="kpi-card2" style="--accent:var(--green)"><div class="kpi-label2">SIAP NAIK LEVEL</div><div class="kpi-value2" id="kpiPromosi">-</div><div class="kpi-sub">Eligible &gt; level sekarang</div></div>
@@ -212,7 +224,7 @@
           <div style="display:flex; align-items:center; justify-content:space-between;">
             <div>
               <h2 class="text-h2" style="margin-bottom:4px;">Recalculate Score</h2>
-              <p class="text-sub">Hitung ulang Trainer Score sekarang juga (biasanya otomatis tiap malam jam 1).</p>
+              <p class="text-sub">Hitung ulang Trainer Score sekarang juga — cuma menghitung training offline (formal), course online tidak masuk formula ini.</p>
             </div>
             <button class="btn btn-primary" id="recalcBtn">Recalculate Sekarang</button>
           </div>
@@ -246,6 +258,26 @@
           </table>
           </div>
           <div id="trainerEmpty" class="empty-state" style="display:none"></div>
+        </div>
+        </div>
+
+        <div id="subpage-courses" style="display:none">
+          <div class="kpi-row">
+            <div class="kpi-card2" style="--accent:var(--purple)"><div class="kpi-label2">TOTAL COURSE ONLINE</div><div class="kpi-value2" id="kpiTotalCourse">-</div><div class="kpi-sub">Status published</div></div>
+            <div class="kpi-card2" style="--accent:var(--green)"><div class="kpi-label2">AVG COMPLETION RATE</div><div class="kpi-value2" id="kpiCourseCompletion">-</div><div class="kpi-sub">Rata-rata semua course</div></div>
+            <div class="kpi-card2" style="--accent:var(--blue)"><div class="kpi-label2">TOTAL PESERTA</div><div class="kpi-value2" id="kpiCourseTotalPeserta">-</div><div class="kpi-sub">Semua course</div></div>
+            <div class="kpi-card2" style="--accent:var(--amber)"><div class="kpi-label2">AVG POST-TEST</div><div class="kpi-value2" id="kpiCourseAvgScore">-</div><div class="kpi-sub">Semua peserta</div></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>Daftar Course Online</h3></div>
+            <div style="overflow-x:auto">
+            <table class="data-table">
+              <thead><tr><th>Judul</th><th>Kategori</th><th>Trainer</th><th>Peserta</th><th>Avg Post-Test</th></tr></thead>
+              <tbody id="courseTableBody"></tbody>
+            </table>
+            </div>
+            <div id="courseEmpty" class="empty-state" style="display:none"></div>
+          </div>
         </div>
       </div>
 
@@ -290,7 +322,7 @@
     return results;
   }
 
-  let state = { trainings:[], sessions:[], roster:[], attendance:[], attempts:[], trainers:[], today:new Date() };
+  let state = { trainings:[], sessions:[], roster:[], attendance:[], attempts:[], trainers:[], today:new Date(), coursesLoaded:false };
 
   async function loadAll(){
     document.getElementById('lastSync').textContent = 'Memuat data...';
@@ -465,6 +497,54 @@
     const map = {'New Comer':'badge-gray','Junior Trainer':'badge-blue','Intermediate Trainer':'badge-purple','Senior Trainer':'badge-amber','Master Trainer':'badge-green'};
     return map[level] || 'badge-gray';
   }
+  document.querySelectorAll('.tab-btn[data-subtab]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn[data-subtab]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const sub = btn.dataset.subtab;
+      document.getElementById('subpage-trainerpool').style.display = sub === 'trainerpool' ? 'block' : 'none';
+      document.getElementById('subpage-courses').style.display = sub === 'courses' ? 'block' : 'none';
+      if(sub === 'courses' && !state.coursesLoaded) loadCourseAnalytics();
+    });
+  });
+
+  async function loadCourseAnalytics(){
+    state.coursesLoaded = true;
+    const tbody = document.getElementById('courseTableBody');
+    tbody.innerHTML = `<tr><td colspan="5" class="text-meta">Memuat...</td></tr>`;
+    try{
+      const modSnap = await getDocs(query(collection(db, 'modules'), where('mode', '==', 'online'), where('status', '==', 'published')));
+      const courses = []; modSnap.forEach(d => courses.push({ id: d.id, ...d.data() }));
+      const ids = courses.map(c => c.id);
+      const attempts = await getAllWhereIn('attempts', 'moduleId', ids);
+
+      let totalPeserta = 0, sumScore = 0, scoredCount = 0, completionSum = 0;
+      const rows = courses.map(c => {
+        const rows = attempts.filter(a => a.moduleId === c.id);
+        const scores = rows.filter(a => a.score != null).map(a => a.score);
+        const avg = scores.length ? Math.round(scores.reduce((s,v)=>s+v,0)/scores.length) : null;
+        totalPeserta += rows.length; scoredCount += scores.length; sumScore += scores.reduce((s,v)=>s+v,0);
+        completionSum += rows.length > 0 ? 100 : 0; // proxy: course dgn minimal 1 peserta selesai = "aktif"
+        return { c, pesertaCount: rows.length, avg };
+      });
+
+      document.getElementById('kpiTotalCourse').textContent = courses.length;
+      document.getElementById('kpiCourseCompletion').textContent = courses.length ? Math.round(completionSum/courses.length)+'%' : '-';
+      document.getElementById('kpiCourseTotalPeserta').textContent = totalPeserta;
+      document.getElementById('kpiCourseAvgScore').textContent = scoredCount ? Math.round(sumScore/scoredCount) : '-';
+
+      tbody.innerHTML = rows.map(({c, pesertaCount, avg}) => `
+        <tr><td><strong>${c.judul}</strong><div class="text-meta">${c.id}</div></td>
+          <td>${c.kategori||'-'}</td><td>${c.createdByName||'-'}</td>
+          <td>${pesertaCount}</td><td>${avg ?? '-'}</td></tr>`).join('');
+      document.getElementById('courseEmpty').style.display = rows.length ? 'none' : 'block';
+      document.getElementById('courseEmpty').innerHTML = iconSvg('inbox',{size:24}) + '<p style="margin-top:8px;">Belum ada course online yang published.</p>';
+    } catch(err){
+      tbody.innerHTML = '';
+      showToast('Gagal memuat course analytics: ' + err.message);
+    }
+  }
+
   function renderTrainerPool(){
     const rows = state.trainers;
     document.getElementById('kpiTotalTrainer').textContent = rows.length;
