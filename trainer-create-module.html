@@ -247,7 +247,7 @@
       materiFiles.push({ nama: (res.data.judul || 'Materi AI') + '.pdf', url: res.data.pdfUrl, pageCount: res.data.pageCount, audio: res.data.audio || {} });
       renderMateriList();
       document.getElementById('aiModal').style.display = 'none';
-      showToast('Materi berhasil dibuat dan ditambahkan.');
+      showToast('Materi berhasil dibuat — cek tombol Preview/Unduh di daftar materi.');
     } catch(err){
       showToast('Gagal generate: ' + err.message);
     } finally {
@@ -384,11 +384,32 @@
     el.innerHTML = materiFiles.map((f,i) => `
       <div class="file-item">
         <span style="display:flex; align-items:center; gap:8px;">${iconSvg('file-text',{size:16})} ${f.nama} <span class="text-meta">(${f.pageCount||'?'} halaman)</span></span>
-        <button class="icon-btn" data-i="${i}" title="Hapus">${iconSvg('trash',{size:14})}</button>
+        <span style="display:flex; gap:6px; align-items:center;">
+          <button class="btn btn-outline btn-sm" data-action="preview" data-url="${f.url}" style="padding:5px 10px;">Preview</button>
+          <button class="btn btn-outline btn-sm" data-action="download" data-url="${f.url}" data-nama="${f.nama.replace(/"/g,'&quot;')}" style="padding:5px 10px;">Unduh</button>
+          <button class="icon-btn" data-i="${i}" title="Hapus">${iconSvg('trash',{size:14})}</button>
+        </span>
       </div>
       <div class="audio-slots" id="audioSlots-${i}"></div>`).join('');
-    el.querySelectorAll('.icon-btn').forEach(btn => {
+    el.querySelectorAll('[data-i]').forEach(btn => {
       btn.addEventListener('click', () => { materiFiles.splice(Number(btn.dataset.i),1); renderMateriList(); });
+    });
+    el.querySelectorAll('[data-action="preview"]').forEach(btn => {
+      btn.addEventListener('click', () => window.open(btn.dataset.url, '_blank'));
+    });
+    el.querySelectorAll('[data-action="download"]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const original = btn.textContent; btn.textContent = '...';
+        try{
+          const res = await fetch(btn.dataset.url);
+          const blob = await res.blob();
+          const objUrl = URL.createObjectURL(blob);
+          const a = document.createElement('a'); a.href = objUrl; a.download = btn.dataset.nama;
+          document.body.appendChild(a); a.click(); a.remove();
+          URL.revokeObjectURL(objUrl);
+        } catch(err){ showToast('Gagal unduh: ' + err.message); }
+        finally { btn.textContent = original; }
+      });
     });
     materiFiles.forEach((f,i) => renderAudioSlots(i));
   }
