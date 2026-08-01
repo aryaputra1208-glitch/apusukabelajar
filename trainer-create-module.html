@@ -222,7 +222,7 @@
     document.getElementById('aiChatBody').appendChild(thinking);
 
     try{
-      const call = httpsCallable(aiFunctions, 'aiChatConsult');
+      const call = httpsCallable(aiFunctions, 'aiChatConsult', { timeout: 120000 });
       const res = await call({ messages: aiMessages });
       thinking.remove();
       aiMessages.push({ role: 'assistant', content: res.data.reply });
@@ -242,7 +242,7 @@
     const original = btn.textContent;
     btn.disabled = true; btn.textContent = 'Menyusun materi...';
     try{
-      const call = httpsCallable(aiFunctions, 'aiGenerateMateri');
+      const call = httpsCallable(aiFunctions, 'aiGenerateMateri', { timeout: 300000 }); // 300000ms = samakan dengan timeoutSeconds server
       const res = await call({ messages: aiMessages, withAudio });
       materiFiles.push({ nama: (res.data.judul || 'Materi AI') + '.pdf', url: res.data.pdfUrl, pageCount: res.data.pageCount, audio: res.data.audio || {} });
       renderMateriList();
