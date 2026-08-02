@@ -36,6 +36,7 @@
   <div class="tabbar" id="tabbar" style="display:none">
     <div class="tab-btn active" id="tabAbsensiBtn">Absensi</div>
     <div class="tab-btn" id="tabPostTestBtn">Post-Test &amp; CSI</div>
+    <div class="tab-btn" id="tabMateriBtn">Materi</div>
   </div>
   <div id="app"></div>
 </div>
@@ -94,6 +95,39 @@
     });
   }
 
+  async function renderMateriTab(){
+    if(!peserta){ renderNamePicker(() => renderMateriTab()); return; }
+    app().innerHTML = emptyCard('Memuat...', '');
+    try{
+      const aSnap = await getDocs(query(collection(db, 'attempts'), where('moduleId', '==', trainingId), where('nik', '==', peserta.nik)));
+      const hasSubmitted = !aSnap.empty;
+      if(!hasSubmitted){
+        app().innerHTML = `<div class="card" style="text-align:center;">
+          <h1 class="text-h1">Materi terkunci</h1>
+          <p class="text-sub" style="margin-top:8px;">Materi bisa didownload setelah Anda submit Post-Test &amp; CSI.</p>
+        </div>`;
+        return;
+      }
+      const files = training.materiFiles || [];
+      if(!files.length){
+        app().innerHTML = `<div class="card" style="text-align:center;">
+          <h1 class="text-h1">Belum ada materi</h1>
+          <p class="text-sub" style="margin-top:8px;">Trainer belum upload materi untuk training ini.</p>
+        </div>`;
+        return;
+      }
+      app().innerHTML = `<div class="card">
+        <h1 class="text-h1" style="margin-bottom:6px;">Materi Training</h1>
+        <p class="text-sub" style="margin-bottom:16px;">Terima kasih sudah submit Post-Test — materi sudah bisa didownload.</p>
+        ${files.map(f => `
+          <a href="${f.url}" target="_blank" class="btn btn-outline" style="width:100%; display:block; text-align:center; text-decoration:none; margin-bottom:8px;">📄 ${f.nama}</a>
+        `).join('')}
+      </div>`;
+    } catch(err){
+      app().innerHTML = emptyCard('Gagal memuat materi', err.message);
+    }
+  }
+
   function emptyCard(title, sub){
     return `<div class="card" style="text-align:center;"><h1 class="text-h1">${title}</h1><p class="text-sub" style="margin-top:8px;">${sub}</p></div>`;
   }
@@ -126,6 +160,7 @@
 
     document.getElementById('tabAbsensiBtn').addEventListener('click', () => switchTab('absensi'));
     document.getElementById('tabPostTestBtn').addEventListener('click', () => switchTab('posttest'));
+    document.getElementById('tabMateriBtn').addEventListener('click', () => switchTab('materi'));
     const remembered = recallPeserta();
     if(remembered) peserta = remembered;
     renderTab();
@@ -135,10 +170,12 @@
     activeTab = tab;
     document.getElementById('tabAbsensiBtn').classList.toggle('active', tab==='absensi');
     document.getElementById('tabPostTestBtn').classList.toggle('active', tab==='posttest');
+    document.getElementById('tabMateriBtn').classList.toggle('active', tab==='materi');
     renderTab();
   }
   function renderTab(){
     if(activeTab === 'absensi') renderAbsensi();
+    else if(activeTab === 'materi') renderMateriTab();
     else renderPostTestTab();
   }
 
