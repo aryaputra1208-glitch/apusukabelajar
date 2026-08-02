@@ -67,7 +67,7 @@
   import { auth, db, onAuth, ensureUserProfile } from './firebase-shared.js';
   import { iconSvg } from './lms-icons.js';
   import {
-    doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp
+    doc, getDoc, setDoc, collection, query, where, getDocs, addDoc, serverTimestamp
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
   import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-storage.js";
   import { getApps } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
@@ -395,6 +395,12 @@
       return;
     }
     moduleData = modSnap.data();
+
+    // Catat progress "sedang dipelajari" — dipakai trainee-library.html buat "Lanjutkan Belajar"
+    setDoc(doc(db, 'progress', `${user.uid}_${moduleId}`), {
+      uid: user.uid, moduleId, judul: moduleData.judul, kategori: moduleData.kategori || '',
+      updatedAt: serverTimestamp(),
+    }, { merge: true }).catch(() => {});
 
     const qSnap = await getDocs(query(collection(db, 'questions'), where('moduleId', '==', moduleId)));
     questions = [];
