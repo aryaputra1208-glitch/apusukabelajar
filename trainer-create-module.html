@@ -129,6 +129,11 @@
         <input type="url" id="mVideo" placeholder="https://youtu.be/...">
       </div>
 
+      <div id="aiDraftsBox" style="display:none; margin-bottom:16px;">
+        <label>Draft dari AI Generator (.pptx — belum jadi PDF materi resmi)</label>
+        <div id="aiDraftsList"></div>
+      </div>
+
       <label>File Materi (PDF — export dari PPT/Word jadi PDF dulu sebelum upload)</label>
       <div id="materiList"></div>
       <div class="dropzone" id="materiDropzone"></div>
@@ -186,6 +191,7 @@
   document.getElementById('openAiBtn').innerHTML = iconSvg('sparkles', { size: 14 }) + ' Buat Materi dengan AI';
   let aiMessages = [];
   let aiFunctions = null;
+  let aiDrafts = [];
 
   document.getElementById('openAiBtn').addEventListener('click', () => {
     if(!aiFunctions) aiFunctions = getFunctions(getApps()[0]);
@@ -213,6 +219,7 @@
     const text = input.value.trim();
     if(!text) return;
     input.value = '';
+    input.style.height = 'auto';
     aiMessages.push({ role: 'user', content: text });
     appendAiBubble('user', text);
     const thinking = document.createElement('div');
@@ -234,7 +241,13 @@
     }
   }
   document.getElementById('aiSendBtn').addEventListener('click', sendAiMessage);
-  document.getElementById('aiInput').addEventListener('keydown', (e) => { if(e.key === 'Enter') sendAiMessage(); });
+  document.getElementById('aiInput').addEventListener('keydown', (e) => {
+    if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendAiMessage(); }
+  });
+  document.getElementById('aiInput').addEventListener('input', (e) => {
+    e.target.style.height = 'auto';
+    e.target.style.height = Math.min(e.target.scrollHeight, 160) + 'px';
+  });
 
   async function generateMateriAi(withAudio){
     const btnId = withAudio ? 'aiGenPptAudioBtn' : 'aiGenPptBtn';
@@ -272,6 +285,9 @@
         </div>
       ` : ''}`;
     panel.style.display = 'block';
+
+    aiDrafts.push(data);
+    renderAiDrafts();
   }
 
   function setMode(newMode, skipAutoSesi){
@@ -392,6 +408,24 @@
         if(idx === -1) selectedArr.push(val); else selectedArr.splice(idx,1);
         chip.classList.toggle('selected');
       });
+    });
+  }
+
+  function renderAiDrafts(){
+    const box = document.getElementById('aiDraftsBox');
+    const list = document.getElementById('aiDraftsList');
+    if(!aiDrafts.length){ box.style.display = 'none'; return; }
+    box.style.display = 'block';
+    list.innerHTML = aiDrafts.map((d, i) => `
+      <div class="file-item">
+        <span style="display:flex; align-items:center; gap:8px;">${iconSvg('sparkles',{size:15})} ${d.judul || 'Materi AI'}.pptx <span class="text-meta">(${d.slideCount} slide${d.audio && d.audio.length ? ', ' + d.audio.length + ' audio' : ''})</span></span>
+        <span style="display:flex; gap:6px;">
+          <a class="btn btn-outline btn-sm" href="${d.pptxUrl}" target="_blank" style="padding:5px 10px; text-decoration:none;">Download</a>
+          <button class="icon-btn" data-i="${i}" title="Hapus dari daftar">${iconSvg('trash',{size:14})}</button>
+        </span>
+      </div>`).join('');
+    list.querySelectorAll('[data-i]').forEach(btn => {
+      btn.addEventListener('click', () => { aiDrafts.splice(Number(btn.dataset.i),1); renderAiDrafts(); });
     });
   }
 
@@ -766,7 +800,7 @@
         <button class="btn btn-primary" id="aiGenPptAudioBtn" style="flex:1;">Generate PPT + Audio</button>
       </div>
       <div style="display:flex; gap:8px;">
-        <input type="text" id="aiInput" placeholder="Ketik topik atau pertanyaan Anda..." style="flex:1; margin-bottom:0;">
+        <textarea id="aiInput" placeholder="Ketik topik atau pertanyaan Anda..." rows="1" style="flex:1; margin-bottom:0; resize:none; max-height:160px; overflow-y:auto; line-height:1.4;"></textarea>
         <button class="btn btn-primary" id="aiSendBtn">Kirim</button>
       </div>
     </div>
