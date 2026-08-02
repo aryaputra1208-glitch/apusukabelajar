@@ -242,12 +242,9 @@
     const original = btn.textContent;
     btn.disabled = true; btn.textContent = 'Menyusun materi...';
     try{
-      const call = httpsCallable(aiFunctions, 'aiGenerateMateri', { timeout: 300000 }); // 300000ms = samakan dengan timeoutSeconds server
+      const call = httpsCallable(aiFunctions, 'aiGenerateMateri', { timeout: 300000 });
       const res = await call({ messages: aiMessages, withAudio });
-      materiFiles.push({ nama: (res.data.judul || 'Materi AI') + '.pdf', url: res.data.pdfUrl, pageCount: res.data.pageCount, audio: res.data.audio || {} });
-      renderMateriList();
-      document.getElementById('aiModal').style.display = 'none';
-      showToast('Materi berhasil dibuat — cek tombol Preview/Unduh di daftar materi.');
+      showAiResult(res.data);
     } catch(err){
       showToast('Gagal generate: ' + err.message);
     } finally {
@@ -256,6 +253,27 @@
   }
   document.getElementById('aiGenPptBtn').addEventListener('click', () => generateMateriAi(false));
   document.getElementById('aiGenPptAudioBtn').addEventListener('click', () => generateMateriAi(true));
+
+  function showAiResult(data){
+    document.getElementById('aiGenerateRow').style.display = 'none';
+    const box = document.getElementById('aiChatBody');
+    const card = document.createElement('div');
+    card.style.cssText = 'align-self:stretch; border:1px solid var(--border); border-radius:var(--r-card); padding:16px; background:var(--surface-2);';
+    card.innerHTML = `
+      <div style="font-weight:700; font-size:14px; margin-bottom:6px;">${iconSvg('check',{size:15})} Draft siap — ${data.slideCount} slide</div>
+      <p class="text-sub" style="margin-bottom:12px;">File .pptx bisa dibuka & diedit di PowerPoint. Untuk dipakai di modul <strong>online</strong> (butuh tracking baca), export dulu jadi PDF dari PowerPoint, baru upload lewat tombol upload PDF Materi di bawah. Untuk training <strong>offline</strong>, langsung pakai file ini apa adanya.</p>
+      <a href="${data.pptxUrl}" target="_blank" class="btn btn-primary" style="width:100%; display:block; text-align:center; text-decoration:none; margin-bottom:${(data.audio&&data.audio.length)?'10px':'0'};">Download ${data.judul || 'Materi'}.pptx</a>
+      ${(data.audio && data.audio.length) ? `
+        <div class="text-meta" style="margin:10px 0 6px;">Audio narasi per slide (urutannya samakan dengan slide setelah di-export PDF):</div>
+        ${data.audio.map(a => `
+          <div style="display:flex; align-items:center; gap:8px; padding:6px 0;">
+            <span class="text-meta" style="width:60px; flex-shrink:0;">Slide ${a.slideNo}</span>
+            <audio controls src="${a.url}" style="height:30px; flex:1;"></audio>
+          </div>`).join('')}
+      ` : ''}`;
+    box.appendChild(card);
+    box.scrollTop = box.scrollHeight;
+  }
 
   function setMode(newMode, skipAutoSesi){
     mode = newMode;
