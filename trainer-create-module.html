@@ -256,23 +256,22 @@
 
   function showAiResult(data){
     document.getElementById('aiGenerateRow').style.display = 'none';
-    const box = document.getElementById('aiChatBody');
-    const card = document.createElement('div');
-    card.style.cssText = 'align-self:stretch; border:1px solid var(--border); border-radius:var(--r-card); padding:16px; background:var(--surface-2);';
-    card.innerHTML = `
+    const panel = document.getElementById('aiResultPanel');
+    panel.innerHTML = `
       <div style="font-weight:700; font-size:14px; margin-bottom:6px;">${iconSvg('check',{size:15})} Draft siap — ${data.slideCount} slide</div>
-      <p class="text-sub" style="margin-bottom:12px;">File .pptx bisa dibuka & diedit di PowerPoint. Untuk dipakai di modul <strong>online</strong> (butuh tracking baca), export dulu jadi PDF dari PowerPoint, baru upload lewat tombol upload PDF Materi di bawah. Untuk training <strong>offline</strong>, langsung pakai file ini apa adanya.</p>
+      <p class="text-sub" style="margin-bottom:12px;">File .pptx bisa dibuka & diedit di PowerPoint. Untuk dipakai di modul <strong>online</strong> (butuh tracking baca), export dulu jadi PDF dari PowerPoint, baru upload lewat tombol upload PDF Materi. Untuk training <strong>offline</strong>, langsung pakai file ini apa adanya.</p>
       <a href="${data.pptxUrl}" target="_blank" class="btn btn-primary" style="width:100%; display:block; text-align:center; text-decoration:none; margin-bottom:${(data.audio&&data.audio.length)?'10px':'0'};">Download ${data.judul || 'Materi'}.pptx</a>
       ${(data.audio && data.audio.length) ? `
         <div class="text-meta" style="margin:10px 0 6px;">Audio narasi per slide (urutannya samakan dengan slide setelah di-export PDF):</div>
+        <div style="max-height:160px; overflow-y:auto;">
         ${data.audio.map(a => `
           <div style="display:flex; align-items:center; gap:8px; padding:6px 0;">
             <span class="text-meta" style="width:60px; flex-shrink:0;">Slide ${a.slideNo}</span>
             <audio controls src="${a.url}" style="height:30px; flex:1;"></audio>
           </div>`).join('')}
+        </div>
       ` : ''}`;
-    box.appendChild(card);
-    box.scrollTop = box.scrollHeight;
+    panel.style.display = 'block';
   }
 
   function setMode(newMode, skipAutoSesi){
@@ -759,6 +758,7 @@
       <span style="font-weight:700; font-size:14px;">✨ Konsultasi Materi dengan AI</span>
       <button class="icon-btn" id="closeAiBtn"></button>
     </div>
+    <div id="aiResultPanel" style="display:none; padding:16px 20px; background:var(--pink-bg); border-bottom:2px solid var(--pink);"></div>
     <div id="aiChatBody" style="flex:1; overflow-y:auto; padding:16px 20px; display:flex; flex-direction:column; gap:12px;"></div>
     <div style="padding:14px 20px; border-top:1px solid var(--border);">
       <div id="aiGenerateRow" style="display:none; gap:8px; margin-bottom:10px;">
