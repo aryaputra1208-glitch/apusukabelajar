@@ -17,6 +17,21 @@
   .menu-card:hover { border-color: var(--pink); }
   .menu-icon { width: 40px; height: 40px; border-radius: var(--r-control); background: var(--pink-bg); color: var(--pink-dark); display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
   .role-badge { display: inline-flex; align-items: center; gap: 4px; background: var(--pink-bg); color: var(--pink-dark); font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: var(--r-pill); margin-top: 6px; }
+  /* --- Beranda trainee --- */
+  .filter-row { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .module-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+  .module-card { border: 1px solid var(--border); border-radius: var(--r-card); overflow: hidden; text-decoration: none; color: var(--text); display: block; }
+  .module-card:hover { border-color: var(--pink); }
+  .module-thumb { aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; color: #fff; }
+  .module-body { padding: 14px; }
+  .stat-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 28px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); padding: 18px; }
+  .stat-num { font-size: 28px; font-weight: 700; color: var(--pink); font-family: var(--font-display); line-height: 1; }
+  .stat-label { font-size: 12px; color: var(--text-2); margin-top: 6px; }
+  .resume-row { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 28px; }
+  .resume-card { flex: 0 0 240px; border: 1px solid var(--border); border-radius: var(--r-card); padding: 14px; text-decoration: none; color: var(--text); display: flex; flex-direction: column; gap: 8px; }
+  .resume-card:hover { border-color: var(--pink); }
+  .section-title { font-size: 16px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
 </style>
 </head>
 <body>
@@ -45,16 +60,72 @@
     </div>
   </div>
 
-  <div class="wrap">
+  <!-- ===== Beranda ADMIN/TRAINER: menu grid biasa ===== -->
+  <div class="wrap" id="menuWrap" style="display:none;">
     <h1 class="text-h1" id="welcomeTitle"></h1>
     <div class="role-badge" id="roleBadge"></div>
     <div class="menu-grid" id="menuGrid"></div>
   </div>
+
+  <!-- ===== Beranda TRAINEE: langsung jadi dashboard belajar ===== -->
+  <div class="wrap" id="traineeWrap" style="display:none;">
+    <h1 class="text-h1" id="greeting">Halo!</h1>
+    <p class="text-sub" style="margin-bottom:24px;">Semua modul training online yang tersedia untuk Anda.</p>
+
+    <div class="card" id="levelBanner" style="margin-bottom:24px; display:none; background:linear-gradient(135deg, var(--pink) 0%, var(--pink-dark) 100%); border:none;">
+      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div style="width:52px; height:52px; border-radius:14px; background:rgba(255,255,255,.2); display:flex; align-items:center; justify-content:center;" id="levelIcon"></div>
+          <div>
+            <div style="color:rgba(255,255,255,.8); font-size:12px; font-weight:600; letter-spacing:.03em;">LEVEL ANDA</div>
+            <div style="color:#fff; font-size:20px; font-weight:700;" id="levelName">-</div>
+          </div>
+        </div>
+        <div style="flex:1; min-width:200px; max-width:320px;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+            <span style="color:rgba(255,255,255,.85); font-size:12px;" id="levelPoints">-</span>
+            <span style="color:rgba(255,255,255,.85); font-size:12px;" id="levelNext">-</span>
+          </div>
+          <div style="height:8px; background:rgba(255,255,255,.25); border-radius:99px; overflow:hidden;">
+            <div id="levelBar" style="height:100%; background:#fff; border-radius:99px; width:0%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-card"><div class="stat-num" id="statSelesai">-</div><div class="stat-label">Modul Selesai</div></div>
+      <div class="stat-card"><div class="stat-num" id="statBerjalan">-</div><div class="stat-label">Sedang Dipelajari</div></div>
+      <div class="stat-card"><div class="stat-num" id="statSkor">-</div><div class="stat-label">Rata-rata Skor</div></div>
+    </div>
+
+    <div id="resumeSection" style="display:none;">
+      <div class="section-title"><span id="resumeIconSlot"></span> Lanjutkan Belajar</div>
+      <div class="resume-row" id="resumeRow"></div>
+    </div>
+
+    <div id="wajibSection" style="display:none;">
+      <div class="section-title"><span id="wajibIconSlot"></span> Wajib untuk Anda</div>
+      <div class="module-grid" id="wajibGrid" style="margin-bottom:28px;"></div>
+    </div>
+
+    <div class="section-title">Semua Modul</div>
+    <div class="filter-row" id="filterRow">
+      <span class="chip selected" data-kategori="">Semua</span>
+      <span class="chip" data-kategori="Basic/Fundamental">Basic/Fundamental</span>
+      <span class="chip" data-kategori="Core/Mandatory">Core/Mandatory</span>
+      <span class="chip" data-kategori="General">General</span>
+    </div>
+
+    <div class="module-grid" id="moduleGrid"></div>
+    <div class="empty-state" id="emptyState" style="display:none;"></div>
+  </div>
 </div>
 
 <script type="module">
-  import { auth, onAuth, loginWithGoogle, loginWithMicrosoft, logout, ensureUserProfile } from './firebase-shared.js';
+  import { auth, db, onAuth, loginWithGoogle, loginWithMicrosoft, logout, ensureUserProfile } from './firebase-shared.js';
   import { iconSvg } from './lms-icons.js';
+  import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const MENU_BY_ROLE = {
     admin: [
@@ -72,9 +143,6 @@
       { href: 'trainer-submissions.html', icon: 'file-text', title: 'Nilai Submission', desc: 'Nilai file jawaban trainee' },
       { href: 'trainer-analytics.html', icon: 'chart-bar', title: 'Analitik Modul', desc: 'Performa post-test peserta' },
     ],
-    trainee: [
-      { href: 'trainee-library.html', icon: 'books', title: 'Library Modul', desc: 'Lihat semua modul training online' },
-    ],
   };
 
   document.getElementById('loginBtn').addEventListener('click', async () => {
@@ -91,6 +159,182 @@
   });
   document.getElementById('logoutBtn').addEventListener('click', () => logout());
 
+  /* ===== Logic beranda trainee (dipindah dari trainee-library.html) ===== */
+  let currentProfile = null;
+  let currentUser = null;
+  let allModules = [];
+  let activeKategori = '';
+  let myAttempts = [];
+  let myProgress = [];
+
+  const KATEGORI_STYLE = {
+    'Basic/Fundamental': { color: 'ED0677', icon: 'books' },
+    'Core/Mandatory': { color: '7ECCEE', icon: 'check' },
+    'General': { color: 'FFCB05', icon: 'sparkles' },
+  };
+  function kategoriStyle(k){ return KATEGORI_STYLE[k] || { color: '9C9491', icon: 'file-text' }; }
+
+  function youtubeThumb(url){
+    if(!url) return null;
+    const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([a-zA-Z0-9_-]{6,})/);
+    return m ? `https://img.youtube.com/vi/${m[1]}/mqdefault.jpg` : null;
+  }
+
+  function isWajib(m, profile){
+    const divCocok = !m.targetDivisi?.length || m.targetDivisi.some(d => (profile.divisi||'').toLowerCase().includes(d.toLowerCase()));
+    const lvlCocok = !m.targetLevel?.length || m.targetLevel.includes(profile.level);
+    return (m.targetDivisi?.length || m.targetLevel?.length) && divCocok && lvlCocok;
+  }
+
+  function moduleCard(m){
+    const thumb = youtubeThumb(m.videoUrl);
+    const wajib = isWajib(m, currentProfile);
+    const style = kategoriStyle(m.kategori);
+    return `
+    <a class="module-card" href="trainee-learn.html?module=${m.id}">
+      <div class="module-thumb" style="background:${thumb ? 'var(--surface-2)' : '#'+style.color};">
+        ${thumb ? `<img src="${thumb}" style="width:100%; height:100%; object-fit:cover;">` : iconSvg(style.icon,{size:28})}
+      </div>
+      <div class="module-body">
+        ${wajib ? `<span class="badge badge-pink" style="background:var(--pink-bg); color:var(--pink-dark); margin-bottom:8px;">Wajib untuk Anda</span>` : ''}
+        <div style="font-weight:700; font-size:14px; margin-bottom:4px;">${m.judul}</div>
+        <div class="text-meta">${m.kategori} · ${m.durasiMenit||0} menit</div>
+      </div>
+    </a>`;
+  }
+
+  function renderTraineeModules(){
+    const filtered = allModules.filter(m => !activeKategori || m.kategori === activeKategori);
+    const grid = document.getElementById('moduleGrid');
+    const empty = document.getElementById('emptyState');
+
+    if(!filtered.length){
+      grid.innerHTML = '';
+      empty.style.display = 'block';
+      empty.innerHTML = iconSvg('inbox', {size:28}) + `<p style="margin-top:8px;">Belum ada modul di kategori ini.</p>`;
+      return;
+    }
+    empty.style.display = 'none';
+    grid.innerHTML = filtered.map(moduleCard).join('');
+
+    const wajibList = allModules.filter(m => isWajib(m, currentProfile));
+    const wajibSection = document.getElementById('wajibSection');
+    if(wajibList.length){
+      wajibSection.style.display = 'block';
+      document.getElementById('wajibGrid').innerHTML = wajibList.map(moduleCard).join('');
+    } else {
+      wajibSection.style.display = 'none';
+    }
+  }
+
+  const LEVELS = [
+    { name: 'Pemula', min: 0, icon: 'sparkles' },
+    { name: 'Rajin Belajar', min: 3, icon: 'books' },
+    { name: 'Bersemangat', min: 8, icon: 'check' },
+    { name: 'Ahli', min: 16, icon: 'user-check' },
+    { name: 'Master Pembelajar', min: 30, icon: 'sparkles' },
+  ];
+
+  function computeLevel(){
+    let totalPoints = 0;
+    myAttempts.forEach(a => {
+      const mod = allModules.find(m => m.id === a.moduleId);
+      const kategoriPoint = (mod && mod.kategori === 'Core/Mandatory') ? 2 : 1;
+      const scoreFactor = a.score != null ? (a.score / 100) : 1;
+      totalPoints += kategoriPoint * scoreFactor;
+    });
+    totalPoints = Math.round(totalPoints * 10) / 10;
+
+    let current = LEVELS[0];
+    let next = null;
+    for(let i = 0; i < LEVELS.length; i++){
+      if(totalPoints >= LEVELS[i].min) current = LEVELS[i];
+      else { next = LEVELS[i]; break; }
+    }
+    return { totalPoints, current, next };
+  }
+
+  function renderLevel(){
+    const { totalPoints, current, next } = computeLevel();
+    document.getElementById('levelBanner').style.display = 'block';
+    document.getElementById('levelIcon').innerHTML = iconSvg(current.icon, { size: 26, color: '#fff' });
+    document.getElementById('levelName').textContent = current.name;
+    document.getElementById('levelPoints').textContent = `${totalPoints} poin`;
+    if(next){
+      const pct = Math.min(100, Math.round((totalPoints - current.min) / (next.min - current.min) * 100));
+      document.getElementById('levelBar').style.width = pct + '%';
+      document.getElementById('levelNext').textContent = `${(next.min - totalPoints).toFixed(1)} poin lagi ke ${next.name}`;
+    } else {
+      document.getElementById('levelBar').style.width = '100%';
+      document.getElementById('levelNext').textContent = 'Level tertinggi!';
+    }
+  }
+
+  async function loadStatsAndResume(){
+    const completedModuleIds = new Set(myAttempts.map(a => a.moduleId));
+    document.getElementById('statSelesai').textContent = completedModuleIds.size;
+
+    const scores = myAttempts.filter(a => a.score != null).map(a => a.score);
+    document.getElementById('statSkor').textContent = scores.length ? Math.round(scores.reduce((s,v)=>s+v,0)/scores.length) : '-';
+
+    const resumeItems = myProgress
+      .filter(p => !completedModuleIds.has(p.moduleId))
+      .sort((a,b) => (b.updatedAt?.seconds||0) - (a.updatedAt?.seconds||0))
+      .slice(0, 6);
+    document.getElementById('statBerjalan').textContent = resumeItems.length;
+
+    const resumeSection = document.getElementById('resumeSection');
+    if(resumeItems.length){
+      resumeSection.style.display = 'block';
+      document.getElementById('resumeRow').innerHTML = resumeItems.map(p => {
+        const style = kategoriStyle(p.kategori);
+        return `
+        <a class="resume-card" href="trainee-learn.html?module=${p.moduleId}">
+          <div style="width:36px; height:36px; border-radius:10px; background:#${style.color}20; color:#${style.color}; display:flex; align-items:center; justify-content:center;">${iconSvg(style.icon,{size:18})}</div>
+          <div style="font-weight:700; font-size:13px;">${p.judul}</div>
+          <div class="text-meta">Lanjutkan →</div>
+        </a>`;
+      }).join('');
+    } else {
+      resumeSection.style.display = 'none';
+    }
+  }
+
+  document.getElementById('filterRow').addEventListener('click', (e) => {
+    const chip = e.target.closest('.chip');
+    if(!chip) return;
+    document.querySelectorAll('#filterRow .chip').forEach(c => c.classList.remove('selected'));
+    chip.classList.add('selected');
+    activeKategori = chip.dataset.kategori;
+    renderTraineeModules();
+  });
+
+  async function loadTraineeHome(){
+    document.getElementById('resumeIconSlot').innerHTML = iconSvg('refresh', {size:18});
+    document.getElementById('wajibIconSlot').innerHTML = iconSvg('user-check', {size:18});
+    document.getElementById('greeting').textContent = `Halo, ${(currentProfile.displayName||'').split(' ')[0]}!`;
+
+    const q = query(collection(db, 'modules'), where('status', '==', 'published'));
+    const snap = await getDocs(q);
+    allModules = [];
+    snap.forEach(d => allModules.push({ id: d.id, ...d.data() }));
+
+    try{
+      const aSnap = await getDocs(query(collection(db, 'attempts'), where('uid', '==', currentUser.uid)));
+      myAttempts = []; aSnap.forEach(d => myAttempts.push(d.data()));
+    } catch(e){ myAttempts = []; }
+
+    try{
+      const pSnap = await getDocs(query(collection(db, 'progress'), where('uid', '==', currentUser.uid)));
+      myProgress = []; pSnap.forEach(d => myProgress.push(d.data()));
+    } catch(e){ myProgress = []; }
+
+    renderTraineeModules();
+    renderLevel();
+    loadStatsAndResume();
+  }
+
+  /* ===== Auth utama ===== */
   onAuth(async (user) => {
     document.getElementById('loadingState').style.display = 'none';
     const out = document.getElementById('loggedOut');
@@ -98,12 +342,22 @@
     if(!user){ out.style.display = 'flex'; inn.style.display = 'none'; return; }
 
     const profile = await ensureUserProfile(user);
+    currentUser = user; currentProfile = profile;
     out.style.display = 'none'; inn.style.display = 'block';
     document.getElementById('userAvatar').src = profile.photoURL || '';
     document.getElementById('userName').textContent = profile.displayName;
+
+    if(profile.role === 'trainee'){
+      document.getElementById('menuWrap').style.display = 'none';
+      document.getElementById('traineeWrap').style.display = 'block';
+      loadTraineeHome();
+      return;
+    }
+
+    document.getElementById('traineeWrap').style.display = 'none';
+    document.getElementById('menuWrap').style.display = 'block';
     document.getElementById('welcomeTitle').textContent = `Selamat datang, ${profile.displayName.split(' ')[0]}`;
     document.getElementById('roleBadge').textContent = 'Role: ' + profile.role;
-
     const menu = MENU_BY_ROLE[profile.role] || [];
     document.getElementById('menuGrid').innerHTML = menu.map(m => `
       <a class="menu-card" href="${m.href}">
