@@ -232,10 +232,11 @@
 
         <div class="card" style="margin-bottom:20px;">
           <h2 class="text-h2" style="margin-bottom:6px;">Tambah / Assign Level Trainer</h2>
-          <p class="text-sub" style="margin-bottom:12px;">Set Level Saat Ini per NIK trainer — dipakai sebagai bobot formula Trainer Score.</p>
-          <div style="display:grid; grid-template-columns:1fr 1.4fr 1fr auto; gap:8px; align-items:end;">
+          <p class="text-sub" style="margin-bottom:12px;">Set Level Saat Ini per NIK trainer — dipakai sebagai bobot formula Trainer Score. Isi Email supaya trainer bisa lihat level-nya sendiri di beranda LMS.</p>
+          <div style="display:grid; grid-template-columns:1fr 1.2fr 1.2fr 1fr auto; gap:8px; align-items:end;">
             <div><label>NIK</label><input type="text" id="tpNik"></div>
             <div><label>Nama</label><input type="text" id="tpNama"></div>
+            <div><label>Email (login LMS)</label><input type="email" id="tpEmail" placeholder="opsional"></div>
             <div><label>Level</label>
               <select id="tpLevel">
                 <option>New Comer</option><option>Junior Trainer</option><option>Intermediate Trainer</option>
@@ -251,7 +252,7 @@
           <div style="overflow-x:auto">
           <table class="data-table">
             <thead><tr>
-              <th>Nama</th><th>NIK</th><th>Level Saat Ini</th>
+              <th>Nama</th><th>NIK</th><th>Email</th><th>Level Saat Ini</th>
               <th>Semester Terakhir</th><th>Total Score</th><th>Eligible</th>
             </tr></thead>
             <tbody id="trainerTableBody"></tbody>
@@ -350,7 +351,7 @@
       state.trainers = Object.keys(profiles).map(nik => {
         const latest = latestByNik[nik];
         return {
-          nik, nama: profiles[nik].nama || nik, levelSaatIni: profiles[nik].levelSaatIni || 'New Comer',
+          nik, nama: profiles[nik].nama || nik, levelSaatIni: profiles[nik].levelSaatIni || 'New Comer', email: profiles[nik].email || '',
           semester: latest?.semester, totalScore: latest?.totalScore, levelEligible: latest?.levelBaruEligible,
         };
       });
@@ -554,7 +555,7 @@
     document.getElementById('trainerTableBody').innerHTML = rows.map(r => {
       const promo = r.levelEligible && LEVEL_ORDER.indexOf(r.levelEligible) > LEVEL_ORDER.indexOf(r.levelSaatIni);
       return `<tr>
-        <td><strong>${r.nama}</strong></td><td>${r.nik}</td>
+        <td><strong>${r.nama}</strong></td><td>${r.nik}</td><td class="text-meta">${r.email||'-'}</td>
         <td><span class="badge ${levelBadgeCls(r.levelSaatIni)}">${r.levelSaatIni}</span></td>
         <td>${r.semester||'-'}</td><td>${r.totalScore ?? '-'}</td>
         <td>${r.levelEligible ? `<span class="badge ${promo?'badge-green':'badge-gray'}">${r.levelEligible}${promo?' ↑':''}</span>` : '-'}</td>
@@ -567,11 +568,14 @@
   document.getElementById('tpSaveBtn').addEventListener('click', async () => {
     const nik = document.getElementById('tpNik').value.trim();
     const nama = document.getElementById('tpNama').value.trim();
+    const email = document.getElementById('tpEmail').value.trim().toLowerCase();
     const level = document.getElementById('tpLevel').value;
     if(!nik || !nama){ showToast('NIK dan Nama wajib diisi.'); return; }
     try{
-      await setDoc(doc(db, 'trainerProfiles', nik), { nama, levelSaatIni: level }, { merge: true });
-      document.getElementById('tpNik').value = ''; document.getElementById('tpNama').value = '';
+      const payload = { nama, levelSaatIni: level };
+      if(email) payload.email = email;
+      await setDoc(doc(db, 'trainerProfiles', nik), payload, { merge: true });
+      document.getElementById('tpNik').value = ''; document.getElementById('tpNama').value = ''; document.getElementById('tpEmail').value = '';
       showToast('Trainer tersimpan.');
       await loadAll();
     } catch(err){ showToast('Gagal simpan: ' + err.message); }
