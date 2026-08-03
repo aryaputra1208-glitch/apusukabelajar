@@ -230,21 +230,9 @@
           </div>
         </div>
 
-        <div class="card" style="margin-bottom:20px;">
-          <h2 class="text-h2" style="margin-bottom:6px;">Tambah / Assign Level Trainer</h2>
-          <p class="text-sub" style="margin-bottom:12px;">Set Level Saat Ini per NIK trainer — dipakai sebagai bobot formula Trainer Score. Isi Email supaya trainer bisa lihat level-nya sendiri di beranda LMS.</p>
-          <div style="display:grid; grid-template-columns:1fr 1.2fr 1.2fr 1fr auto; gap:8px; align-items:end;">
-            <div><label>NIK</label><input type="text" id="tpNik"></div>
-            <div><label>Nama</label><input type="text" id="tpNama"></div>
-            <div><label>Email (login LMS)</label><input type="email" id="tpEmail" placeholder="opsional"></div>
-            <div><label>Level</label>
-              <select id="tpLevel">
-                <option>New Comer</option><option>Junior Trainer</option><option>Intermediate Trainer</option>
-                <option>Senior Trainer</option><option>Master Trainer</option>
-              </select>
-            </div>
-            <button class="btn btn-primary" id="tpSaveBtn" style="margin-bottom:14px;">Simpan</button>
-          </div>
+        <div class="card" style="margin-bottom:20px; display:flex; align-items:center; justify-content:space-between;">
+          <p class="text-sub" style="margin:0;">Mau tambah trainer baru atau assign Level Saat Ini? Itu sekarang di halaman terpisah, bukan di sini (dashboard ini read-only analitik).</p>
+          <a href="admin-trainer.html" class="btn btn-outline" style="text-decoration:none; white-space:nowrap; margin-left:12px;">Kelola Trainer →</a>
         </div>
 
         <div class="panel">
@@ -292,7 +280,7 @@
 <script type="module">
   import { auth, db, onAuth, ensureUserProfile } from './firebase-shared.js';
   import { iconSvg } from './lms-icons.js';
-  import { collection, getDocs, doc, setDoc, query, where } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+  import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
   import { getApps } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
   import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-functions.js";
 
@@ -564,22 +552,6 @@
     document.getElementById('trainerEmpty').style.display = rows.length ? 'none' : 'block';
     document.getElementById('trainerEmpty').innerHTML = iconSvg('inbox',{size:24}) + '<p style="margin-top:8px;">Belum ada data trainer.</p>';
   }
-
-  document.getElementById('tpSaveBtn').addEventListener('click', async () => {
-    const nik = document.getElementById('tpNik').value.trim();
-    const nama = document.getElementById('tpNama').value.trim();
-    const email = document.getElementById('tpEmail').value.trim().toLowerCase();
-    const level = document.getElementById('tpLevel').value;
-    if(!nik || !nama){ showToast('NIK dan Nama wajib diisi.'); return; }
-    try{
-      const payload = { nama, levelSaatIni: level };
-      if(email) payload.email = email;
-      await setDoc(doc(db, 'trainerProfiles', nik), payload, { merge: true });
-      document.getElementById('tpNik').value = ''; document.getElementById('tpNama').value = ''; document.getElementById('tpEmail').value = '';
-      showToast('Trainer tersimpan.');
-      await loadAll();
-    } catch(err){ showToast('Gagal simpan: ' + err.message); }
-  });
 
   document.getElementById('recalcBtn').addEventListener('click', async () => {
     const btn = document.getElementById('recalcBtn');
