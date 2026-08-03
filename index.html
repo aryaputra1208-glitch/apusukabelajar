@@ -405,9 +405,9 @@
           : 'Belum ada training offline yang terhitung skornya.';
       } else {
         document.getElementById('trLevelHint').style.display = 'block';
-        document.getElementById('trLevelHint').textContent = 'Level Trainer Anda belum terhubung — minta admin tautkan email Anda di Training Dashboard.';
+        document.getElementById('trLevelHint').textContent = `Level Trainer Anda belum terhubung untuk email "${user.email}" — minta admin tautkan email PERSIS ini (bukan email lain) di Training Dashboard → Trainer Pool.`;
       }
-    } catch(e){ /* diamkan, tidak kritikal buat halaman utama */ }
+    } catch(e){ console.error('Gagal muat level trainer:', e); }
 
     try{
       const modSnap = await getDocs(query(collection(db, 'modules'), where('createdBy', '==', user.uid), where('mode', '==', 'online')));
