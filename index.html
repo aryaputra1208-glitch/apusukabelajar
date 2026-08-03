@@ -64,6 +64,27 @@
   <div class="wrap" id="menuWrap" style="display:none;">
     <h1 class="text-h1" id="welcomeTitle"></h1>
     <div class="role-badge" id="roleBadge"></div>
+
+    <div class="card" id="trainerLevelBanner" style="margin-top:20px; margin-bottom:8px; display:none; background:linear-gradient(135deg, var(--pink) 0%, var(--pink-dark) 100%); border:none;">
+      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div style="width:52px; height:52px; border-radius:14px; background:rgba(255,255,255,.2); display:flex; align-items:center; justify-content:center;" id="trLevelIcon"></div>
+          <div>
+            <div style="color:rgba(255,255,255,.8); font-size:12px; font-weight:600; letter-spacing:.03em;">LEVEL TRAINER ANDA</div>
+            <div style="color:#fff; font-size:20px; font-weight:700;" id="trLevelName">-</div>
+          </div>
+        </div>
+        <div style="color:rgba(255,255,255,.9); font-size:13px;" id="trLevelSub"></div>
+      </div>
+    </div>
+    <p class="text-sub" id="trLevelHint" style="display:none; margin-bottom:16px;"></p>
+
+    <div class="stat-row" id="trainerStatRow" style="display:none; margin-top:8px;">
+      <div class="stat-card"><div class="stat-num" id="trStatModul">-</div><div class="stat-label">Modul Online Dibuat</div></div>
+      <div class="stat-card"><div class="stat-num" id="trStatPeserta">-</div><div class="stat-label">Total Peserta (semua modul)</div></div>
+      <div class="stat-card"><div class="stat-num" id="trStatAvgSkor">-</div><div class="stat-label">Avg Skor Peserta</div></div>
+    </div>
+
     <div class="menu-grid" id="menuGrid"></div>
   </div>
 
@@ -365,6 +386,55 @@
         <div style="font-weight:700; font-size:14px; margin-bottom:4px;">${m.title}</div>
         <div class="text-sub">${m.desc}</div>
       </a>`).join('') || `<p class="text-sub">Belum ada menu untuk role Anda.</p>`;
+
+    if(profile.role === 'trainer'){
+      loadTrainerHome(user);
+    }
+  });
+
+  async function loadTrainerHome(user){
+    try{
+      const profSnap = await getDocs(query(collection(db, 'trainerProfiles'), where('email', '==', (user.email||'').toLowerCase())));
+      if(!profSnap.empty){
+        const trProfile = profSnap.docs[0].data();
+        const nik = profSnap.docs[0].id;
+        const scoreSnap = await getDocs(query(collection(db, 'trainerScoreSemester'), where('trainerNik', '==', nik)));
+        let latest = null;
+        scoreSnap.forEach(d => { const s = d.data(); if(!latest || s.semester > latest.semester) latest = s; });
+
+        document.getElementById('trainerLevelBanner').style.display = 'block';
+        document.getElementById('trLevelIcon').innerHTML = iconSvg('user-check', { size: 26, color: '#fff' });
+        document.getElementById('trLevelName').textContent = trProfile.levelSaatIni || 'New Comer';
+        document.getElementById('trLevelSub').textContent = latest
+          ? `Score semester ${latest.semester}: ${latest.totalScore}${latest.levelBaruEligible && latest.levelBaruEligible !== trProfile.levelSaatIni ? ' · Eligible naik ke ' + latest.levelBaruEligible : ''}`
+          : 'Belum ada training offline yang terhitung skornya.';
+      } else {
+        document.getElementById('trLevelHint').style.display = 'block';
+        document.getElementById('trLevelHint').textContent = 'Level Trainer Anda belum terhubung — minta admin tautkan email Anda di Training Dashboard.';
+      }
+    } catch(e){ /* diamkan, tidak kritikal buat halaman utama */ }
+
+    try{
+      const modSnap = await getDocs(query(collection(db, 'modules'), where('createdBy', '==', user.uid), where('mode', '==', 'online')));
+      const myModuleIds = []; modSnap.forEach(d => myModuleIds.push(d.id));
+      document.getElementById('trStatModul').textContent = myModuleIds.length;
+
+      if(myModuleIds.length){
+        const chunks = []; for(let i=0;i<myModuleIds.length;i+=30) chunks.push(myModuleIds.slice(i,i+30));
+        let allAttempts = [];
+        for(const c of chunks){
+          const aSnap = await getDocs(query(collection(db, 'attempts'), where('moduleId', 'in', c)));
+          aSnap.forEach(d => allAttempts.push(d.data()));
+        }
+        document.getElementById('trStatPeserta').textContent = allAttempts.length;
+        const scores = allAttempts.filter(a => a.score != null).map(a => a.score);
+        document.getElementById('trStatAvgSkor').textContent = scores.length ? Math.round(scores.reduce((s,v)=>s+v,0)/scores.length) : '-';
+      } else {
+        document.getElementById('trStatPeserta').textContent = 0;
+        document.getElementById('trStatAvgSkor').textContent = '-';
+      }
+      document.getElementById('trainerStatRow').style.display = 'grid';
+    } catch(e){ /* diamkan */ }
   });
 </script>
 </body>
