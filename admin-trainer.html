@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kelola Trainer — Anteraja LMS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./lms-design-system.css">
+<style>
+  .avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+  .user-chip { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); }
+  .kpi-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 18px; margin-bottom: 28px; }
+  .kpi-card2 { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; border-top: 3px solid var(--accent, var(--pink)); }
+  .kpi-label2 { font-size: 11px; color: var(--text-3); letter-spacing: .04em; font-weight: 700; margin-bottom: 6px; }
+  .kpi-value2 { font-size: 28px; font-weight: 700; color: var(--accent, var(--pink)); font-family: var(--font-display); }
+  .kpi-sub { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<div id="gate" class="locked-state" style="display:none;">
+  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Memuat...</p>
+  <p class="text-sub" id="gateSub"></p>
+</div>
+
+<div id="appShell" style="display:none;">
+  <div class="topbar">
+    <div style="display:flex; align-items:center; gap:16px;">
+      <a href="index.html" class="sidebar-logo" style="margin:0; text-decoration:none;">anteraja LMS</a>
+      <a href="index.html" class="text-sub" style="text-decoration:none; display:flex; align-items:center; gap:4px;">← Menu Utama</a>
+    </div>
+    <div class="user-chip">
+      <img class="avatar" id="userAvatar" src="">
+      <span id="userName"></span>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <h1 class="text-h1">Kelola Trainer</h1>
+    <p class="text-sub" style="margin-bottom:20px;">Assign NIK, Level Saat Ini, dan hubungkan email login trainer. Analitik/skor lengkap ada di <a href="training-dashboard-v2.html" style="color:var(--pink);">Training Dashboard</a>.</p>
+
+    <div class="kpi-row">
+      <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">TOTAL TRAINER</div><div class="kpi-value2" id="kpiTotalTrainer">-</div><div class="kpi-sub">Semua level</div></div>
+      <div class="kpi-card2" style="--accent:var(--green)"><div class="kpi-label2">SIAP NAIK LEVEL</div><div class="kpi-value2" id="kpiPromosi">-</div><div class="kpi-sub">Eligible &gt; level sekarang</div></div>
+      <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">SENIOR + MASTER</div><div class="kpi-value2" id="kpiSeniorMaster">-</div><div class="kpi-sub">Trainer level atas</div></div>
+      <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">EMAIL BELUM DIHUBUNGKAN</div><div class="kpi-value2" id="kpiNoEmail">-</div><div class="kpi-sub">Belum bisa lihat level sendiri</div></div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px;">
+      <h2 class="text-h2" style="margin-bottom:6px;">Tambah / Assign Trainer</h2>
+      <p class="text-sub" style="margin-bottom:12px;">Set NIK, Nama, Level Saat Ini, dan Email (opsional — supaya trainer bisa lihat level-nya sendiri di beranda LMS).</p>
+      <div style="display:grid; grid-template-columns:1fr 1.2fr 1.2fr 1fr auto; gap:8px; align-items:end;">
+        <div><label>NIK</label><input type="text" id="tpNik"></div>
+        <div><label>Nama</label><input type="text" id="tpNama"></div>
+        <div><label>Email (login LMS)</label><input type="email" id="tpEmail" placeholder="opsional"></div>
+        <div><label>Level</label>
+          <select id="tpLevel">
+            <option>New Comer</option><option>Junior Trainer</option><option>Intermediate Trainer</option>
+            <option>Senior Trainer</option><option>Master Trainer</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" id="tpSaveBtn" style="margin-bottom:14px;">Simpan</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h3>Daftar Trainer</h3></div>
+      <div style="overflow-x:auto">
+      <table class="data-table">
+        <thead><tr>
+          <th>Nama</th><th>NIK</th><th>Email</th><th>Level Saat Ini</th>
+          <th>Semester Terakhir</th><th>Total Score</th><th>Eligible</th><th>Aksi</th>
+        </tr></thead>
+        <tbody id="trainerTableBody"></tbody>
+      </table>
+      </div>
+      <div id="trainerEmpty" class="empty-state" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { auth, db, onAuth, ensureUserProfile } from './firebase-shared.js';
+  import { iconSvg } from './lms-icons.js';
+  import { collection, getDocs, doc, setDoc } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+
+  const LEVEL_ORDER = ['New Comer','Junior Trainer','Intermediate Trainer','Senior Trainer','Master Trainer'];
+  let trainers = [];
+
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 2500);
+  }
+  function levelBadgeCls(level){
+    const map = {'New Comer':'badge-gray','Junior Trainer':'badge-blue','Intermediate Trainer':'badge-purple','Senior Trainer':'badge-amber','Master Trainer':'badge-green'};
+    return map[level] || 'badge-gray';
+  }
+
+  async function loadAll(){
+    const scoreSnap = await getDocs(collection(db, 'trainerScoreSemester'));
+    const scores = []; scoreSnap.forEach(d => scores.push({ id: d.id, ...d.data() }));
+    const profSnap = await getDocs(collection(db, 'trainerProfiles'));
+    const profiles = {}; profSnap.forEach(d => { profiles[d.id] = d.data(); });
+
+    const latestByNik = {};
+    scores.forEach(s => {
+      const cur = latestByNik[s.trainerNik];
+      if(!cur || s.semester > cur.semester) latestByNik[s.trainerNik] = s;
+    });
+
+    trainers = Object.keys(profiles).map(nik => {
+      const latest = latestByNik[nik];
+      return {
+        nik, nama: profiles[nik].nama || nik, levelSaatIni: profiles[nik].levelSaatIni || 'New Comer', email: profiles[nik].email || '',
+        semester: latest?.semester, totalScore: latest?.totalScore, levelEligible: latest?.levelBaruEligible,
+      };
+    });
+    Object.keys(latestByNik).forEach(nik => {
+      if(!profiles[nik]){
+        const latest = latestByNik[nik];
+        trainers.push({ nik, nama: nik, levelSaatIni: 'New Comer', email: '', semester: latest.semester, totalScore: latest.totalScore, levelEligible: latest.levelBaruEligible });
+      }
+    });
+
+    render();
+  }
+
+  function render(){
+    document.getElementById('kpiTotalTrainer').textContent = trainers.length;
+    document.getElementById('kpiPromosi').textContent = trainers.filter(r => r.levelEligible && LEVEL_ORDER.indexOf(r.levelEligible) > LEVEL_ORDER.indexOf(r.levelSaatIni)).length;
+    document.getElementById('kpiSeniorMaster').textContent = trainers.filter(r=>r.levelSaatIni==='Senior Trainer'||r.levelSaatIni==='Master Trainer').length;
+    document.getElementById('kpiNoEmail').textContent = trainers.filter(r=>!r.email).length;
+
+    document.getElementById('trainerTableBody').innerHTML = trainers.map(r => {
+      const promo = r.levelEligible && LEVEL_ORDER.indexOf(r.levelEligible) > LEVEL_ORDER.indexOf(r.levelSaatIni);
+      return `<tr>
+        <td><strong>${r.nama}</strong></td><td>${r.nik}</td><td class="text-meta">${r.email||'-'}</td>
+        <td><span class="badge ${levelBadgeCls(r.levelSaatIni)}">${r.levelSaatIni}</span></td>
+        <td>${r.semester||'-'}</td><td>${r.totalScore ?? '-'}</td>
+        <td>${r.levelEligible ? `<span class="badge ${promo?'badge-green':'badge-gray'}">${r.levelEligible}${promo?' ↑':''}</span>` : '-'}</td>
+        <td><button class="icon-btn row-action ra-gray" data-nik="${r.nik}" title="Edit">${iconSvg('settings',{size:14})}</button></td>
+      </tr>`;
+    }).join('');
+    document.getElementById('trainerEmpty').style.display = trainers.length ? 'none' : 'block';
+    document.getElementById('trainerEmpty').innerHTML = iconSvg('inbox',{size:24}) + '<p style="margin-top:8px;">Belum ada data trainer.</p>';
+
+    document.querySelectorAll('[data-nik]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const r = trainers.find(t => t.nik === btn.dataset.nik);
+        if(!r) return;
+        document.getElementById('tpNik').value = r.nik;
+        document.getElementById('tpNama').value = r.nama;
+        document.getElementById('tpEmail').value = r.email;
+        document.getElementById('tpLevel').value = r.levelSaatIni;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
+  }
+
+  document.getElementById('tpSaveBtn').addEventListener('click', async () => {
+    const nik = document.getElementById('tpNik').value.trim();
+    const nama = document.getElementById('tpNama').value.trim();
+    const email = document.getElementById('tpEmail').value.trim().toLowerCase();
+    const level = document.getElementById('tpLevel').value;
+    if(!nik || !nama){ showToast('NIK dan Nama wajib diisi.'); return; }
+    try{
+      const payload = { nama, levelSaatIni: level };
+      if(email) payload.email = email;
+      await setDoc(doc(db, 'trainerProfiles', nik), payload, { merge: true });
+      document.getElementById('tpNik').value = ''; document.getElementById('tpNama').value = ''; document.getElementById('tpEmail').value = '';
+      showToast('Trainer tersimpan.');
+      await loadAll();
+    } catch(err){ showToast('Gagal simpan: ' + err.message); }
+  });
+
+  onAuth(async (user) => {
+    const gate = document.getElementById('gate');
+    const shell = document.getElementById('appShell');
+    if(!user){
+      gate.style.display = 'block'; shell.style.display = 'none';
+      document.getElementById('gateTitle').textContent = 'Silakan login';
+      document.getElementById('gateSub').innerHTML = `<a href="index.html">Login dulu di sini</a>.`;
+      return;
+    }
+    const profile = await ensureUserProfile(user);
+    if(profile.role !== 'admin'){
+      gate.style.display = 'block'; shell.style.display = 'none';
+      document.getElementById('gateTitle').textContent = 'Akses ditolak';
+      document.getElementById('gateSub').textContent = 'Halaman ini cuma buat Admin.';
+      return;
+    }
+    gate.style.display = 'none'; shell.style.display = 'block';
+    document.getElementById('userAvatar').src = profile.photoURL;
+    document.getElementById('userName').textContent = profile.displayName;
+    loadAll();
+  });
+</script>
+</body>
+</html>
