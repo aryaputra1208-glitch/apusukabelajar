@@ -335,20 +335,15 @@
     document.getElementById('wajibIconSlot').innerHTML = iconSvg('user-check', {size:18});
     document.getElementById('greeting').textContent = `Halo, ${(currentProfile.displayName||'').split(' ')[0]}!`;
 
-    const q = query(collection(db, 'modules'), where('status', '==', 'published'));
-    const snap = await getDocs(q);
-    allModules = [];
-    snap.forEach(d => allModules.push({ id: d.id, ...d.data() }));
+    const [modSnap, aSnap, pSnap] = await Promise.all([
+      getDocs(query(collection(db, 'modules'), where('status', '==', 'published'))),
+      getDocs(query(collection(db, 'attempts'), where('uid', '==', currentUser.uid))).catch(() => null),
+      getDocs(query(collection(db, 'progress'), where('uid', '==', currentUser.uid))).catch(() => null),
+    ]);
 
-    try{
-      const aSnap = await getDocs(query(collection(db, 'attempts'), where('uid', '==', currentUser.uid)));
-      myAttempts = []; aSnap.forEach(d => myAttempts.push(d.data()));
-    } catch(e){ myAttempts = []; }
-
-    try{
-      const pSnap = await getDocs(query(collection(db, 'progress'), where('uid', '==', currentUser.uid)));
-      myProgress = []; pSnap.forEach(d => myProgress.push(d.data()));
-    } catch(e){ myProgress = []; }
+    allModules = []; modSnap.forEach(d => allModules.push({ id: d.id, ...d.data() }));
+    myAttempts = []; if(aSnap) aSnap.forEach(d => myAttempts.push(d.data()));
+    myProgress = []; if(pSnap) pSnap.forEach(d => myProgress.push(d.data()));
 
     renderTraineeModules();
     renderLevel();
@@ -435,7 +430,7 @@
       }
       document.getElementById('trainerStatRow').style.display = 'grid';
     } catch(e){ /* diamkan */ }
-  });
+  }
 </script>
 </body>
 </html>
