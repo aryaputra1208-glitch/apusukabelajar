@@ -435,17 +435,29 @@
         postQuestions.forEach((q,i) => { if(q.tipe==='multiple_choice'){ gradable++; if(postTestAnswers[i]===q.jawabanBenar) correct++; } });
         const score = gradable ? Math.round((correct/gradable)*100) : null;
 
-        await addDoc(collection(db, 'attempts'), {
+        const attemptPayload = {
           moduleId: trainingId, uid: currentUid, nama: peserta.nama, nik: peserta.nik,
           score, answers: postTestAnswers, submittedAt: serverTimestamp(),
-        });
+        };
+        console.log('Mengirim attempts:', attemptPayload, 'currentUid:', currentUid);
+        try{
+          await addDoc(collection(db, 'attempts'), attemptPayload);
+        } catch(err){
+          console.error('GAGAL tulis ke attempts:', err.code, err.message, attemptPayload);
+          throw new Error('Gagal simpan Post-Test (attempts): ' + err.message);
+        }
+
         for(const t of trainers){
           const vals = Object.values(csiAnswers[t.nik] || {});
           if(!vals.length) continue;
           const avg = Math.round((vals.reduce((a,b)=>a+b,0)/vals.length) * 100) / 100;
-          await addDoc(collection(db, 'csiResponses'), {
-            trainingId, trainerNik: t.nik, nikPeserta: peserta.nik, csiScore: avg, submittedAt: serverTimestamp(),
-          });
+          const csiPayload = { trainingId, trainerNik: t.nik, nikPeserta: peserta.nik, csiScore: avg, submittedAt: serverTimestamp() };
+          try{
+            await addDoc(collection(db, 'csiResponses'), csiPayload);
+          } catch(err){
+            console.error('GAGAL tulis ke csiResponses:', err.code, err.message, csiPayload);
+            throw new Error('Gagal simpan CSI trainer ' + t.nik + ': ' + err.message);
+          }
         }
         app().innerHTML = `<div class="card" style="text-align:center;">
           <h1 class="text-h1">Terima kasih, ${peserta.nama.split(' ')[0]}!</h1>
@@ -453,6 +465,7 @@
         </div>`;
         document.getElementById('tabbar').style.display = 'none';
       } catch(err){
+        console.error('Gagal mengirim (lengkap):', err);
         alert('Gagal mengirim: ' + err.message);
         btn.disabled = false; btn.textContent = 'Kirim Jawaban';
       }
