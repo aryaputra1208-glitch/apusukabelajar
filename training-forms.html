@@ -90,6 +90,7 @@
       try{
         await loadTraining();
       } catch(err){
+        console.error('Gagal memuat training (lengkap):', err.code, err.message, err);
         app().innerHTML = emptyCard('Gagal memuat training', err.message);
       }
     });
@@ -133,7 +134,13 @@
   }
 
   async function loadTraining(){
-    const snap = await getDoc(doc(db, 'modules', trainingId));
+    let snap;
+    try{
+      snap = await getDoc(doc(db, 'modules', trainingId));
+    } catch(err){
+      console.error('GAGAL baca modules:', err.code, err.message);
+      throw new Error('Gagal baca data training (modules): ' + err.message);
+    }
     if(!snap.exists() || snap.data().mode !== 'offline'){
       app().innerHTML = emptyCard('Training tidak ditemukan', 'Cek lagi link yang Anda buka.');
       return;
@@ -143,15 +150,33 @@
     document.getElementById('tabbar').style.display = 'flex';
     document.getElementById('tabPostTestBtn').style.opacity = training.postTestOpen ? '1' : '.55';
 
-    const sSnap = await getDocs(query(collection(db, 'sessions'), where('trainingId', '==', trainingId)));
+    let sSnap;
+    try{
+      sSnap = await getDocs(query(collection(db, 'sessions'), where('trainingId', '==', trainingId)));
+    } catch(err){
+      console.error('GAGAL baca sessions:', err.code, err.message);
+      throw new Error('Gagal baca data sesi (sessions): ' + err.message);
+    }
     sessions = []; sSnap.forEach(d => sessions.push(d.data()));
     sessions.sort((a,b) => (a.sesiKe||0) - (b.sesiKe||0));
     trainers = [...new Map(sessions.map(s => [s.trainerNik, { nik: s.trainerNik, nama: s.trainerNama }])).values()].filter(t => t.nik);
 
-    const rSnap = await getDocs(query(collection(db, 'roster'), where('trainingId', '==', trainingId)));
+    let rSnap;
+    try{
+      rSnap = await getDocs(query(collection(db, 'roster'), where('trainingId', '==', trainingId)));
+    } catch(err){
+      console.error('GAGAL baca roster:', err.code, err.message);
+      throw new Error('Gagal baca data roster: ' + err.message);
+    }
     roster = []; rSnap.forEach(d => roster.push(d.data()));
 
-    const qSnap = await getDocs(query(collection(db, 'questions'), where('moduleId', '==', trainingId)));
+    let qSnap;
+    try{
+      qSnap = await getDocs(query(collection(db, 'questions'), where('moduleId', '==', trainingId)));
+    } catch(err){
+      console.error('GAGAL baca questions:', err.code, err.message);
+      throw new Error('Gagal baca soal (questions): ' + err.message);
+    }
     const allQ = []; qSnap.forEach(d => allQ.push(d.data()));
     allQ.sort((a,b) => (a.urutan||0) - (b.urutan||0));
     postQuestions = allQ.filter(q => q.tipe !== 'csi_rating');
