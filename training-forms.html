@@ -88,9 +88,24 @@
       if(!user) return; // akan segera resolve lagi otomatis
       currentUid = user.uid;
       try{
+        await user.getIdToken(true); // paksa token auth "settle" dulu sebelum tembak query Firestore
+      } catch(e){ /* kalau gagal refresh token, tetap lanjut coba load */ }
+      try{
         await loadTraining();
       } catch(err){
-        console.error('Gagal memuat training (lengkap):', err.code, err.message, err);
+        console.error('Gagal memuat training (percobaan 1):', err.code, err.message);
+        if(err.code === 'permission-denied' || /permission/i.test(err.message||'')){
+          // Kemungkinan besar race condition token auth baru login — tunggu sebentar, coba 1x lagi otomatis
+          await new Promise(r => setTimeout(r, 1200));
+          try{
+            await loadTraining();
+            return; // berhasil di percobaan ke-2, selesai diam-diam
+          } catch(err2){
+            console.error('Gagal memuat training (percobaan 2, tetap gagal):', err2.code, err2.message, err2);
+            app().innerHTML = emptyCard('Gagal memuat training', err2.message);
+            return;
+          }
+        }
         app().innerHTML = emptyCard('Gagal memuat training', err.message);
       }
     });
