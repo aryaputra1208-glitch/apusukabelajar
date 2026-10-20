@@ -48,6 +48,50 @@
   .tabs{display:flex; gap:6px;}
   .tab-btn{padding:8px 16px; border-radius:var(--r-control); font-size:13px; font-weight:600; cursor:pointer; border:1px solid var(--border); background:var(--surface); color:var(--text-2);}
   .tab-btn.active{background:var(--pink); border-color:var(--pink); color:#fff;}
+
+  /* ===== Trainee Analytics ===== */
+  .ta-filters{display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; margin-bottom:22px;}
+  .ta-field{min-width:190px;}
+  .ta-field.grow{flex:1; min-width:220px;}
+  .ta-field label{font-size:11px; font-weight:700; color:var(--text-3); letter-spacing:.04em;}
+  .ta-field select,.ta-field input{margin-bottom:0;}
+  .name-link{background:none; border:none; padding:0; font:inherit; font-weight:700; color:var(--text); cursor:pointer; text-align:left;}
+  .name-link:hover{color:var(--pink); text-decoration:underline;}
+  .ta-sub{font-size:12px; color:var(--text-2); margin-top:2px;}
+  .ta-overlay{position:fixed; inset:0; background:rgba(26,26,26,.45); display:none; align-items:flex-start; justify-content:center; padding:40px 16px; overflow-y:auto; z-index:60;}
+  .ta-overlay.open{display:flex;}
+  .ta-modal{background:var(--surface); border-radius:var(--r-card); width:100%; max-width:860px; overflow:hidden;}
+  .ta-head{background:linear-gradient(120deg,#E6007A 0%,#FF84A1 100%); color:#fff; padding:24px 28px; position:relative;}
+  .ta-close{position:absolute; top:16px; right:16px; width:34px; height:34px; border-radius:50%; border:none; background:rgba(255,255,255,.2); color:#fff; font-size:18px; cursor:pointer;}
+  .ta-close:hover{background:rgba(255,255,255,.32);}
+  .ta-name{font-size:22px; font-family:var(--font-display); font-weight:700;}
+  .ta-meta{font-size:13px; opacity:.92; margin-top:4px;}
+  .ta-level{display:inline-flex; gap:8px; align-items:center; margin-top:14px; background:rgba(255,255,255,.18); border-radius:var(--r-pill); padding:6px 14px; font-size:12px; font-weight:700;}
+  .ta-lvl-track{height:6px; background:rgba(255,255,255,.25); border-radius:99px; margin-top:10px; max-width:360px; overflow:hidden;}
+  .ta-lvl-fill{height:100%; background:#FFCB05; border-radius:99px;}
+  .ta-lvl-note{font-size:11px; opacity:.9; margin-top:5px;}
+  .ta-body{padding:24px 28px;}
+  .ta-stats{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px;}
+  .ta-stat{background:var(--surface-2); border-radius:12px; padding:14px;}
+  .ta-stat-num{font-family:var(--font-display); font-size:22px; font-weight:700; color:var(--pink);}
+  .ta-stat-label{font-size:11px; color:var(--text-2); margin-top:2px;}
+  .ta-split{display:grid; grid-template-columns:1fr 1.4fr; gap:16px; margin-bottom:20px;}
+  .ta-box{border:1px solid var(--border); border-radius:12px; padding:16px;}
+  .ta-box h4{margin:0 0 12px; font-size:12px; color:var(--text-3); letter-spacing:.04em; font-family:var(--font-body);}
+  .ta-mode-row{display:flex; gap:10px;}
+  .ta-mode{flex:1; border-radius:10px; padding:12px; text-align:center;}
+  .ta-mode .n{font-family:var(--font-display); font-size:22px; font-weight:700;}
+  .ta-mode .l{font-size:11px; font-weight:600;}
+  .ta-mode.on{background:var(--blue-bg); color:var(--blue);}
+  .ta-mode.off{background:var(--pink-bg); color:var(--pink-dark);}
+  .ta-bar-row{display:grid; grid-template-columns:150px 1fr 38px; gap:10px; align-items:center; margin-bottom:9px; font-size:12px;}
+  .ta-bar-label{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text-2);}
+  .ta-bar-track{height:10px; background:var(--surface-2); border-radius:99px; overflow:hidden; position:relative;}
+  .ta-bar-fill{height:100%; border-radius:99px;}
+  .ta-bar-pass{position:absolute; top:-2px; bottom:-2px; left:75%; width:2px; background:var(--text-3);}
+  .ta-bar-val{font-weight:700; text-align:right;}
+  @media (max-width:1000px){ .ta-stats{grid-template-columns:repeat(2,1fr);} .ta-split{grid-template-columns:1fr;} }
+  @media (max-width:760px){ .ta-field{min-width:0; flex:1 1 100%;} .ta-head,.ta-body{padding:20px 16px;} .ta-bar-row{grid-template-columns:100px 1fr 34px;} }
 </style>
 </head>
 <body>
@@ -205,11 +249,12 @@
       <!-- ANALYTICS TAB (Trainer Pool + Course Analytics) -->
       <div class="tab-page" id="page-analytics">
         <h1 class="text-h1">Analytics</h1>
-        <div class="subtitle">Trainer Pool (training offline) dan Course Analytics (course online)</div>
+        <div class="subtitle">Trainer Pool (training offline), Course Analytics (course online), dan Trainee Analytics (rekam jejak per trainee)</div>
 
         <div class="tabs" style="margin-bottom:20px;">
           <div class="tab-btn active" data-subtab="trainerpool" id="subtabTrainerpool">Trainer Pool</div>
           <div class="tab-btn" data-subtab="courses" id="subtabCourses">Course Analytics</div>
+          <div class="tab-btn" data-subtab="trainees" id="subtabTrainees">Trainee Analytics</div>
         </div>
 
         <div id="subpage-trainerpool">
@@ -268,6 +313,37 @@
             <div id="courseEmpty" class="empty-state" style="display:none"></div>
           </div>
         </div>
+
+        <div id="subpage-trainees" style="display:none">
+          <div class="ta-filters">
+            <div class="ta-field"><label for="taDiv">DIVISI</label>
+              <select id="taDiv"><option value="">Semua Divisi</option></select></div>
+            <div class="ta-field"><label for="taDept">DEPARTEMEN</label>
+              <select id="taDept"><option value="">Semua Departemen</option></select></div>
+            <div class="ta-field grow"><label for="taSearch">CARI NIK / NAMA</label>
+              <input id="taSearch" type="text" placeholder="Ketik NIK atau nama"></div>
+            <button class="btn btn-outline" id="taReset">Reset Filter</button>
+          </div>
+
+          <div class="kpi-row">
+            <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">TOTAL TRAINEE</div><div class="kpi-value2" id="kpiTaTrainee">-</div><div class="kpi-sub">Sesuai filter</div></div>
+            <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">TRAINING DIIKUTI</div><div class="kpi-value2" id="kpiTaTraining">-</div><div class="kpi-sub">Total keikutsertaan</div></div>
+            <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">AVG POST-TEST</div><div class="kpi-value2" id="kpiTaAvg">-</div><div class="kpi-sub" id="kpiTaPass">-</div></div>
+            <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">AVG TRAINING / ORANG</div><div class="kpi-value2" id="kpiTaPer">-</div><div class="kpi-sub">Online + offline</div></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head"><h3>Daftar Trainee</h3><span class="text-meta" id="taRowCount"></span></div>
+            <div style="overflow-x:auto">
+            <table class="data-table">
+              <thead><tr>
+                <th>Nama</th><th>NIK</th><th>Divisi / Departemen</th><th>Training</th><th>Avg Post-Test</th><th>Training Terakhir</th><th>Level</th>
+              </tr></thead>
+              <tbody id="taTableBody"></tbody>
+            </table>
+            </div>
+          </div>
+        </div>
       </div>
 
     </div>
@@ -275,6 +351,10 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<div class="ta-overlay" id="taOverlay" role="dialog" aria-modal="true">
+  <div class="ta-modal" id="taModal"></div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 <script type="module">
@@ -493,7 +573,9 @@
       const sub = btn.dataset.subtab;
       document.getElementById('subpage-trainerpool').style.display = sub === 'trainerpool' ? 'block' : 'none';
       document.getElementById('subpage-courses').style.display = sub === 'courses' ? 'block' : 'none';
+      document.getElementById('subpage-trainees').style.display = sub === 'trainees' ? 'block' : 'none';
       if(sub === 'courses' && !state.coursesLoaded) loadCourseAnalytics();
+      if(sub === 'trainees' && !state.traineesLoaded) loadTraineeAnalytics();
     });
   });
 
@@ -534,6 +616,280 @@
     }
   }
 
+  /* ===================== TRAINEE ANALYTICS ===================== */
+  const TA_PASS = 75;
+  const TA_LEVELS = [['Pemula',0],['Rajin Belajar',3],['Bersemangat',8],['Ahli',16],['Master Pembelajar',30]];
+  let taPeople = [];
+
+  const taEsc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const taNorm = s => String(s || '').trim().toUpperCase();
+  const taToDate = v => {
+    if(!v) return null;
+    if(typeof v.toDate === 'function') return v.toDate();
+    const d = new Date(String(v).length === 10 ? v + 'T00:00:00' : v);
+    return isNaN(d) ? null : d;
+  };
+  const taFmtDate = d => d ? d.toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'}) : '-';
+  const taAvg = a => a.length ? a.reduce((s,v)=>s+v,0)/a.length : null;
+  const taScoreBadge = v => v == null ? '<span class="badge badge-gray">—</span>'
+    : `<span class="badge ${v>=85?'badge-green':v>=TA_PASS?'badge-amber':'badge-red'}">${Math.round(v)}</span>`;
+  const taBarColor = v => v>=85 ? 'var(--green)' : v>=TA_PASS ? 'var(--amber)' : 'var(--red)';
+
+  // Rumus level SAMA dengan beranda trainee di index.html (dihitung dari attempt course online).
+  function taLevel(onlineAttempts, modulesById){
+    let pts = 0;
+    onlineAttempts.forEach(a => {
+      const mod = modulesById[a.moduleId];
+      const w = (mod && mod.kategori === 'Core/Mandatory') ? 2 : 1;
+      pts += w * (a.score != null ? a.score/100 : 1);
+    });
+    pts = Math.round(pts*10)/10;
+    let idx = 0; TA_LEVELS.forEach((t,i) => { if(pts >= t[1]) idx = i; });
+    const next = TA_LEVELS[idx+1];
+    const pct = next ? Math.min(100, (pts - TA_LEVELS[idx][1]) / (next[1] - TA_LEVELS[idx][1]) * 100) : 100;
+    return { pts, idx, name: TA_LEVELS[idx][0], next, pct };
+  }
+
+  async function taGetAll(colName){
+    const snap = await getDocs(collection(db, colName));
+    const out = []; snap.forEach(d => out.push({ id: d.id, ...d.data() })); return out;
+  }
+
+  async function loadTraineeAnalytics(){
+    state.traineesLoaded = true;
+    const tbody = document.getElementById('taTableBody');
+    tbody.innerHTML = `<tr><td colspan="7" class="text-meta">Memuat data trainee...</td></tr>`;
+    try{
+      const [modules, attempts, roster, attendance, sessions, users, approved] = await Promise.all([
+        taGetAll('modules'), taGetAll('attempts'), taGetAll('roster'), taGetAll('attendanceLog'),
+        taGetAll('sessions'), taGetAll('users'), taGetAll('approved_users'),
+      ]);
+      const modulesById = {}; modules.forEach(m => modulesById[m.id] = m);
+      const approvedByEmail = {}; approved.forEach(a => approvedByEmail[String(a.id).toLowerCase()] = a);
+      const usersByUid = {}; users.forEach(u => usersByUid[u.id] = u);
+
+      const sessionsByTraining = {};
+      sessions.forEach(s => (sessionsByTraining[s.trainingId] = sessionsByTraining[s.trainingId] || []).push(s));
+
+      // Identitas: pakai NIK kalau diketahui (offline / akun yang punya field nik), selain itu akun LMS (uid).
+      const people = {};
+      const getPerson = (key, info) => {
+        const p = people[key] || (people[key] = { key, nik:'', nama:'', email:'', jabatan:'', divisi:'', departemen:'', recs:{}, onlineAttempts:[], regTrainings:new Set() });
+        ['nik','nama','email','jabatan','divisi','departemen'].forEach(f => { if(!p[f] && info[f]) p[f] = String(info[f]).trim(); });
+        return p;
+      };
+      const userInfo = u => {
+        const ap = approvedByEmail[String(u.email||'').toLowerCase()] || {};
+        return { nik: u.nik || ap.nik, nama: u.displayName || ap.nama, email: u.email, jabatan: u.jabatan || ap.jabatan,
+                 divisi: u.divisi || ap.divisi, departemen: u.departemen || ap.departemen };
+      };
+      const keyForUid = uid => {
+        const u = usersByUid[uid]; const info = u ? userInfo(u) : {};
+        return info.nik ? 'n:' + String(info.nik).trim() : 'u:' + uid;
+      };
+      const rec = (p, moduleId) => p.recs[moduleId] || (p.recs[moduleId] = { moduleId, attempts:[], hadirSesi:new Set() });
+
+      // 1. Semua akun trainee LMS (termasuk yang belum ikut training apa pun)
+      users.filter(u => u.role === 'trainee').forEach(u => getPerson(keyForUid(u.id), userInfo(u)));
+
+      // 2. Roster training offline (sumber Divisi/Departemen/Jabatan)
+      roster.forEach(r => {
+        if(!r.nik) return;
+        const p = getPerson('n:' + String(r.nik).trim(), r);
+        p.regTrainings.add(r.trainingId);
+      });
+
+      // 3. Absensi offline
+      attendance.forEach(a => {
+        if(!a.nik) return;
+        const p = getPerson('n:' + String(a.nik).trim(), { nik:a.nik, nama:a.nama });
+        rec(p, a.trainingId).hadirSesi.add(String(a.sesiKe));
+        p.regTrainings.add(a.trainingId);
+      });
+
+      // 4. Post-test (offline lewat Forms = punya nik; online lewat LMS = punya uid akun)
+      attempts.forEach(a => {
+        const mod = modulesById[a.moduleId];
+        const isOffline = mod ? mod.mode === 'offline' : !!a.nik;
+        let p;
+        if(isOffline && a.nik) p = getPerson('n:' + String(a.nik).trim(), { nik:a.nik, nama:a.nama });
+        else if(a.uid){
+          const u = usersByUid[a.uid];
+          p = getPerson(keyForUid(a.uid), u ? userInfo(u) : { nama:a.nama, email:a.email });
+          p.onlineAttempts.push(a);
+        } else return;
+        rec(p, a.moduleId).attempts.push(a);
+        if(isOffline) p.regTrainings.add(a.moduleId);
+      });
+
+      // Bentuk riwayat per orang
+      taPeople = Object.values(people).map(p => {
+        const rows = Object.values(p.recs).map(r => {
+          const mod = modulesById[r.moduleId] || {};
+          const offline = mod.mode === 'offline';
+          const latest = r.attempts.slice().sort((x,y) => (taToDate(y.submittedAt)||0) - (taToDate(x.submittedAt)||0))[0];
+          const sess = sessionsByTraining[r.moduleId] || [];
+          const jam = offline
+            ? sess.filter(s => r.hadirSesi.has(String(s.sesiKe))).reduce((s,x) => s + (Number(x.durasiJam)||0), 0)
+            : (latest ? (Number(mod.durasiMenit)||0)/60 : 0);
+          return {
+            moduleId: r.moduleId, judul: mod.judul || '(training dihapus)', kategori: mod.kategori || '-',
+            mode: offline ? 'Offline' : 'Online',
+            tanggal: offline ? taToDate(mod.tanggalMulai) : taToDate(latest?.submittedAt),
+            score: latest ? (latest.score ?? null) : null, hasAttempt: !!latest,
+            hadir: r.hadirSesi.size, totalSesi: sess.length, jam,
+          };
+        }).sort((a,b) => (b.tanggal||0) - (a.tanggal||0));
+
+        // Kehadiran offline: sesi hadir / total sesi dari semua training offline yang dia terdaftar/ikuti
+        let hadir = 0, total = 0;
+        p.regTrainings.forEach(tid => {
+          const mod = modulesById[tid]; if(!mod || mod.mode !== 'offline') return;
+          const tgl = taToDate(mod.tanggalMulai); if(tgl && tgl > state.today) return; // training belum lewat, belum dihitung
+          total += (sessionsByTraining[tid] || []).length;
+          hadir += p.recs[tid] ? p.recs[tid].hadirSesi.size : 0;
+        });
+
+        const scores = rows.filter(r => r.score != null).map(r => r.score);
+        return { ...p, rows, scores, avg: taAvg(scores), hadir, totalSesi: total,
+                 jam: rows.reduce((s,r)=>s+r.jam,0), level: taLevel(p.onlineAttempts, modulesById) };
+      }).sort((a,b) => (a.nama||'').localeCompare(b.nama||''));
+
+      // Dropdown divisi (gabung beda huruf besar/kecil)
+      const divMap = {};
+      taPeople.forEach(p => { const k = taNorm(p.divisi); if(k && !divMap[k]) divMap[k] = p.divisi; });
+      document.getElementById('taDiv').innerHTML = '<option value="">Semua Divisi</option>' +
+        Object.keys(divMap).sort().map(k => `<option value="${taEsc(k)}">${taEsc(divMap[k])}</option>`).join('');
+      taFillDept();
+      renderTraineeAnalytics();
+    } catch(err){
+      state.traineesLoaded = false;
+      tbody.innerHTML = `<tr><td colspan="7" class="text-meta">Gagal memuat: ${taEsc(err.message)}</td></tr>`;
+      showToast('Gagal memuat trainee analytics: ' + err.message);
+    }
+  }
+
+  function taFillDept(){
+    const d = document.getElementById('taDiv').value;
+    const depMap = {};
+    taPeople.filter(p => !d || taNorm(p.divisi) === d).forEach(p => { const k = taNorm(p.departemen); if(k && !depMap[k]) depMap[k] = p.departemen; });
+    document.getElementById('taDept').innerHTML = '<option value="">Semua Departemen</option>' +
+      Object.keys(depMap).sort().map(k => `<option value="${taEsc(k)}">${taEsc(depMap[k])}</option>`).join('');
+  }
+
+  function taFiltered(){
+    const d = document.getElementById('taDiv').value, dp = document.getElementById('taDept').value;
+    const q = document.getElementById('taSearch').value.trim().toLowerCase();
+    return taPeople.filter(p => (!d || taNorm(p.divisi) === d) && (!dp || taNorm(p.departemen) === dp) &&
+      (!q || String(p.nik).toLowerCase().includes(q) || String(p.nama).toLowerCase().includes(q) || String(p.email).toLowerCase().includes(q)));
+  }
+
+  function renderTraineeAnalytics(){
+    const list = taFiltered();
+    const allScores = list.flatMap(p => p.scores);
+    const parts = list.reduce((s,p) => s + p.rows.length, 0);
+    const a = taAvg(allScores);
+    document.getElementById('kpiTaTrainee').textContent = list.length;
+    document.getElementById('kpiTaTraining').textContent = parts;
+    document.getElementById('kpiTaAvg').textContent = a == null ? '-' : Math.round(a);
+    document.getElementById('kpiTaPass').textContent = allScores.length ? `${Math.round(allScores.filter(v=>v>=TA_PASS).length/allScores.length*100)}% lulus (≥${TA_PASS})` : 'Belum ada skor';
+    document.getElementById('kpiTaPer').textContent = list.length ? (parts/list.length).toFixed(1) : '-';
+    document.getElementById('taRowCount').textContent = `${list.length} trainee`;
+
+    const tbody = document.getElementById('taTableBody');
+    if(!list.length){ tbody.innerHTML = `<tr><td colspan="7" class="text-meta" style="text-align:center; padding:32px;">Tidak ada trainee yang cocok dengan filter.</td></tr>`; return; }
+    tbody.innerHTML = list.map(p => {
+      const last = p.rows[0];
+      return `<tr>
+        <td><button class="name-link" data-key="${taEsc(p.key)}">${taEsc(p.nama || p.email || p.nik)}</button><div class="ta-sub">${taEsc(p.jabatan || '-')}</div></td>
+        <td>${p.nik ? taEsc(p.nik) : `<span class="text-meta" title="${taEsc(p.email)}">Akun LMS</span>`}</td>
+        <td>${taEsc(p.divisi || '-')}<div class="ta-sub">${taEsc(p.departemen || '-')}</div></td>
+        <td><strong>${p.rows.length}</strong></td>
+        <td>${taScoreBadge(p.avg)}</td>
+        <td>${last ? `${taEsc(last.judul)}<div class="ta-sub">${taFmtDate(last.tanggal)}</div>` : '<span class="ta-sub">Belum pernah</span>'}</td>
+        <td><span class="badge" style="background:var(--pink-bg); color:var(--pink-dark);">${p.level.name}</span></td>
+      </tr>`;
+    }).join('');
+  }
+
+  function openTraineeModal(key){
+    const p = taPeople.find(x => x.key === key); if(!p) return;
+    const lv = p.level;
+    const on = p.rows.filter(r => r.mode === 'Online').length, off = p.rows.length - on;
+    const katCount = {}; p.rows.forEach(r => katCount[r.kategori] = (katCount[r.kategori]||0) + 1);
+    const topKat = Object.entries(katCount).sort((x,y) => y[1]-x[1])[0];
+    const jam = Math.round(p.jam*10)/10;
+    const idLine = [p.nik ? 'NIK ' + p.nik : p.email, p.jabatan, [p.divisi, p.departemen].filter(Boolean).join(' / ')].filter(Boolean).map(taEsc).join(' · ');
+
+    document.getElementById('taModal').innerHTML = `
+      <div class="ta-head">
+        <button class="ta-close" aria-label="Tutup" id="taClose">×</button>
+        <div class="ta-name">${taEsc(p.nama || p.email || p.nik)}</div>
+        <div class="ta-meta">${idLine}</div>
+        <div class="ta-level">Level ${lv.idx+1} — ${lv.name} · ${lv.pts} poin</div>
+        <div class="ta-lvl-track"><div class="ta-lvl-fill" style="width:${lv.pct}%"></div></div>
+        <div class="ta-lvl-note">${lv.next ? `${(lv.next[1]-lv.pts).toFixed(1)} poin lagi menuju ${lv.next[0]}` : 'Level tertinggi tercapai'} · level dihitung dari course online (sama dengan beranda trainee)</div>
+      </div>
+      <div class="ta-body">
+        <div class="ta-stats">
+          <div class="ta-stat"><div class="ta-stat-num">${p.rows.length}</div><div class="ta-stat-label">Training Diikuti</div></div>
+          <div class="ta-stat"><div class="ta-stat-num">${p.avg == null ? '-' : Math.round(p.avg)}</div><div class="ta-stat-label">Avg Post-Test</div></div>
+          <div class="ta-stat"><div class="ta-stat-num">${jam || '-'}</div><div class="ta-stat-label">Total Jam Training</div></div>
+          <div class="ta-stat"><div class="ta-stat-num">${p.totalSesi ? Math.round(p.hadir/p.totalSesi*100) + '%' : '-'}</div><div class="ta-stat-label">Kehadiran Offline${p.totalSesi ? ` (${p.hadir}/${p.totalSesi} sesi)` : ''}</div></div>
+        </div>
+        ${p.rows.length ? `
+        <div class="ta-split">
+          <div class="ta-box">
+            <h4>MODE TRAINING</h4>
+            <div class="ta-mode-row">
+              <div class="ta-mode on"><div class="n">${on}</div><div class="l">Online</div></div>
+              <div class="ta-mode off"><div class="n">${off}</div><div class="l">Offline</div></div>
+            </div>
+            <div class="ta-sub" style="margin-top:12px;">Kategori terbanyak: <strong>${taEsc(topKat[0])}</strong> (${topKat[1]} training)</div>
+          </div>
+          <div class="ta-box">
+            <h4>SKOR POST-TEST PER TRAINING</h4>
+            ${p.rows.filter(r => r.score != null).map(r => `
+              <div class="ta-bar-row">
+                <span class="ta-bar-label" title="${taEsc(r.judul)}">${taEsc(r.judul)}</span>
+                <div class="ta-bar-track"><div class="ta-bar-fill" style="width:${Math.max(0,Math.min(100,r.score))}%; background:${taBarColor(r.score)}"></div><div class="ta-bar-pass"></div></div>
+                <span class="ta-bar-val">${Math.round(r.score)}</span>
+              </div>`).join('') || '<div class="ta-sub">Belum ada skor post-test.</div>'}
+            <div class="text-meta" style="margin-top:6px;">Garis abu-abu = batas lulus ${TA_PASS}</div>
+          </div>
+        </div>
+        <div class="ta-box" style="padding:0; overflow:hidden;">
+          <div style="padding:14px 16px 0;"><h4>RIWAYAT TRAINING</h4></div>
+          <div style="overflow-x:auto"><table class="data-table">
+            <thead><tr><th>Training</th><th>Mode</th><th>Kategori</th><th>Tanggal</th><th>Skor</th><th>Status</th></tr></thead>
+            <tbody>${p.rows.map(r => {
+              const st = !r.hasAttempt ? '<span class="badge badge-gray">Belum post-test</span>'
+                : r.score == null ? '<span class="badge badge-blue">Selesai</span>'
+                : r.score >= TA_PASS ? '<span class="badge badge-green">Lulus</span>' : '<span class="badge badge-red">Belum lulus</span>';
+              return `<tr>
+                <td><strong>${taEsc(r.judul)}</strong>${r.mode === 'Offline' && r.totalSesi ? `<div class="ta-sub">Hadir ${r.hadir}/${r.totalSesi} sesi</div>` : ''}</td>
+                <td><span class="badge ${r.mode === 'Online' ? 'badge-blue' : ''}" ${r.mode === 'Offline' ? 'style="background:var(--pink-bg); color:var(--pink-dark);"' : ''}>${r.mode}</span></td>
+                <td>${taEsc(r.kategori)}</td><td>${taFmtDate(r.tanggal)}</td><td>${taScoreBadge(r.score)}</td><td>${st}</td></tr>`;
+            }).join('')}</tbody>
+          </table></div>
+        </div>` : `<div class="ta-box" style="text-align:center; color:var(--text-2); padding:32px;">Trainee ini belum mengikuti training apa pun.</div>`}
+      </div>`;
+    document.getElementById('taOverlay').classList.add('open');
+    document.getElementById('taClose').onclick = closeTraineeModal;
+  }
+  function closeTraineeModal(){ document.getElementById('taOverlay').classList.remove('open'); }
+
+  document.getElementById('taDiv').addEventListener('change', () => { taFillDept(); renderTraineeAnalytics(); });
+  document.getElementById('taDept').addEventListener('change', renderTraineeAnalytics);
+  document.getElementById('taSearch').addEventListener('input', renderTraineeAnalytics);
+  document.getElementById('taReset').addEventListener('click', () => {
+    document.getElementById('taDiv').value = ''; taFillDept();
+    document.getElementById('taSearch').value = ''; renderTraineeAnalytics();
+  });
+  document.getElementById('taTableBody').addEventListener('click', e => { const b = e.target.closest('.name-link'); if(b) openTraineeModal(b.dataset.key); });
+  document.getElementById('taOverlay').addEventListener('click', e => { if(e.target.id === 'taOverlay') closeTraineeModal(); });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape') closeTraineeModal(); });
+
   function renderTrainerPool(){
     const rows = state.trainers;
     document.getElementById('kpiTotalTrainer').textContent = rows.length;
@@ -569,7 +925,11 @@
     }
   });
 
-  document.getElementById('refreshBtn').addEventListener('click', loadAll);
+  document.getElementById('refreshBtn').addEventListener('click', () => {
+    loadAll();
+    state.traineesLoaded = false;
+    if(document.getElementById('subpage-trainees').style.display === 'block') loadTraineeAnalytics();
+  });
 
   function goToTab(tabName){
     document.querySelectorAll('.menu-item[data-tab]').forEach(m=>m.classList.remove('active'));
