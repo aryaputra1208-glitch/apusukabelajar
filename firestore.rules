@@ -1,0 +1,119 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() { return request.auth != null; }
+    function myEmail() { return request.auth.token.email; }
+    function isAdminEmail(email) { return exists(/databases/$(database)/documents/admins/$(email)); }
+    function isTrainerEmail(email) { return exists(/databases/$(database)/documents/trainers/$(email)); }
+    function isApprovedEmail(email) { return exists(/databases/$(database)/documents/approved_users/$(email)); }
+    function isAllowedEmail(email) {
+      return isAdminEmail(email) || isTrainerEmail(email) || isApprovedEmail(email);
+    }
+    function correctRole() {
+      return isAdminEmail(myEmail()) ? 'admin' : (isTrainerEmail(myEmail()) ? 'trainer' : 'trainee');
+    }
+    function roleForEmail(email) {
+      return isAdminEmail(email) ? 'admin' : (isTrainerEmail(email) ? 'trainer' : 'trainee');
+    }
+    function myRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    // Whitelist email — trainee TIDAK BISA baca daftar lengkapnya, cuma bisa
+    // cek status email dia sendiri (dipakai buat validasi role di bawah).
+    match /admins/{email} {
+      allow get: if isSignedIn() && myEmail() == email;
+      allow list, write: if isSignedIn() && myRole() == 'admin';
+    }
+    match /trainers/{email} {
+      allow get: if isSignedIn() && myEmail() == email;
+      allow list, write: if isSignedIn() && myRole() == 'admin';
+    }
+    match /approved_users/{email} {
+      allow get: if isSignedIn() && myEmail() == email;
+      allow list, write: if isSignedIn() && myRole() == 'admin';
+    }
+
+    match /users/{uid} {
+      allow read: if isSignedIn() && (request.auth.uid == uid || myRole() == 'admin');
+      // role WAJIB sesuai hasil cek admins/trainers — tidak bisa diklaim sendiri
+      allow create: if isSignedIn() && request.auth.uid == uid
+                    && isAllowedEmail(myEmail())
+                    && request.resource.data.role == correctRole();
+      allow update: if isSignedIn() && (
+        (request.auth.uid == uid && request.resource.data.role == resource.data.role) ||
+        (myRole() == 'admin' && request.resource.data.role == roleForEmail(resource.data.email))
+      );
+      allow delete: if false;
+    }
+
+    match /modules/{moduleId} {
+      allow read: if isSignedIn() && (
+        resource.data.status == 'published' ||
+        resource.data.createdBy == request.auth.uid ||
+        myRole() == 'admin'
+      );
+      allow create: if isSignedIn() && myRole() in ['trainer', 'admin']
+                    && request.resource.data.createdBy == request.auth.uid
+                    && request.resource.data.status == 'draft';
+      allow update: if isSignedIn() && (
+        (resource.data.createdBy == request.auth.uid && myRole() == 'trainer') ||
+        myRole() == 'admin'
+      );
+      allow delete: if isSignedIn() && (resource.data.createdBy == request.auth.uid || myRole() == 'admin');
+    }
+
+    match /questions/{questionId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && myRole() in ['trainer', 'admin'];
+    }
+
+    match /submissions/{subId} {
+      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+      allow read: if isSignedIn() && (resource.data.uid == request.auth.uid || myRole() in ['trainer', 'admin']);
+      allow update: if isSignedIn() && myRole() in ['trainer', 'admin']; // buat trainer kasih skor
+    }
+
+    match /attempts/{attemptId} {
+      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+      allow read: if isSignedIn(); // termasuk anonim — trainee offline perlu cek status submit-nya sendiri via query by nik
+    }
+
+    match /progress/{progressId} {
+      allow read, write: if isSignedIn() && (
+        !exists(/databases/$(database)/documents/progress/$(progressId)) ||
+        resource.data.uid == request.auth.uid ||
+        myRole() in ['trainer', 'admin']
+      );
+    }
+
+    // --- Training OFFLINE (dipakai LMS + Forms baru) ---
+    match /sessions/{sessionId} {
+      allow read: if isSignedIn(); // termasuk akun anonim dari Forms, buat trainee pilih sesi
+      allow write: if isSignedIn() && myRole() in ['trainer', 'admin'];
+    }
+    match /roster/{rosterId} {
+      allow read: if isSignedIn(); // termasuk anonim, buat cocokkan nama di Forms
+      allow write: if isSignedIn() && myRole() in ['trainer', 'admin'];
+    }
+    match /attendanceLog/{logId} {
+      allow create: if isSignedIn(); // termasuk anonim, trainee absen dari Forms
+      allow read: if isSignedIn(); // termasuk anonim — trainee perlu baca balik status absennya sendiri
+    }
+    match /csiResponses/{csiId} {
+      allow create: if isSignedIn(); // termasuk anonim
+      allow read: if isSignedIn() && myRole() in ['trainer', 'admin'];
+    }
+
+    // --- Trainer Pool / Training Dashboard baru ---
+    match /trainerProfiles/{nik} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && myRole() == 'admin';
+    }
+    match /trainerScoreSemester/{scoreId} {
+      allow read: if isSignedIn(); // trainer perlu baca skornya sendiri di beranda LMS
+      allow write: if false; // cuma Cloud Function (admin SDK) yang boleh tulis
+    }
+  }
+}
