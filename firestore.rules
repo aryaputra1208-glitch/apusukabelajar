@@ -19,6 +19,10 @@ service cloud.firestore {
     function myRole() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
     }
+    // Akun LMS sungguhan (sudah punya profil users/{uid}) — akun anonim dari Forms TIDAK lolos.
+    function hasLmsProfile() {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
 
     // Whitelist email — trainee TIDAK BISA baca daftar lengkapnya, cuma bisa
     // cek status email dia sendiri (dipakai buat validasi role di bawah).
@@ -114,6 +118,25 @@ service cloud.firestore {
     match /trainerScoreSemester/{scoreId} {
       allow read: if isSignedIn(); // trainer perlu baca skornya sendiri di beranda LMS
       allow write: if false; // cuma Cloud Function (admin SDK) yang boleh tulis
+    }
+
+    // --- TMS Fase 1: Kamus Kompetensi & Data Karyawan ---
+    match /competencies/{compId} {
+      allow read: if hasLmsProfile(); // trainer perlu baca buat tag modul
+      allow write: if isSignedIn() && myRole() == 'admin';
+    }
+    match /settings/{settingId} {
+      allow read: if hasLmsProfile();
+      allow write: if isSignedIn() && myRole() == 'admin';
+    }
+    // Data karyawan sensitif: admin semua, karyawan cuma datanya sendiri (dicocokkan by email).
+    // Akun anonim tidak punya email -> otomatis ditolak.
+    match /employees/{nik} {
+      allow read: if isSignedIn() && (
+        myRole() == 'admin' ||
+        (resource.data.email != '' && resource.data.email == myEmail())
+      );
+      allow write: if isSignedIn() && myRole() == 'admin';
     }
   }
 }

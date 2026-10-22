@@ -87,6 +87,9 @@
       <input type="text" id="mDivisi" placeholder="Pisahkan koma kalau lebih dari 1, mis. OPERATION, HUMAN CAPITAL">
       <label>Target Level</label>
       <div id="chipLevel" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;"></div>
+      <label>Kompetensi yang Dibangun</label>
+      <p class="text-meta" style="margin:-2px 0 8px;">Pilih kompetensi yang dikembangkan modul ini. Dipakai untuk merekomendasikan modul ke karyawan yang punya gap di kompetensi tersebut.</p>
+      <div id="chipKompetensi" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;"></div>
     </div>
 
     <div class="card" id="cardOffline" style="display:none;">
@@ -160,6 +163,7 @@
 <script type="module">
   import { auth, db, onAuth, ensureUserProfile } from './firebase-shared.js';
   import { iconSvg } from './lms-icons.js';
+  import { KATEGORI_ORDER, escapeHtml } from './competency-shared.js';
   import {
     collection, addDoc, doc, getDoc, updateDoc, serverTimestamp,
     query, where, getDocs, writeBatch
@@ -181,6 +185,8 @@
   let materiFiles = [];
   let questions = [];
   let selectedLevel = [];
+  let selectedKompetensi = [];
+  let competencyList = [];
   let mode = 'online';
   let sesiRows = [];
   let rosterRows = [];
@@ -397,6 +403,38 @@
     const t = document.getElementById('toast');
     t.textContent = msg; t.style.display = 'block';
     setTimeout(() => t.style.display = 'none', 2500);
+  }
+
+  /* ===== Tag kompetensi (dari Kamus Kompetensi) ===== */
+  async function loadCompetencies(){
+    try{
+      const snap = await getDocs(collection(db, 'competencies'));
+      competencyList = [];
+      snap.forEach(d => competencyList.push({ id: d.id, ...d.data() }));
+      competencyList.sort((a,b) => (KATEGORI_ORDER.indexOf(a.kategori) - KATEGORI_ORDER.indexOf(b.kategori)) || ((a.urutan ?? 999) - (b.urutan ?? 999)));
+    } catch(err){
+      console.error('Gagal baca competencies:', err.code, err.message);
+      competencyList = [];
+    }
+  }
+  function renderKompetensiChips(){
+    const el = document.getElementById('chipKompetensi');
+    if(!competencyList.length){
+      el.innerHTML = '<span class="text-meta">Kamus kompetensi belum diisi admin — bagian ini bisa dilewati dulu.</span>';
+      return;
+    }
+    // Tag lama yang kompetensinya sudah dihapus dari kamus tetap disimpan, tidak dibuang diam-diam.
+    const known = new Set(competencyList.map(c => c.id));
+    const orphan = selectedKompetensi.filter(id => !known.has(id));
+    el.innerHTML = competencyList.map(c =>
+      `<span class="chip ${selectedKompetensi.includes(c.id)?'selected':''}" data-val="${escapeHtml(c.id)}" title="${escapeHtml(c.kategori || '')}">${escapeHtml(c.nama)}</span>`
+    ).join('') + orphan.map(id => `<span class="chip selected" data-val="${escapeHtml(id)}" title="Tidak ada lagi di kamus">${escapeHtml(id)} (lama)</span>`).join('');
+    el.querySelectorAll('.chip').forEach(chip => chip.addEventListener('click', () => {
+      const val = chip.dataset.val;
+      const idx = selectedKompetensi.indexOf(val);
+      if(idx === -1) selectedKompetensi.push(val); else selectedKompetensi.splice(idx, 1);
+      chip.classList.toggle('selected');
+    }));
   }
 
   function renderChips(containerId, options, selectedArr){
@@ -638,6 +676,7 @@
       tanggalSelesai: mode === 'offline' ? document.getElementById('mTglSelesai').value : '',
       targetDivisi: document.getElementById('mDivisi').value.split(',').map(s => s.trim()).filter(Boolean),
       targetLevel: selectedLevel,
+      kompetensiIds: selectedKompetensi,
       materiFiles,
       createdBy: currentUser.uid,
       createdByName: currentProfile.displayName,
@@ -741,6 +780,8 @@
 
     selectedLevel = [...(m.targetLevel||[])];
     renderChips('chipLevel', LEVEL_OPTIONS, selectedLevel);
+    selectedKompetensi = [...(m.kompetensiIds||[])];
+    renderKompetensiChips();
 
     materiFiles = [...(m.materiFiles||[])];
     renderMateriList();
@@ -791,6 +832,8 @@
     document.getElementById('userAvatar').src = currentProfile.photoURL;
     document.getElementById('userName').textContent = currentProfile.displayName;
 
+    await loadCompetencies();
+    renderKompetensiChips();
     if(editId){
       await loadForEdit(editId);
     } else {
