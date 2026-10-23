@@ -191,3 +191,57 @@ export function recommendModules(gaps, modules, emp) {
     .sort((a, b) => b._score - a._score)
     .map(({ _score, ...r }) => r);
 }
+
+/* ============================================================
+   Status gap 3 tahap: Gap terbuka → Dalam pengembangan → Closed (tervalidasi PA berikutnya)
+   ============================================================ */
+
+/** Nilai minimal post-test supaya training dianggap lulus. Post-test tanpa soal bernilai (skor kosong) = dianggap selesai. */
+export const PASSING_SCORE = 70;
+
+export function isPassed(attempt) {
+  return attempt.score == null || Number(attempt.score) >= PASSING_SCORE;
+}
+
+function tsSeconds(t) {
+  if (!t) return null;
+  if (typeof t.seconds === 'number') return t.seconds;
+  const d = new Date(t); return isNaN(d) ? null : d.getTime() / 1000;
+}
+
+/**
+ * Status tiap kompetensi untuk satu penilaian.
+ * - closed      : periode sebelumnya gap, sekarang sudah ≥ standar (tervalidasi lewat PA)
+ * - development : masih gap, tapi sudah lulus post-test modul yang membangun kompetensi itu
+ *                 (hanya training yang dikerjakan SETELAH hasil penilaian ini masuk)
+ * - open        : masih gap, belum ada training yang lulus
+ * - ok / strength / unrated
+ * Return { [kompetensiId]: { status, gap?, modules?: [{moduleId, judul, score}], closedFrom? } }
+ */
+export function gapStatuses({ assessment, previous, attempts, modules, standar = 3 }) {
+  const out = {};
+  const after = tsSeconds(assessment.updatedAt);
+  const passedByModule = {};
+  (attempts || []).forEach(t => {
+    const sec = tsSeconds(t.submittedAt);
+    if (after != null && sec != null && sec < after) return;
+    if (!isPassed(t)) return;
+    const cur = passedByModule[t.moduleId];
+    if (!cur || (t.score ?? -1) > (cur.score ?? -1)) passedByModule[t.moduleId] = t;
+  });
+  const modById = {}; (modules || []).forEach(m => modById[m.id] = m);
+  const prevGaps = new Set(previous ? gapsFor(previous.kompetensi, standar).map(g => g.id) : []);
+  Object.keys({ ...(assessment.kompetensi || {}), ...Object.fromEntries([...prevGaps].map(id => [id, 1])) }).forEach(id => {
+    const s = assessment.kompetensi?.[id];
+    if (s == null) { out[id] = { status: 'unrated' }; return; }
+    if (s >= standar) {
+      out[id] = prevGaps.has(id) ? { status: 'closed', closedFrom: previous.periode } : { status: s >= 4 ? 'strength' : 'ok' };
+      return;
+    }
+    const mods = Object.values(passedByModule)
+      .filter(t => (modById[t.moduleId]?.kompetensiIds || []).includes(id))
+      .map(t => ({ moduleId: t.moduleId, judul: modById[t.moduleId]?.judul || '', score: t.score ?? null }));
+    out[id] = { status: mods.length ? 'development' : 'open', gap: round2(standar - s), modules: mods };
+  });
+  return out;
+}

@@ -84,7 +84,8 @@
   import { iconSvg } from './lms-icons.js';
   import {
     KATEGORI_ORDER, DEFAULT_SCALE, escapeHtml, levelLabel, periodeRank, periodeLabel, scoreLabel, round2, gapsFor, recommendModules,
-  } from './competency-shared.js?v=20261023';
+    PASSING_SCORE, isPassed, gapStatuses,
+  } from './competency-shared.js?v=20261023b';
   import { collection, getDocs, doc, getDoc, query, where } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const F = id => document.getElementById(id);
@@ -169,9 +170,7 @@
       a.email ? run(query(collection(db, 'attempts'), where('email', '==', a.email)), 'email') : null,
       run(query(collection(db, 'attempts'), where('nik', '==', a.nik)), 'nik'),
     ]);
-    const best = {};
-    out.forEach(t => { const cur = best[t.moduleId]; if(!cur || (t.score ?? -1) > (cur.score ?? -1)) best[t.moduleId] = t; });
-    return best;
+    return out;
   }
 
   async function renderDetail(){
@@ -184,20 +183,30 @@
     const gaps = gapsFor(a.kompetensi, standar());
     const gapIds = new Set(gaps.map(g => g.id));
     const recs = recommendModules(gaps, modules, { level: a.level, divisi: a.divisi });
-    const attempts = await loadAttemptsFor(a);
+    const attemptList = await loadAttemptsFor(a);
     if(a.nik !== selectedNik) return; // sudah pindah orang selagi menunggu
+    const attempts = {}; // percobaan terbaik per modul (buat status di daftar training)
+    attemptList.forEach(t => { const cur = attempts[t.moduleId]; if(!cur || (t.score ?? -1) > (cur.score ?? -1)) attempts[t.moduleId] = t; });
     const compById = {}; competencies.forEach(c => compById[c.id] = c);
     const coveredGap = new Set(recs.flatMap(r => r.kompetensiIds));
     const uncovered = gaps.filter(g => !coveredGap.has(g.id));
     const history = assessments.filter(x => x.nik === a.nik).sort((x,y) => periodeRank(y.periode) - periodeRank(x.periode));
+    const previous = history.find(h => periodeRank(h.periode) < periodeRank(a.periode)) || null;
+    const statuses = gapStatuses({ assessment: a, previous, attempts: attemptList, modules, standar: standar() });
+    const nOpen = Object.values(statuses).filter(x => x.status === 'open').length;
+    const nDev = Object.values(statuses).filter(x => x.status === 'development').length;
+    const nClosed = Object.values(statuses).filter(x => x.status === 'closed').length;
 
     const compRows = competencies.map(c => {
       const s = a.kompetensi?.[c.id];
       const ind = a.levelKey ? (c.indikator?.[a.levelKey] || '') : '';
+      const st = statuses[c.id] || { status: s == null ? 'unrated' : 'ok' };
       let status;
-      if(s == null) status = '<span class="badge badge-gray">Belum dinilai</span>';
-      else if(gapIds.has(c.id)) status = `<span class="badge badge-amber">Gap ${fmt(standar() - s)}</span>`;
-      else if(s >= 4) status = '<span class="badge badge-green">Kekuatan</span>';
+      if(st.status === 'unrated') status = '<span class="badge badge-gray">Belum dinilai</span>';
+      else if(st.status === 'open') status = `<span class="badge badge-amber">Gap terbuka · ${fmt(st.gap)}</span>`;
+      else if(st.status === 'development') status = `<span class="badge badge-purple">Dalam pengembangan</span><div class="text-meta" style="margin-top:4px;">Lulus ${st.modules.map(m => escapeHtml(m.judul) + (m.score != null ? ' (' + m.score + ')' : '')).join(', ')} · menunggu PA berikutnya</div>`;
+      else if(st.status === 'closed') status = `<span class="badge badge-green">Gap closed</span><div class="text-meta" style="margin-top:4px;">Tervalidasi PA ${escapeHtml(periodeLabel(a.periode))} (gap di ${escapeHtml(periodeLabel(st.closedFrom))})</div>`;
+      else if(st.status === 'strength') status = '<span class="badge badge-green">Kekuatan</span>';
       else status = '<span class="badge badge-blue">Sesuai standar</span>';
       return `<tr>
         <td style="min-width:170px;"><strong>${escapeHtml(c.nama)}</strong><div class="text-meta">${escapeHtml(c.kategori || '')}</div></td>
@@ -209,7 +218,9 @@
 
     const recRows = recs.map(r => {
       const t = attempts[r.moduleId];
-      const done = t ? `<span class="badge badge-green">Sudah ikut${t.score != null ? ' · skor ' + t.score : ''}</span>` : '<span class="badge badge-amber">Belum ikut</span>';
+      const done = !t ? '<span class="badge badge-amber">Belum ikut</span>'
+        : isPassed(t) ? `<span class="badge badge-green">Lulus${t.score != null ? ' · skor ' + t.score : ''}</span>`
+        : `<span class="badge badge-red">Belum lulus · skor ${t.score} (min ${PASSING_SCORE})</span>`;
       return `<div class="rec-row">
         <div><div style="font-weight:700;">${escapeHtml(r.judul)}</div>
           <div class="text-meta">${escapeHtml(r.mode === 'offline' ? 'Offline' : 'Online')} · ${escapeHtml(r.kategori)} · membangun ${r.kompetensiIds.map(id => escapeHtml(compById[id]?.nama || id)).join(', ')}</div></div>
@@ -244,7 +255,7 @@
       </div>
 
       <div class="panel">
-        <div class="panel-head"><h3 class="text-h2" style="margin:0;">Kompetensi: Diharapkan vs Aktual</h3><span class="text-meta">Standar = skor ${standar()}</span></div>
+        <div class="panel-head"><h3 class="text-h2" style="margin:0;">Kompetensi: Diharapkan vs Aktual</h3><span class="text-meta">${nOpen} gap terbuka · ${nDev} dalam pengembangan · ${nClosed} closed · standar = skor ${standar()}</span></div>
         <div style="overflow-x:auto;"><table class="data-table comp-table">
           <thead><tr><th>Kompetensi</th><th>Perilaku yang diharapkan di level ini</th><th>Skor</th><th>Status</th></tr></thead>
           <tbody>${compRows}</tbody>

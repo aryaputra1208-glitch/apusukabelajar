@@ -344,7 +344,7 @@
     try{
       const snap = await getDoc(doc(db, 'recommendations', (currentUser.email || '').toLowerCase()));
       if(!snap.exists()) return;
-      const done = new Set(myAttempts.map(a => a.moduleId));
+      const done = new Set(myAttempts.filter(a => a.score == null || Number(a.score) >= 70).map(a => a.moduleId));
       const items = (snap.data().items || []).filter(r => !done.has(r.moduleId));
       const cards = items.map(r => {
         const m = allModules.find(x => x.id === r.moduleId);
