@@ -123,7 +123,7 @@
 <script type="module">
   import { db, onAuth, ensureUserProfile } from './firebase-shared.js';
   import { iconSvg } from './lms-icons.js';
-  import { LEVEL_COLUMNS, KATEGORI_ORDER, DEFAULT_SCALE, matchLevelHeader, slugify, escapeHtml } from './competency-shared.js';
+  import { LEVEL_COLUMNS, KATEGORI_ORDER, DEFAULT_SCALE, matchLevelHeader, slugify, escapeHtml } from './competency-shared.js?v=20261023';
   import { collection, getDocs, doc, getDoc, setDoc, updateDoc, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   let competencies = [];
