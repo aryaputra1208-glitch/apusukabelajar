@@ -190,7 +190,7 @@
         <td class="num">${fmt(a.skorPA)}</td>
         <td class="num">${fmt(a.skorKPI)}</td>
         <td class="num"><strong>${fmt(a.skorFinal)}</strong>${label ? `<div class="text-meta">${escapeHtml(label)}${a.skorFinalSumber === 'import' ? ' · dari file' : ''}</div>` : ''}</td>
-        <td>${nGap ? `<span class="badge badge-amber">${nGap} kompetensi</span>` : '<span class="badge badge-green">Tidak ada</span>'}</td>
+        <td>${!Object.keys(a.kompetensi || {}).length ? '<span class="badge badge-gray" title="Skor per kompetensi tidak ada di file import — gap tidak bisa dihitung">Belum ada skor kompetensi</span>' : nGap ? `<span class="badge badge-amber">${nGap} kompetensi</span>` : '<span class="badge badge-green">Tidak ada</span>'}</td>
         <td class="text-meta">${(a.viewerEmails||[]).length ? escapeHtml(a.viewerEmails.join(', ')) : '<span style="color:var(--red);">hanya admin</span>'}</td>
       </tr>`;
     }).join('');
@@ -302,6 +302,7 @@
       [['KPI', kpi], ['PA', paImp], ['Final', finImp]].forEach(([n, v]) => { if(v !== null && (isNaN(v) || v < 0 || v > 5)){ warnings.push(`Baris ${line} (${emp.nama}): Skor ${n} "${v}" di luar 0–5.`); bad = true; } });
       if(bad) return;
       if(!Object.keys(kompetensi).length && paImp === null){ warnings.push(`Baris ${line} (${emp.nama}): tidak ada skor kompetensi maupun Skor PA — dilewati.`); return; }
+      if(!Object.keys(kompetensi).length) warnings.push(`Baris ${line} (${emp.nama}): hanya ada Skor PA, skor per kompetensi kosong — gap & rekomendasi tidak bisa dihitung untuk orang ini.`);
       if(!emp.levelKey) warnings.push(`Baris ${line} (${emp.nama}): level "${emp.level || '-'}" belum terpetakan ke kamus — gap tetap dihitung, tapi indikator yang diharapkan tidak bisa ditampilkan.`);
       const vals = Object.values(kompetensi);
       const skorPA = paImp !== null ? paImp : round2(vals.reduce((s, v) => s + v, 0) / vals.length);

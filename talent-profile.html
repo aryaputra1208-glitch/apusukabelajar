@@ -145,7 +145,7 @@
         <td class="text-meta">${escapeHtml(a.jabatan || '-')}</td>
         <td class="text-meta">${escapeHtml(levelLabel(a.levelKey) || a.level || '-')}</td>
         <td class="num"><strong>${fmt(a.skorFinal)}</strong> <span class="text-meta">${escapeHtml(scoreLabel(a.skorFinal, scale) || '')}</span></td>
-        <td>${n ? `<span class="badge badge-amber">${n} kompetensi</span>` : '<span class="badge badge-green">Tidak ada</span>'}</td>
+        <td>${!Object.keys(a.kompetensi || {}).length ? '<span class="badge badge-gray" title="Skor per kompetensi tidak ada di file import — gap tidak bisa dihitung">Belum ada skor kompetensi</span>' : n ? `<span class="badge badge-amber">${n} kompetensi</span>` : '<span class="badge badge-green">Tidak ada</span>'}</td>
       </tr>`;
     }).join('');
     const empty = F('listEmpty');
@@ -264,7 +264,8 @@
 
       <div class="panel section-gap">
         <div class="panel-head"><h3 class="text-h2" style="margin:0;">Training yang Dibutuhkan</h3><span class="text-meta">${gaps.length} kompetensi di bawah standar</span></div>
-        ${!gaps.length ? `<div class="empty-state">${iconSvg('check',{size:24})}<p style="margin-top:8px;">Tidak ada gap kompetensi di periode ini.</p></div>`
+        ${!Object.keys(a.kompetensi || {}).length ? `<div class="empty-state"><p>Skor per kompetensi belum ada untuk periode ini (hanya Skor PA total yang di-import), jadi gap & training belum bisa dihitung. Import ulang dengan kolom 11 kompetensi terisi.</p></div>`
+          : !gaps.length ? `<div class="empty-state">${iconSvg('check',{size:24})}<p style="margin-top:8px;">Tidak ada gap kompetensi di periode ini.</p></div>`
           : recRows || `<div class="empty-state"><p>Belum ada modul published yang membangun kompetensi ber-gap untuk level ini.</p></div>`}
         ${uncovered.length ? `<div style="padding:12px 20px; background:var(--amber-bg); font-size:12px; color:#92400E;">Belum ada modul untuk: <strong>${uncovered.map(g => escapeHtml(compById[g.id]?.nama || g.id)).join(', ')}</strong>. Pertimbangkan penugasan/coaching, atau minta tim training membuat modulnya (lalu tag kompetensinya).</div>` : ''}
       </div>`;
