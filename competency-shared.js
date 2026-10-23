@@ -73,3 +73,121 @@ export function slugify(text) {
 export function escapeHtml(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
+
+/* ============================================================
+   FASE 2 — Performa, gap, dan rekomendasi training
+   ============================================================ */
+
+/** Level yang boleh melihat skor bawahannya (Department Head ke atas). */
+export const VIEWER_LEVEL_KEYS = ['DH', 'AVP', 'DIVH'];
+
+/** Bobot default skor final kalau admin belum mengatur. KPI & PA diasumsikan sama-sama skala 1–5. */
+export const DEFAULT_WEIGHTS = { pa: 50, kpi: 50 };
+
+/**
+ * Normalisasi periode: "2026" → "2026" (tahunan), "2026 S1" / "S1-2026" / "2026-1" → "2026-S1".
+ * Return null kalau tidak ada tahunnya.
+ */
+export function normalizePeriode(v) {
+  const s = String(v ?? '').trim().toUpperCase();
+  const year = (s.match(/(20\d{2})/) || [])[1];
+  if (!year) return null;
+  const rest = s.replace(year, '');
+  const sem = (rest.match(/S(?:EM(?:ESTER)?)?\s*-?\s*([12])/) || rest.match(/(?:^|[^0-9])([12])(?:[^0-9]|$)/) || [])[1];
+  return sem ? `${year}-S${sem}` : year;
+}
+
+/** Untuk urutan: 2026-S1 < 2026-S2 < 2026 (tahunan dianggap paling akhir di tahun itu). */
+export function periodeRank(p) {
+  const m = String(p || '').match(/^(\d{4})(?:-S([12]))?$/);
+  if (!m) return 0;
+  return Number(m[1]) * 10 + (m[2] ? Number(m[2]) : 3);
+}
+
+export function periodeLabel(p) {
+  const m = String(p || '').match(/^(\d{4})(?:-S([12]))?$/);
+  if (!m) return p || '-';
+  return m[2] ? `Semester ${m[2]} ${m[1]}` : `Tahunan ${m[1]}`;
+}
+
+/**
+ * Label skor berdasarkan batas BAWAH tiap kategori (0, 2, 3, 3.8, 4.75 dari skala PA).
+ * Cara ini menutup celah rentang di skala aslinya: 1,5 → POOR, 2,97 → LOW, 3,77 → GOOD, 4,75 → OUTSTANDING.
+ */
+export function scoreLabel(score, scale) {
+  if (score == null || isNaN(score)) return null;
+  const items = (scale?.skala || []).map(s => ({ label: s.label, min: parseFloat(String((String(s.rentang).match(/\d+(?:[.,]\d+)?/) || [s.skor])[0]).replace(',', '.')) }))
+    .filter(s => !isNaN(s.min)).sort((a, b) => a.min - b.min);
+  let label = items[0]?.label || null;
+  items.forEach(s => { if (score >= s.min - 1e-9) label = s.label; });
+  return label;
+}
+
+export function round2(n) { return n == null || isNaN(n) ? null : Math.round(n * 100) / 100; }
+
+/**
+ * Hitung skor final:
+ *  - ada kolom Skor Final di import → pakai itu (sumber: import)
+ *  - tidak ada KPI → final = skor PA (model: PA saja)
+ *  - ada KPI → rata-rata berbobot sesuai level (model: PA + KPI)
+ */
+export function computeFinal({ skorPA, skorKPI, skorFinalImport, levelKey, weights }) {
+  if (skorFinalImport != null && !isNaN(skorFinalImport)) {
+    return { skorFinal: round2(skorFinalImport), skorFinalSumber: 'import', modelSkor: skorKPI != null ? 'PA + KPI' : 'PA saja', bobot: null };
+  }
+  if (skorKPI == null || isNaN(skorKPI)) {
+    return { skorFinal: round2(skorPA), skorFinalSumber: 'hitung', modelSkor: 'PA saja', bobot: null };
+  }
+  const w = (weights?.perLevel?.[levelKey]) || weights?.default || DEFAULT_WEIGHTS;
+  const total = (Number(w.pa) || 0) + (Number(w.kpi) || 0) || 100;
+  const final = skorPA == null ? skorKPI : (skorPA * w.pa + skorKPI * w.kpi) / total;
+  return { skorFinal: round2(final), skorFinalSumber: 'hitung', modelSkor: 'PA + KPI', bobot: { pa: Number(w.pa), kpi: Number(w.kpi) } };
+}
+
+/** Email semua atasan di garis ke atas yang levelnya DH ke atas (yang boleh lihat skor). */
+export function viewerEmailsFor(nik, employeesByNik) {
+  const out = [];
+  const seen = new Set([nik]);
+  let cur = employeesByNik[nik]?.atasanNik;
+  while (cur && !seen.has(cur)) {
+    seen.add(cur);
+    const boss = employeesByNik[cur];
+    if (!boss) break;
+    if (boss.email && VIEWER_LEVEL_KEYS.includes(boss.levelKey)) out.push(boss.email);
+    cur = boss.atasanNik;
+  }
+  return out;
+}
+
+/** Kompetensi di bawah standar → [{ id, skor, gap }] urut gap terbesar. */
+export function gapsFor(kompetensiScores, standar = 3) {
+  return Object.entries(kompetensiScores || {})
+    .filter(([, s]) => s != null && !isNaN(s) && s < standar)
+    .map(([id, s]) => ({ id, skor: s, gap: round2(standar - s) }))
+    .sort((a, b) => b.gap - a.gap);
+}
+
+/** Apakah modul ditujukan untuk karyawan ini (target level & divisi kosong = semua). Sama seperti logika "Wajib untuk Anda". */
+export function moduleTargetsEmployee(m, emp) {
+  const lvlOk = !m.targetLevel?.length || m.targetLevel.includes(emp.level);
+  const divOk = !m.targetDivisi?.length || m.targetDivisi.some(d => (emp.divisi || '').toLowerCase().includes(String(d).toLowerCase()));
+  return lvlOk && divOk;
+}
+
+/**
+ * Training needed: modul published yang membangun kompetensi ber-gap dan ditujukan untuk level/divisi karyawan.
+ * Return [{ moduleId, judul, kategori, mode, kompetensiIds (yang cocok dengan gap) }], urut dari yang menutup gap terbesar.
+ */
+export function recommendModules(gaps, modules, emp) {
+  const gapRank = {}; gaps.forEach((g, i) => gapRank[g.id] = { i, gap: g.gap });
+  return modules
+    .filter(m => m.status === 'published' && moduleTargetsEmployee(m, emp))
+    .map(m => {
+      const cocok = (m.kompetensiIds || []).filter(id => gapRank[id]);
+      return { moduleId: m.id, judul: m.judul || '', kategori: m.kategori || '', mode: m.mode || 'online', kompetensiIds: cocok,
+        _score: cocok.reduce((s, id) => s + gapRank[id].gap, 0) };
+    })
+    .filter(r => r.kompetensiIds.length)
+    .sort((a, b) => b._score - a._score)
+    .map(({ _score, ...r }) => r);
+}

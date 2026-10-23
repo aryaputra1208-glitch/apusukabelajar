@@ -138,5 +138,21 @@ service cloud.firestore {
       );
       allow write: if isSignedIn() && myRole() == 'admin';
     }
+
+    // --- TMS Fase 2: Performa & Rekomendasi ---
+    // Skor PA/KPI: admin, dan atasan berlevel Department Head ke atas di garis atasan
+    // (email mereka disimpan di viewerEmails saat import). Karyawan sendiri TIDAK bisa baca.
+    match /assessments/{assessmentId} {
+      allow read: if isSignedIn() && (
+        myRole() == 'admin' ||
+        (myEmail() != null && myEmail() in resource.data.viewerEmails)
+      );
+      allow write: if isSignedIn() && myRole() == 'admin';
+    }
+    // Rekomendasi training per karyawan (by email) — TIDAK berisi skor, cuma daftar modul.
+    match /recommendations/{email} {
+      allow read: if isSignedIn() && (myEmail() == email || myRole() == 'admin');
+      allow write: if isSignedIn() && myRole() == 'admin';
+    }
   }
 }
