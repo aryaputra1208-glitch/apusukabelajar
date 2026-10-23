@@ -32,6 +32,17 @@
   .resume-card { flex: 0 0 240px; border: 1px solid var(--border); border-radius: var(--r-card); padding: 14px; text-decoration: none; color: var(--text); display: flex; flex-direction: column; gap: 8px; }
   .resume-card:hover { border-color: var(--pink); }
   .section-title { font-size: 16px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  /* --- Beranda ADMIN --- */
+  .wrap.admin-wide { max-width: 1100px; }
+  .ah-kpi { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 14px; margin: 18px 0 22px; }
+  .ah-kpi .stat-card { padding: 16px; }
+  .ah-delta { font-size: 12px; margin-top: 4px; }
+  .ah-two { display: grid; grid-template-columns: minmax(0,1.25fr) minmax(0,1fr); gap: 18px; margin-bottom: 18px; }
+  .ah-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--border); }
+  .ah-row:last-child { border-bottom: none; }
+  .ah-row .t { font-weight: 600; font-size: 13px; }
+  .ah-ok { padding: 22px 20px; color: var(--text-3); font-size: 13px; display: flex; align-items: center; gap: 8px; }
+  @media (max-width: 900px) { .ah-kpi { grid-template-columns: repeat(2, minmax(0,1fr)); } .ah-two { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -87,6 +98,21 @@
     </div>
 
     <div class="menu-grid" id="menuGrid"></div>
+
+    <div id="adminHome" style="display:none;">
+      <p class="text-sub" style="margin-top:2px;">Ringkasan Training 30 Hari Terakhir</p>
+      <div class="ah-kpi">
+        <div class="stat-card"><div class="stat-label" style="margin:0 0 6px;">Peserta Aktif</div><div class="stat-num" id="ahActive">-</div><div class="ah-delta text-meta" id="ahActiveDelta"></div></div>
+        <div class="stat-card"><div class="stat-label" style="margin:0 0 6px;">Completion Rate</div><div class="stat-num" id="ahCompletion">-</div><div class="ah-delta text-meta" id="ahCompletionSub">Mulai belajar → selesai post-test</div></div>
+        <div class="stat-card"><div class="stat-label" style="margin:0 0 6px;">Modul Published</div><div class="stat-num" id="ahPublished">-</div><div class="ah-delta text-meta" id="ahPublishedSub"></div></div>
+        <div class="stat-card"><div class="stat-label" style="margin:0 0 6px;">Rata-rata Post-Test</div><div class="stat-num" id="ahAvg">-</div><div class="ah-delta text-meta" id="ahAvgSub"></div></div>
+      </div>
+      <div class="ah-two">
+        <div class="panel"><div class="panel-head"><h3 class="text-h2" style="margin:0;">Perlu Tindakan</h3></div><div id="ahTodo"><div class="ah-ok">Memuat...</div></div></div>
+        <div class="panel"><div class="panel-head"><h3 class="text-h2" style="margin:0;">Training Offline Minggu Ini</h3></div><div id="ahOffline"><div class="ah-ok">Memuat...</div></div></div>
+      </div>
+      <div class="panel"><div class="panel-head"><h3 class="text-h2" style="margin:0;">Modul Terpopuler</h3><span class="text-meta">30 hari terakhir</span></div><div id="ahTop"><div class="ah-ok">Memuat...</div></div></div>
+    </div>
   </div>
 
   <!-- ===== Beranda TRAINEE: langsung jadi dashboard belajar ===== -->
@@ -444,6 +470,17 @@
     document.getElementById('traineeWrap').style.display = 'none';
     document.getElementById('menuWrap').style.display = 'block';
     document.getElementById('welcomeTitle').textContent = `Selamat datang, ${profile.displayName.split(' ')[0]}`;
+    if(profile.role === 'admin'){
+      const h = new Date().getHours();
+      document.getElementById('welcomeTitle').textContent = `Selamat ${h < 11 ? 'Pagi' : h < 15 ? 'Siang' : h < 18 ? 'Sore' : 'Malam'}, ${profile.displayName.split(' ')[0]}`;
+      document.getElementById('menuWrap').classList.add('admin-wide');
+      document.getElementById('roleBadge').style.display = 'none';
+      document.getElementById('menuGrid').style.display = 'none';
+      document.getElementById('adminHome').style.display = 'block';
+      document.getElementById('tmsTopBtn').style.display = 'inline-flex';
+      loadAdminHome();
+      return;
+    }
     document.getElementById('roleBadge').textContent = 'Role: ' + profile.role;
     const menu = MENU_BY_ROLE[profile.role] || [];
     document.getElementById('menuGrid').innerHTML = menu.map(m => `
@@ -469,6 +506,112 @@
     }
     if(profile.role === 'admin') document.getElementById('tmsTopBtn').style.display = 'inline-flex';
   });
+
+  /* ===== Beranda ADMIN: angka kunci + perlu tindakan (semua dari data yang sudah ada) ===== */
+  function tsMs(t){
+    if(!t) return null;
+    if(typeof t.toMillis === 'function') return t.toMillis();
+    if(typeof t.seconds === 'number') return t.seconds * 1000;
+    const d = new Date(t); return isNaN(d) ? null : d.getTime();
+  }
+  async function getAll(q, label){
+    try{ const out = []; (await getDocs(q)).forEach(d => out.push({ id: d.id, ...d.data() })); return out; }
+    catch(err){ console.error('Beranda admin: gagal baca', label, err.code, err.message); return []; }
+  }
+  function esc(s){ return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function ymd(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+
+  async function loadAdminHome(){
+    const [mods, attempts, progress, subs, sessions, roster, approved, users] = await Promise.all([
+      getAll(collection(db, 'modules'), 'modules'),
+      getAll(collection(db, 'attempts'), 'attempts'),
+      getAll(collection(db, 'progress'), 'progress'),
+      getAll(query(collection(db, 'submissions'), where('score', '==', null)), 'submissions'),
+      getAll(collection(db, 'sessions'), 'sessions'),
+      getAll(collection(db, 'roster'), 'roster'),
+      getAll(collection(db, 'approved_users'), 'approved_users'),
+      getAll(collection(db, 'users'), 'users'),
+    ]);
+    const now = Date.now(), DAY = 86400000, from30 = now - 30*DAY, from60 = now - 60*DAY;
+    const modById = {}; mods.forEach(m => modById[m.id] = m);
+    const who = a => a.uid || a.email || a.nik || '?';
+
+    // --- Angka kunci ---
+    const att30 = attempts.filter(a => (tsMs(a.submittedAt) ?? 0) >= from30);
+    const attPrev = attempts.filter(a => { const t = tsMs(a.submittedAt) ?? 0; return t >= from60 && t < from30; });
+    const prog30 = progress.filter(p => (tsMs(p.updatedAt) ?? 0) >= from30);
+    const active = new Set([...att30.map(who), ...prog30.map(p => p.uid)]);
+    const activePrev = new Set(attPrev.map(who));
+    document.getElementById('ahActive').textContent = active.size;
+    const delta = document.getElementById('ahActiveDelta');
+    if(activePrev.size){
+      const pct = Math.round((active.size - activePrev.size) / activePrev.size * 100);
+      delta.textContent = `${pct >= 0 ? '+' : ''}${pct}% vs 30 hari sebelumnya`;
+      delta.style.color = pct >= 0 ? 'var(--green)' : 'var(--red)';
+    } else delta.textContent = 'Online & offline';
+    const started = new Set([...prog30.map(p => `${p.uid}|${p.moduleId}`), ...att30.map(a => `${who(a)}|${a.moduleId}`)]);
+    const finished = new Set(att30.map(a => `${who(a)}|${a.moduleId}`));
+    document.getElementById('ahCompletion').textContent = started.size ? Math.round(finished.size / started.size * 100) + '%' : '-';
+    const published = mods.filter(m => m.status === 'published');
+    const pending = mods.filter(m => m.status === 'pending_approval');
+    document.getElementById('ahPublished').textContent = published.length;
+    document.getElementById('ahPublishedSub').textContent = pending.length ? `${pending.length} menunggu approval` : 'Tidak ada antrean';
+    const scores = att30.filter(a => a.score != null).map(a => Number(a.score));
+    document.getElementById('ahAvg').textContent = scores.length ? Math.round(scores.reduce((s,v)=>s+v,0) / scores.length) : '-';
+    document.getElementById('ahAvgSub').textContent = `dari ${att30.length} attempt`;
+
+    // --- Perlu tindakan ---
+    const todo = [];
+    if(pending.length){
+      const oldest = Math.max(...pending.map(m => now - (tsMs(m.updatedAt) ?? now)));
+      todo.push({ t: `${pending.length} modul menunggu approval`, s: oldest > DAY ? `Terlama: ${Math.floor(oldest / DAY)} hari` : 'Masuk hari ini', href: 'admin-approval.html', btn: 'Review' });
+    }
+    if(subs.length){
+      const late = subs.filter(x => now - (tsMs(x.submittedAt) ?? now) > 7*DAY).length;
+      todo.push({ t: `${subs.length} submission belum dinilai`, s: late ? `${late} lewat 7 hari` : 'Semua masih di bawah 7 hari', href: 'trainer-submissions.html', btn: 'Nilai' });
+    }
+    const today = ymd(new Date());
+    const sesByTraining = {}; sessions.forEach(s => (sesByTraining[s.trainingId] = sesByTraining[s.trainingId] || []).push(s));
+    const needPostTest = published.filter(m => m.mode === 'offline' && !m.postTestOpen && (sesByTraining[m.id] || []).some(s => s.tanggal && s.tanggal < today));
+    if(needPostTest.length) todo.push({ t: `Post-test belum dibuka (${needPostTest.length} training)`, s: needPostTest.slice(0,2).map(m => m.judul).join(', ') + (needPostTest.length > 2 ? ', …' : '') + ' — sesi sudah lewat', href: 'admin-trainings.html', btn: 'Buka' });
+    const loggedIn = new Set(users.map(u => (u.email || '').toLowerCase()));
+    const neverLogin = approved.filter(a => !loggedIn.has(a.id.toLowerCase()) && (now - (tsMs(a.updatedAt) ?? now)) > 14*DAY);
+    if(neverLogin.length) todo.push({ t: `${neverLogin.length} user belum pernah login`, s: 'Terdaftar lebih dari 14 hari', href: 'admin-users.html', btn: 'Lihat' });
+    document.getElementById('ahTodo').innerHTML = todo.length
+      ? todo.map(x => `<div class="ah-row"><div><div class="t">${esc(x.t)}</div><div class="text-meta">${esc(x.s)}</div></div><a class="btn btn-outline btn-sm" href="${x.href}">${x.btn}</a></div>`).join('')
+      : `<div class="ah-ok">${iconSvg('check',{size:16})} Semua beres — tidak ada yang perlu ditindaklanjuti.</div>`;
+
+    // --- Training offline minggu ini (Senin–Minggu) ---
+    const d = new Date(); const dow = (d.getDay() + 6) % 7;
+    const mon = new Date(d.getFullYear(), d.getMonth(), d.getDate() - dow), sun = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + 6);
+    const wkFrom = ymd(mon), wkTo = ymd(sun);
+    const rosterCount = {}; roster.forEach(r => rosterCount[r.trainingId] = (rosterCount[r.trainingId] || 0) + 1);
+    const thisWeek = Object.entries(sesByTraining).map(([tid, ss]) => {
+      const inWeek = ss.filter(s => s.tanggal >= wkFrom && s.tanggal <= wkTo).sort((a,b) => (a.tanggal+(a.jamMulai||'')).localeCompare(b.tanggal+(b.jamMulai||'')));
+      return inWeek.length && modById[tid] && modById[tid].status !== 'draft' ? { m: modById[tid], s: inWeek[0], n: inWeek.length } : null;
+    }).filter(Boolean).sort((a,b) => a.s.tanggal.localeCompare(b.s.tanggal));
+    const FORMS_BASE_URL = 'https://aryaputra1208-glitch.github.io/apusukabelajar/training-forms.html';
+    document.getElementById('ahOffline').innerHTML = thisWeek.length
+      ? thisWeek.map(x => {
+          const tgl = new Date(x.s.tanggal + 'T00:00:00').toLocaleDateString('id-ID', { weekday:'short', day:'numeric', month:'short' });
+          return `<div class="ah-row"><div><div class="t">${esc(x.m.judul)}</div><div class="text-meta">${esc(tgl)}${x.s.jamMulai ? ' · ' + esc(x.s.jamMulai) : ''} · ${rosterCount[x.m.id] || 0} peserta${x.n > 1 ? ` · ${x.n} sesi` : ''}</div></div>
+            <button class="btn btn-outline btn-sm" data-copy="${esc(FORMS_BASE_URL + '?training=' + x.m.id)}">Copy Link Form</button></div>`;
+        }).join('')
+      : `<div class="ah-ok">Tidak ada sesi offline minggu ini.</div>`;
+    document.querySelectorAll('#ahOffline [data-copy]').forEach(b => b.addEventListener('click', async () => {
+      try{ await navigator.clipboard.writeText(b.dataset.copy); b.textContent = 'Tersalin'; setTimeout(() => b.textContent = 'Copy Link Form', 1500); }
+      catch(e){ prompt('Copy link ini:', b.dataset.copy); }
+    }));
+
+    // --- Modul terpopuler (berdasarkan jumlah peserta 30 hari) ---
+    const byMod = {};
+    att30.forEach(a => { const x = byMod[a.moduleId] = byMod[a.moduleId] || { who: new Set(), scores: [] }; x.who.add(who(a)); if(a.score != null) x.scores.push(Number(a.score)); });
+    const top = Object.entries(byMod).filter(([id]) => modById[id]).map(([id, x]) => ({ m: modById[id], n: x.who.size, avg: x.scores.length ? Math.round(x.scores.reduce((s,v)=>s+v,0) / x.scores.length) : null }))
+      .sort((a,b) => b.n - a.n).slice(0, 5);
+    document.getElementById('ahTop').innerHTML = top.length
+      ? top.map(x => `<div class="ah-row"><div><div class="t">${esc(x.m.judul)}</div><div class="text-meta">${esc(x.m.mode === 'offline' ? 'Offline' : 'Online')} · ${esc(x.m.kategori || '')}</div></div><div class="text-meta" style="text-align:right;">${x.n} peserta${x.avg != null ? ' · skor ' + x.avg : ''}</div></div>`).join('')
+      : `<div class="ah-ok">Belum ada peserta dalam 30 hari terakhir.</div>`;
+  }
 
   async function loadTrainerHome(user){
     try{
@@ -515,5 +658,6 @@
     } catch(e){ /* diamkan */ }
   }
 </script>
+<script type="module" src="./admin-shell.js?v=20261023"></script>
 </body>
 </html>
