@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anteraja TMS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../lms-design-system.css">
+<style>
+  .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 12px; margin-bottom: 28px; }
+  .menu-card { border: 1px solid var(--border); border-radius: var(--r-card); padding: 20px; text-decoration: none; color: var(--text); display: block; background: var(--surface); transition: border-color .12s; }
+  .menu-card:hover { border-color: var(--pink); }
+  .menu-icon { width: 40px; height: 40px; border-radius: var(--r-control); background: var(--pink-bg); color: var(--pink-dark); display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+  .user-chip { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); }
+  .avatar { width: 28px; height: 28px; border-radius: 50%; }
+</style>
+</head>
+<body>
+
+<div id="gate" class="locked-state">
+  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Memuat...</p>
+  <p class="text-sub" id="gateSub"></p>
+</div>
+
+<div id="appShell" style="display:none;">
+  <div class="topbar">
+    <div class="sidebar-logo" style="margin:0;">anteraja TMS</div>
+    <div class="user-chip">
+      <a href="../index.html" class="btn btn-outline btn-sm" style="margin-right:6px;">Ke LMS</a>
+      <img class="avatar" id="userAvatar" src="">
+      <span id="userName"></span>
+    </div>
+  </div>
+  <div class="wrap">
+    <h1 class="text-h1">Talent Management</h1>
+    <p class="text-sub" style="margin-bottom:20px;">Kompetensi, performa, dan rencana pengembangan karyawan. Belajar modul tetap di <a href="../index.html" style="color:var(--pink);">LMS</a>.</p>
+    <div id="sections"></div>
+  </div>
+</div>
+
+<script type="module">
+  import { db, onAuth, ensureUserProfile } from '../firebase-shared.js';
+  import { iconSvg } from '../lms-icons.js';
+  import { collection, getDocs, query, where, limit } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+
+  const F = id => document.getElementById(id);
+  const card = m => `<a class="menu-card" href="${m.href}"><div class="menu-icon">${iconSvg(m.icon, {size:20})}</div>
+    <div style="font-weight:700; font-size:14px; margin-bottom:4px;">${m.title}</div><div class="text-sub">${m.desc}</div></a>`;
+  const section = (title, items) => items.length ? `<div class="text-h3" style="margin-top:8px;">${title}</div><div class="menu-grid">${items.map(card).join('')}</div>` : '';
+
+  async function exists(q, label){
+    try{ return !(await getDocs(q)).empty; }
+    catch(err){ console.error('Gagal cek akses', label, err.code, err.message); return false; }
+  }
+
+  onAuth(async (user) => {
+    if(!user){
+      F('gateTitle').textContent = 'Silakan login';
+      F('gateSub').innerHTML = `<a href="../index.html">Login dulu di LMS</a>, lalu buka TMS lagi.`;
+      return;
+    }
+    const profile = await ensureUserProfile(user);
+    const email = (user.email || '').toLowerCase();
+    const isAdmin = profile.role === 'admin';
+    const [isViewer, hasIdp] = await Promise.all([
+      isAdmin ? false : exists(query(collection(db, 'assessments'), where('viewerEmails', 'array-contains', email), limit(1)), 'assessments'),
+      exists(query(collection(db, 'developmentPlans'), where('email', '==', email), limit(1)), 'developmentPlans'),
+    ]);
+
+    let html = '';
+    if(isAdmin){
+      html += section('Pengembangan Karyawan', [
+        { href: 'profile.html', icon: 'user-check', title: 'Profil Kompetensi', desc: 'Diharapkan vs aktual, gap, status pengembangan' },
+        { href: 'idp.html', icon: 'check', title: 'IDP', desc: 'Susun rencana: training, mentoring, coaching, penugasan' },
+      ]);
+      html += section('Data Master (HR/OD)', [
+        { href: 'employees.html', icon: 'users', title: 'Data Karyawan', desc: 'NIK, level, atasan & email' },
+        { href: 'competencies.html', icon: 'layout-grid', title: 'Kamus Kompetensi', desc: 'Indikator perilaku per level jabatan' },
+        { href: 'performance.html', icon: 'chart-bar', title: 'Data Performa', desc: 'Import skor PA & KPI per periode' },
+      ]);
+    } else if(isViewer){
+      html += section('Tim Anda', [
+        { href: 'profile.html', icon: 'user-check', title: 'Profil Kompetensi Tim', desc: 'Gap, IDP & perkembangan anggota tim' },
+      ]);
+    }
+    if(hasIdp){
+      html += section('Untuk Anda', [
+        { href: 'my-idp.html', icon: 'file-text', title: 'IDP Saya', desc: 'Rencana pengembangan Anda' },
+      ]);
+    }
+    if(!html){
+      F('gateTitle').textContent = 'Belum ada yang bisa ditampilkan';
+      F('gateSub').innerHTML = `Akun Anda belum punya IDP atau akses tim di TMS. <a href="../index.html">Kembali ke LMS</a>.`;
+      return;
+    }
+    F('gate').style.display = 'none'; F('appShell').style.display = 'block';
+    F('userAvatar').src = profile.photoURL || '';
+    F('userName').textContent = profile.displayName;
+    F('sections').innerHTML = html;
+  });
+</script>
+</body>
+</html>

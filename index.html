@@ -56,6 +56,7 @@
     <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-2);">
       <img id="userAvatar" src="" style="width:28px; height:28px; border-radius:50%;">
       <span id="userName"></span>
+      <a href="tms/index.html" class="btn btn-outline btn-sm" id="tmsTopBtn" style="display:none; margin-left:8px;">Ke TMS</a>
       <button class="btn btn-outline btn-sm" id="logoutBtn" style="margin-left:8px;">Logout</button>
     </div>
   </div>
@@ -125,16 +126,16 @@
       <div class="resume-row" id="resumeRow"></div>
     </div>
 
-    <a class="card" id="teamProfileLink" href="talent-profile.html" style="display:none; margin-bottom:24px; text-decoration:none; color:var(--text);">
+    <a class="card" id="tmsLink" href="tms/my-idp.html" style="display:none; margin-bottom:24px; text-decoration:none; color:var(--text);">
       <div style="display:flex; align-items:center; gap:12px;">
-        <div class="menu-icon" style="margin:0;" id="teamProfileIcon"></div>
-        <div><div style="font-weight:700;">Profil Kompetensi Tim</div><div class="text-sub">Gap kompetensi &amp; training yang dibutuhkan anggota tim Anda</div></div>
+        <div class="menu-icon" style="margin:0;" id="tmsLinkIcon"></div>
+        <div><div style="font-weight:700;" id="tmsLinkTitle"></div><div class="text-sub" id="tmsLinkDesc"></div></div>
       </div>
     </a>
 
     <div id="recSection" style="display:none;">
-      <div class="section-title"><span id="recIconSlot"></span> Rekomendasi untuk Anda</div>
-      <p class="text-sub" style="margin:-8px 0 14px;">Berdasarkan kompetensi yang perlu dikembangkan dari hasil penilaian terakhir.</p>
+      <div class="section-title"><span id="recIconSlot"></span> Tugas Belajar dari IDP</div>
+      <p class="text-sub" style="margin:-8px 0 14px;">Training yang ada di rencana pengembangan (IDP) Anda.</p>
       <div class="module-grid" id="recGrid" style="margin-bottom:28px;"></div>
     </div>
 
@@ -167,10 +168,7 @@
       { href: 'admin-trainings.html', icon: 'books', title: 'Daftar Training', desc: 'Semua training online & offline, copy link form' },
       { href: 'admin-users.html', icon: 'users', title: 'Kelola User', desc: 'Assign Divisi & Level tiap user' },
       { href: 'admin-trainer.html', icon: 'user-check', title: 'Kelola Trainer', desc: 'Assign NIK, Level, & email trainer' },
-      { href: 'admin-employees.html', icon: 'user', title: 'Data Karyawan', desc: 'Master NIK, level, atasan & email' },
-      { href: 'admin-competencies.html', icon: 'layout-grid', title: 'Kamus Kompetensi', desc: 'Indikator perilaku per level jabatan' },
-      { href: 'admin-performance.html', icon: 'chart-bar', title: 'Data Performa', desc: 'Import skor PA & KPI per periode' },
-      { href: 'talent-profile.html', icon: 'user-check', title: 'Profil Kompetensi', desc: 'Gap & training yang dibutuhkan per orang' },
+      { href: 'tms/index.html', icon: 'layout-grid', title: 'TMS — Talent Management', desc: 'Karyawan, kamus, performa, profil & IDP' },
       { href: 'trainer-create-module.html', icon: 'plus', title: 'Buat Modul', desc: 'Buat modul training sendiri' },
       { href: 'trainer-submissions.html', icon: 'file-text', title: 'Nilai Submission', desc: 'Nilai file jawaban trainee' },
       { href: 'trainer-analytics.html', icon: 'chart-bar', title: 'Analitik Modul', desc: 'Performa post-test peserta' },
@@ -339,16 +337,18 @@
     }
   }
 
-  /* ===== Rekomendasi berbasis gap kompetensi (dokumen tanpa skor, disiapkan admin) ===== */
-  async function loadRecommendations(){
+  /* ===== Tugas belajar dari IDP (disusun HR/OD di TMS) — hanya item training, tanpa skor ===== */
+  async function loadIdpTasks(){
     try{
-      const snap = await getDoc(doc(db, 'recommendations', (currentUser.email || '').toLowerCase()));
-      if(!snap.exists()) return;
-      const done = new Set(myAttempts.filter(a => a.score == null || Number(a.score) >= 70).map(a => a.moduleId));
-      const items = (snap.data().items || []).filter(r => !done.has(r.moduleId));
-      const cards = items.map(r => {
-        const m = allModules.find(x => x.id === r.moduleId);
-        if(!m) return '';
+      const snap = await getDocs(query(collection(db, 'developmentPlans'), where('email', '==', (currentUser.email || '').toLowerCase())));
+      if(snap.empty) return false;
+      let plan = null;
+      snap.forEach(d => { const p = d.data(); if(!plan || (p.periodeRank || 0) > (plan.periodeRank || 0)) plan = p; });
+      const passed = new Set(myAttempts.filter(a => a.score == null || Number(a.score) >= 70).map(a => a.moduleId));
+      const items = (plan.items || []).filter(it => it.jenis === 'training' && it.moduleId && it.status !== 'batal' && !passed.has(it.moduleId));
+      const cards = items.map(it => {
+        const m = allModules.find(x => x.id === it.moduleId);
+        if(!m || m.mode === 'offline') return '';
         const style = kategoriStyle(m.kategori);
         const thumb = youtubeThumb(m.videoUrl);
         return `
@@ -358,15 +358,29 @@
           </div>
           <div class="module-body">
             <div style="font-weight:700; font-size:14px; margin-bottom:4px;">${m.judul}</div>
-            <div class="text-meta">Mengembangkan: ${(r.kompetensi || []).join(', ')}</div>
+            <div class="text-meta">Mengembangkan: ${it.kompetensiNama || ''}${it.targetTanggal ? ' · target ' + it.targetTanggal : ''}</div>
           </div>
         </a>`;
       }).filter(Boolean);
-      if(!cards.length) return;
-      document.getElementById('recIconSlot').innerHTML = iconSvg('sparkles', {size:18});
-      document.getElementById('recGrid').innerHTML = cards.join('');
-      document.getElementById('recSection').style.display = 'block';
-    } catch(err){ console.error('Gagal baca recommendations:', err.code, err.message); }
+      if(cards.length){
+        document.getElementById('recIconSlot').innerHTML = iconSvg('sparkles', {size:18});
+        document.getElementById('recGrid').innerHTML = cards.join('');
+        document.getElementById('recSection').style.display = 'block';
+      }
+      return true;
+    } catch(err){ console.error('Gagal baca developmentPlans:', err.code, err.message); return false; }
+  }
+
+  function showTmsEntry(isViewer, hasIdp){
+    if(!isViewer && !hasIdp) return;
+    document.getElementById('tmsTopBtn').style.display = 'inline-flex';
+    const link = document.getElementById('tmsLink');
+    if(!link) return;
+    link.href = isViewer ? 'tms/index.html' : 'tms/my-idp.html';
+    document.getElementById('tmsLinkIcon').innerHTML = iconSvg(isViewer ? 'user-check' : 'file-text', {size:20});
+    document.getElementById('tmsLinkTitle').textContent = isViewer ? 'Buka TMS — Tim Anda' : 'IDP Saya';
+    document.getElementById('tmsLinkDesc').textContent = isViewer ? 'Profil kompetensi & IDP anggota tim Anda' + (hasIdp ? ', juga IDP Anda' : '') : 'Rencana pengembangan Anda: training, mentoring, dan lainnya';
+    link.style.display = 'block';
   }
 
   /** Atasan DH+ yang punya anggota tim dengan data penilaian → tampilkan pintu ke Profil Kompetensi. */
@@ -404,12 +418,7 @@
     renderTraineeModules();
     renderLevel();
     loadStatsAndResume();
-    loadRecommendations();
-    hasTeamProfiles().then(ok => {
-      if(!ok) return;
-      document.getElementById('teamProfileIcon').innerHTML = iconSvg('user-check', {size:20});
-      document.getElementById('teamProfileLink').style.display = 'block';
-    });
+    Promise.all([hasTeamProfiles(), loadIdpTasks()]).then(([isViewer, hasIdp]) => showTmsEntry(isViewer, hasIdp));
   }
 
   /* ===== Auth utama ===== */
@@ -446,16 +455,19 @@
 
     if(profile.role === 'trainer'){
       loadTrainerHome(user);
-      hasTeamProfiles().then(ok => {
-        if(!ok) return;
-        document.getElementById('menuGrid').insertAdjacentHTML('beforeend', `
-          <a class="menu-card" href="talent-profile.html">
-            <div class="menu-icon">${iconSvg('user-check', {size:20})}</div>
-            <div style="font-weight:700; font-size:14px; margin-bottom:4px;">Profil Kompetensi Tim</div>
-            <div class="text-sub">Gap &amp; training yang dibutuhkan tim Anda</div>
-          </a>`);
-      });
+      Promise.all([hasTeamProfiles(), getDocs(query(collection(db, 'developmentPlans'), where('email', '==', (user.email || '').toLowerCase()), limit(1))).then(s => !s.empty).catch(() => false)])
+        .then(([isViewer, hasIdp]) => {
+          if(!isViewer && !hasIdp) return;
+          document.getElementById('tmsTopBtn').style.display = 'inline-flex';
+          document.getElementById('menuGrid').insertAdjacentHTML('beforeend', `
+            <a class="menu-card" href="${isViewer ? 'tms/index.html' : 'tms/my-idp.html'}">
+              <div class="menu-icon">${iconSvg(isViewer ? 'user-check' : 'file-text', {size:20})}</div>
+              <div style="font-weight:700; font-size:14px; margin-bottom:4px;">${isViewer ? 'TMS — Tim Anda' : 'IDP Saya'}</div>
+              <div class="text-sub">${isViewer ? 'Profil kompetensi &amp; IDP tim Anda' : 'Rencana pengembangan Anda'}</div>
+            </a>`);
+        });
     }
+    if(profile.role === 'admin') document.getElementById('tmsTopBtn').style.display = 'inline-flex';
   });
 
   async function loadTrainerHome(user){

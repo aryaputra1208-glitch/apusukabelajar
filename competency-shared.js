@@ -1,5 +1,5 @@
 // Definisi bersama untuk Kamus Kompetensi & Data Karyawan (Fase 1 TMS).
-// Dipakai: admin-competencies.html, admin-employees.html, trainer-create-module.html.
+// Dipakai: tms/*.html (Karyawan, Kamus, Performa, Profil, IDP) dan trainer-create-module.html.
 // Nanti juga dipakai halaman profiling (Fase 2) — jadi aturan level cukup diubah di sini saja.
 
 /** Kolom level di kamus kompetensi, urut dari terendah ke tertinggi. */
@@ -218,7 +218,7 @@ function tsSeconds(t) {
  * - ok / strength / unrated
  * Return { [kompetensiId]: { status, gap?, modules?: [{moduleId, judul, score}], closedFrom? } }
  */
-export function gapStatuses({ assessment, previous, attempts, modules, standar = 3 }) {
+export function gapStatuses({ assessment, previous, attempts, modules, standar = 3, idpItems = [] }) {
   const out = {};
   const after = tsSeconds(assessment.updatedAt);
   const passedByModule = {};
@@ -241,7 +241,30 @@ export function gapStatuses({ assessment, previous, attempts, modules, standar =
     const mods = Object.values(passedByModule)
       .filter(t => (modById[t.moduleId]?.kompetensiIds || []).includes(id))
       .map(t => ({ moduleId: t.moduleId, judul: modById[t.moduleId]?.judul || '', score: t.score ?? null }));
-    out[id] = { status: mods.length ? 'development' : 'open', gap: round2(standar - s), modules: mods };
+    // Aksi IDP non-training (mentoring, coaching, penugasan, ...) yang sudah ditandai selesai juga menghitung.
+    const aksi = (idpItems || []).filter(it => it.kompetensiId === id && it.jenis !== 'training' && it.status === 'selesai')
+      .map(it => ({ moduleId: null, judul: `${IDP_JENIS[it.jenis] || it.jenis}: ${it.deskripsi || ''}`.trim(), score: null }));
+    const all = [...mods, ...aksi];
+    out[id] = { status: all.length ? 'development' : 'open', gap: round2(standar - s), modules: all };
   });
   return out;
+}
+
+/* ============================================================
+   IDP (Individual Development Plan) — dikelola HR/OD di TMS
+   ============================================================ */
+export const IDP_JENIS = { training: 'Training', mentoring: 'Mentoring', coaching: 'Coaching', penugasan: 'Penugasan / Proyek', lainnya: 'Lainnya' };
+export const IDP_STATUS = { rencana: 'Rencana', berjalan: 'Berjalan', selesai: 'Selesai', batal: 'Batal' };
+
+/**
+ * Status efektif satu item IDP. Item training mengikuti hasil post-test di LMS
+ * (lulus → selesai, sudah ikut tapi belum lulus → berjalan); item lain mengikuti status yang diisi HR/OD.
+ */
+export function idpItemStatus(item, attempts) {
+  if (item.jenis !== 'training' || !item.moduleId) return { status: item.status || 'rencana', auto: false };
+  if (item.status === 'batal') return { status: 'batal', auto: false };
+  const mine = (attempts || []).filter(t => t.moduleId === item.moduleId);
+  const best = mine.reduce((b, t) => (!b || (t.score ?? -1) > (b.score ?? -1)) ? t : b, null);
+  if (!best) return { status: item.status || 'rencana', auto: false };
+  return isPassed(best) ? { status: 'selesai', auto: true, score: best.score ?? null } : { status: 'berjalan', auto: true, score: best.score ?? null };
 }

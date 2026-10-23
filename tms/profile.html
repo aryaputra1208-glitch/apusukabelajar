@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profil Kompetensi — Anteraja LMS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../lms-design-system.css">
+<style>
+  .avatar { width: 28px; height: 28px; border-radius: 50%; }
+  .user-chip { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); }
+  .wrap.wide { max-width: 1100px; }
+  .filter-row { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+  .filter-row input, .filter-row select { margin-bottom: 0; }
+  .num { font-variant-numeric: tabular-nums; }
+  table.data-table tr.clickable { cursor: pointer; }
+  table.data-table tr.selected td { background: var(--pink-bg); }
+  .score-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+  .score-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); padding: 18px; }
+  .score-label { font-size: 11px; color: var(--text-3); letter-spacing: .04em; font-weight: 700; margin-bottom: 6px; }
+  .score-value { font-size: 28px; font-weight: 700; font-family: var(--font-display); color: var(--pink); line-height: 1.1; }
+  .score-sub { font-size: 12px; color: var(--text-2); margin-top: 4px; }
+  .comp-table td { vertical-align: top; }
+  .comp-table .indikator { font-size: 12px; color: var(--text-2); line-height: 1.5; max-width: 520px; }
+  .rec-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--border); }
+  .rec-row:last-child { border-bottom: none; }
+  .profile-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin: 28px 0 16px; flex-wrap: wrap; }
+  .section-gap { margin-top: 20px; }
+</style>
+</head>
+<body>
+
+<div id="gate" class="locked-state" style="display:none;">
+  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Memuat...</p>
+  <p class="text-sub" id="gateSub"></p>
+</div>
+
+<div id="appShell" style="display:none;">
+  <div class="topbar">
+    <div style="display:flex; align-items:center; gap:16px;">
+      <a href="index.html" class="sidebar-logo" style="margin:0; text-decoration:none;">anteraja TMS</a>
+      <a href="index.html" class="text-sub" style="text-decoration:none; display:flex; align-items:center; gap:4px;">← Menu TMS</a>
+    </div>
+    <div class="user-chip">
+      <a href="../index.html" class="btn btn-outline btn-sm" style="margin-right:6px;">Ke LMS</a>
+      <img class="avatar" id="userAvatar" src="">
+      <span id="userName"></span>
+    </div>
+  </div>
+
+  <div class="wrap wide">
+    <h1 class="text-h1">Profil Kompetensi</h1>
+    <p class="text-sub" style="margin-bottom:20px;" id="pageSub">Perilaku yang diharapkan di level jabatan, skor aktual dari PA, gap, dan training yang dibutuhkan. Halaman ini bersifat rahasia — hanya admin dan atasan berlevel Department Head ke atas yang bisa melihat skor.</p>
+
+    <div class="filter-row">
+      <select id="periodeSelect" style="max-width:220px;"></select>
+      <input type="text" id="searchBox" placeholder="Cari nama / NIK / jabatan..." style="max-width:280px;">
+      <select id="gapFilter" style="max-width:200px;">
+        <option value="">Semua</option>
+        <option value="gap">Punya gap</option>
+        <option value="noGap">Tanpa gap</option>
+      </select>
+      <span class="text-meta" id="rowCount"></span>
+    </div>
+
+    <div class="panel">
+      <div style="overflow-x:auto; max-height:420px; overflow-y:auto;">
+      <table class="data-table">
+        <thead><tr><th>Nama</th><th>Jabatan</th><th>Level</th><th>Skor Final</th><th>Gap</th></tr></thead>
+        <tbody id="listBody"></tbody>
+      </table>
+      </div>
+      <div id="listEmpty" class="empty-state" style="display:none;"></div>
+    </div>
+
+    <div id="detail" style="display:none;"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { db, onAuth, ensureUserProfile } from '../firebase-shared.js';
+  import { iconSvg } from '../lms-icons.js';
+  import {
+    KATEGORI_ORDER, DEFAULT_SCALE, escapeHtml, levelLabel, periodeRank, periodeLabel, scoreLabel, round2, gapsFor, recommendModules,
+    PASSING_SCORE, isPassed, gapStatuses, IDP_JENIS, IDP_STATUS, idpItemStatus,
+  } from '../competency-shared.js?v=20261023c';
+  import { collection, getDocs, doc, getDoc, query, where } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+
+  const F = id => document.getElementById(id);
+  const params = new URLSearchParams(location.search);
+  let currentProfile = null, currentUser = null;
+  let assessments = [], competencies = [], modules = [], scale = DEFAULT_SCALE;
+  let selectedPeriode = params.get('periode') || '';
+  let selectedNik = params.get('nik') || '';
+
+  function showToast(msg){ const t = F('toast'); t.textContent = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
+  const fmt = n => n == null ? '-' : String(round2(n)).replace('.', ',');
+  const standar = () => scale.standar || 3;
+
+  async function loadAll(){
+    const isAdmin = currentProfile.role === 'admin';
+    const aQuery = isAdmin
+      ? collection(db, 'assessments')
+      : query(collection(db, 'assessments'), where('viewerEmails', 'array-contains', (currentUser.email || '').toLowerCase()));
+    const modQuery = isAdmin ? collection(db, 'modules') : query(collection(db, 'modules'), where('status', '==', 'published'));
+    const grab = async (q, label) => {
+      try{ const s = await getDocs(q); const out = []; s.forEach(d => out.push({ id: d.id, ...d.data() })); return out; }
+      catch(err){ console.error(`Gagal baca ${label}:`, err.code, err.message); return null; }
+    };
+    const [asses, comps, mods, scaleSnap] = await Promise.all([
+      grab(aQuery, 'assessments'), grab(collection(db, 'competencies'), 'competencies'), grab(modQuery, 'modules'),
+      getDoc(doc(db, 'settings', 'competencyScale')).catch(err => { console.error('settings/competencyScale', err.code, err.message); return null; }),
+    ]);
+    if(asses === null){ showToast('Gagal memuat data penilaian — lihat Console.'); }
+    assessments = asses || []; modules = mods || [];
+    competencies = (comps || []).sort((a,b) => (KATEGORI_ORDER.indexOf(a.kategori) - KATEGORI_ORDER.indexOf(b.kategori)) || ((a.urutan ?? 999) - (b.urutan ?? 999)));
+    if(scaleSnap?.exists()) scale = scaleSnap.data();
+
+    if(!isAdmin) F('pageSub').textContent = 'Profil kompetensi anggota tim Anda: perilaku yang diharapkan di levelnya, skor dari PA, gap, dan training yang dibutuhkan. Data ini rahasia — jangan dibagikan ke yang bersangkutan dalam bentuk skor.';
+
+    const periodes = [...new Set(assessments.map(a => a.periode))].sort((a,b) => periodeRank(b) - periodeRank(a));
+    if(!periodes.includes(selectedPeriode)) selectedPeriode = periodes[0] || '';
+    F('periodeSelect').innerHTML = periodes.length
+      ? periodes.map(p => `<option value="${escapeHtml(p)}" ${p===selectedPeriode?'selected':''}>${escapeHtml(periodeLabel(p))}</option>`).join('')
+      : '<option value="">Belum ada periode</option>';
+    renderList();
+    if(selectedNik) renderDetail();
+  }
+
+  function renderList(){
+    const q = (F('searchBox').value || '').toLowerCase();
+    const gf = F('gapFilter').value;
+    let rows = assessments.filter(a => a.periode === selectedPeriode)
+      .filter(a => [a.nama, a.nik, a.jabatan].some(v => String(v||'').toLowerCase().includes(q)));
+    if(gf === 'gap') rows = rows.filter(a => gapsFor(a.kompetensi, standar()).length);
+    if(gf === 'noGap') rows = rows.filter(a => !gapsFor(a.kompetensi, standar()).length);
+    rows.sort((a,b) => (a.nama||'').localeCompare(b.nama||''));
+    F('rowCount').textContent = `${rows.length} orang`;
+    F('listBody').innerHTML = rows.map(a => {
+      const n = gapsFor(a.kompetensi, standar()).length;
+      return `<tr class="clickable ${a.nik===selectedNik?'selected':''}" data-nik="${escapeHtml(a.nik)}">
+        <td><strong>${escapeHtml(a.nama || a.nik)}</strong><div class="text-meta">${escapeHtml(a.nik)}</div></td>
+        <td class="text-meta">${escapeHtml(a.jabatan || '-')}</td>
+        <td class="text-meta">${escapeHtml(levelLabel(a.levelKey) || a.level || '-')}</td>
+        <td class="num"><strong>${fmt(a.skorFinal)}</strong> <span class="text-meta">${escapeHtml(scoreLabel(a.skorFinal, scale) || '')}</span></td>
+        <td>${!Object.keys(a.kompetensi || {}).length ? '<span class="badge badge-gray" title="Skor per kompetensi tidak ada di file import — gap tidak bisa dihitung">Belum ada skor kompetensi</span>' : n ? `<span class="badge badge-amber">${n} kompetensi</span>` : '<span class="badge badge-green">Tidak ada</span>'}</td>
+      </tr>`;
+    }).join('');
+    const empty = F('listEmpty');
+    empty.style.display = rows.length ? 'none' : 'block';
+    empty.innerHTML = iconSvg('inbox',{size:24}) + `<p style="margin-top:8px;">${assessments.length ? 'Tidak ada yang cocok dengan filter.' : (currentProfile.role === 'admin' ? 'Belum ada data performa. Import dulu di halaman Data Performa.' : 'Belum ada anggota tim yang datanya bisa Anda lihat.')}</p>`;
+    F('listBody').querySelectorAll('tr[data-nik]').forEach(tr => tr.addEventListener('click', () => {
+      selectedNik = tr.dataset.nik;
+      history.replaceState(null, '', `?nik=${encodeURIComponent(selectedNik)}&periode=${encodeURIComponent(selectedPeriode)}`);
+      renderList(); renderDetail();
+      F('detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }));
+  }
+  F('periodeSelect').addEventListener('change', e => { selectedPeriode = e.target.value; renderList(); if(selectedNik) renderDetail(); });
+  F('searchBox').addEventListener('input', renderList);
+  F('gapFilter').addEventListener('change', renderList);
+
+  /** Status ikut training: online dicocokkan by email, offline by NIK. */
+  async function loadAttemptsFor(a){
+    const out = [];
+    const run = async (q, label) => { try{ const s = await getDocs(q); s.forEach(d => out.push(d.data())); } catch(err){ console.error('Gagal baca attempts', label, err.code, err.message); } };
+    await Promise.all([
+      a.email ? run(query(collection(db, 'attempts'), where('email', '==', a.email)), 'email') : null,
+      run(query(collection(db, 'attempts'), where('nik', '==', a.nik)), 'nik'),
+    ]);
+    return out;
+  }
+
+  async function renderDetail(){
+    const box = F('detail');
+    const a = assessments.find(x => x.nik === selectedNik && x.periode === selectedPeriode);
+    if(!a){ box.style.display = 'none'; return; }
+    box.style.display = 'block';
+    box.innerHTML = `<p class="text-sub" style="margin-top:24px;">Memuat profil...</p>`;
+
+    const gaps = gapsFor(a.kompetensi, standar());
+    const gapIds = new Set(gaps.map(g => g.id));
+    const recs = recommendModules(gaps, modules, { level: a.level, divisi: a.divisi });
+    const [attemptList, plan] = await Promise.all([
+      loadAttemptsFor(a),
+      getDoc(doc(db, 'developmentPlans', `${a.periode}_${a.nik}`)).then(s => s.exists() ? s.data() : null).catch(err => { console.error('Gagal baca developmentPlans:', err.code, err.message); return null; }),
+    ]);
+    if(a.nik !== selectedNik) return; // sudah pindah orang selagi menunggu
+    const idpItems = (plan?.items || []).filter(it => it.status !== 'batal');
+    const attempts = {}; // percobaan terbaik per modul (buat status di daftar training)
+    attemptList.forEach(t => { const cur = attempts[t.moduleId]; if(!cur || (t.score ?? -1) > (cur.score ?? -1)) attempts[t.moduleId] = t; });
+    const compById = {}; competencies.forEach(c => compById[c.id] = c);
+    const coveredGap = new Set(recs.flatMap(r => r.kompetensiIds));
+    const uncovered = gaps.filter(g => !coveredGap.has(g.id));
+    const history = assessments.filter(x => x.nik === a.nik).sort((x,y) => periodeRank(y.periode) - periodeRank(x.periode));
+    const previous = history.find(h => periodeRank(h.periode) < periodeRank(a.periode)) || null;
+    const statuses = gapStatuses({ assessment: a, previous, attempts: attemptList, modules, standar: standar(), idpItems });
+    const nOpen = Object.values(statuses).filter(x => x.status === 'open').length;
+    const nDev = Object.values(statuses).filter(x => x.status === 'development').length;
+    const nClosed = Object.values(statuses).filter(x => x.status === 'closed').length;
+
+    const compRows = competencies.map(c => {
+      const s = a.kompetensi?.[c.id];
+      const ind = a.levelKey ? (c.indikator?.[a.levelKey] || '') : '';
+      const st = statuses[c.id] || { status: s == null ? 'unrated' : 'ok' };
+      let status;
+      if(st.status === 'unrated') status = '<span class="badge badge-gray">Belum dinilai</span>';
+      else if(st.status === 'open') status = `<span class="badge badge-amber">Gap terbuka · ${fmt(st.gap)}</span>`;
+      else if(st.status === 'development') status = `<span class="badge badge-purple">Dalam pengembangan</span><div class="text-meta" style="margin-top:4px;">Selesai: ${st.modules.map(m => escapeHtml(m.judul) + (m.score != null ? ' (' + m.score + ')' : '')).join(', ')} · menunggu PA berikutnya</div>`;
+      else if(st.status === 'closed') status = `<span class="badge badge-green">Gap closed</span><div class="text-meta" style="margin-top:4px;">Tervalidasi PA ${escapeHtml(periodeLabel(a.periode))} (gap di ${escapeHtml(periodeLabel(st.closedFrom))})</div>`;
+      else if(st.status === 'strength') status = '<span class="badge badge-green">Kekuatan</span>';
+      else status = '<span class="badge badge-blue">Sesuai standar</span>';
+      return `<tr>
+        <td style="min-width:170px;"><strong>${escapeHtml(c.nama)}</strong><div class="text-meta">${escapeHtml(c.kategori || '')}</div></td>
+        <td class="indikator">${escapeHtml(ind) || '<span class="text-meta">Level belum terpetakan ke kamus</span>'}</td>
+        <td class="num"><strong>${fmt(s)}</strong><div class="text-meta">${escapeHtml(scoreLabel(s, scale) || '')}</div></td>
+        <td>${status}</td>
+      </tr>`;
+    }).join('');
+
+    const recRows = recs.map(r => {
+      const t = attempts[r.moduleId];
+      const done = !t ? '<span class="badge badge-amber">Belum ikut</span>'
+        : isPassed(t) ? `<span class="badge badge-green">Lulus${t.score != null ? ' · skor ' + t.score : ''}</span>`
+        : `<span class="badge badge-red">Belum lulus · skor ${t.score} (min ${PASSING_SCORE})</span>`;
+      return `<div class="rec-row">
+        <div><div style="font-weight:700;">${escapeHtml(r.judul)}</div>
+          <div class="text-meta">${escapeHtml(r.mode === 'offline' ? 'Offline' : 'Online')} · ${escapeHtml(r.kategori)} · membangun ${r.kompetensiIds.map(id => escapeHtml(compById[id]?.nama || id)).join(', ')}</div></div>
+        ${done}
+      </div>`;
+    }).join('');
+
+    const kpiCard = a.skorKPI == null
+      ? `<div class="score-card"><div class="score-label">SKOR KPI</div><div class="score-value" style="color:var(--text-3);">-</div><div class="score-sub">Tidak ada KPI di level ini</div></div>`
+      : `<div class="score-card"><div class="score-label">SKOR KPI</div><div class="score-value num">${fmt(a.skorKPI)}</div><div class="score-sub">${escapeHtml(scoreLabel(a.skorKPI, scale) || '')}</div></div>`;
+    const finalSub = a.skorFinalSumber === 'import' ? 'Dari file import'
+      : a.modelSkor === 'PA + KPI' && a.bobot ? `PA ${a.bobot.pa}% + KPI ${a.bobot.kpi}%` : 'Sama dengan skor PA';
+
+    box.innerHTML = `
+      <div class="profile-head">
+        <div>
+          <h2 class="text-h1" style="margin:0;">${escapeHtml(a.nama || a.nik)}</h2>
+          <div class="text-sub">${escapeHtml(a.jabatan || '-')} · NIK ${escapeHtml(a.nik)} · ${escapeHtml(a.divisi || '')}</div>
+          <div style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;">
+            <span class="badge badge-blue">${escapeHtml(levelLabel(a.levelKey) || a.level || 'Level belum terpetakan')}</span>
+            <span class="badge badge-gray">${escapeHtml(periodeLabel(a.periode))}</span>
+            <span class="badge badge-gray">${escapeHtml(a.modelSkor || '')}</span>
+          </div>
+        </div>
+        ${history.length > 1 ? `<div class="text-meta" style="text-align:right;">Riwayat skor final<br>${history.map(h => `${escapeHtml(periodeLabel(h.periode))}: <strong>${fmt(h.skorFinal)}</strong>`).join('<br>')}</div>` : ''}
+      </div>
+
+      <div class="score-row">
+        <div class="score-card"><div class="score-label">SKOR PA (KOMPETENSI)</div><div class="score-value num">${fmt(a.skorPA)}</div><div class="score-sub">${escapeHtml(scoreLabel(a.skorPA, scale) || '')}</div></div>
+        ${kpiCard}
+        <div class="score-card" style="border-top:3px solid var(--pink);"><div class="score-label">SKOR FINAL</div><div class="score-value num">${fmt(a.skorFinal)}</div><div class="score-sub">${escapeHtml(scoreLabel(a.skorFinal, scale) || '')} · ${escapeHtml(finalSub)}</div></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h3 class="text-h2" style="margin:0;">Kompetensi: Diharapkan vs Aktual</h3><span class="text-meta">${nOpen} gap terbuka · ${nDev} dalam pengembangan · ${nClosed} closed · standar = skor ${standar()}</span></div>
+        <div style="overflow-x:auto;"><table class="data-table comp-table">
+          <thead><tr><th>Kompetensi</th><th>Perilaku yang diharapkan di level ini</th><th>Skor</th><th>Status</th></tr></thead>
+          <tbody>${compRows}</tbody>
+        </table></div>
+      </div>
+
+      <div class="panel section-gap">
+        <div class="panel-head"><h3 class="text-h2" style="margin:0;">IDP</h3>${currentProfile.role === 'admin' ? `<a href="idp.html?nik=${encodeURIComponent(a.nik)}&periode=${encodeURIComponent(a.periode)}" class="btn btn-outline btn-sm">${idpItems.length ? 'Edit IDP' : 'Susun IDP'}</a>` : ''}</div>
+        ${idpItems.length ? idpItems.map(it => { const eff = idpItemStatus(it, attemptList); return `<div class="rec-row"><div><div style="font-weight:700;">${escapeHtml(it.jenis === 'training' ? (it.judul || 'Modul') : (it.deskripsi || ''))}</div><div class="text-meta">${escapeHtml(IDP_JENIS[it.jenis] || it.jenis)} · ${escapeHtml(it.kompetensiNama || it.kompetensiId)}${it.mentorNama ? ' · mentor ' + escapeHtml(it.mentorNama) : ''}${it.targetTanggal ? ' · target ' + escapeHtml(it.targetTanggal) : ''}</div></div><span class="badge ${eff.status === 'selesai' ? 'badge-green' : eff.status === 'berjalan' ? 'badge-purple' : 'badge-gray'}">${escapeHtml(IDP_STATUS[eff.status] || eff.status)}</span></div>`; }).join('') : '<div class="empty-state"><p>Belum ada IDP untuk periode ini.</p></div>'}
+      </div>
+
+      <div class="panel section-gap">
+        <div class="panel-head"><h3 class="text-h2" style="margin:0;">Saran Training dari LMS</h3><span class="text-meta">${gaps.length} kompetensi di bawah standar</span></div>
+        ${!Object.keys(a.kompetensi || {}).length ? `<div class="empty-state"><p>Skor per kompetensi belum ada untuk periode ini (hanya Skor PA total yang di-import), jadi gap & training belum bisa dihitung. Import ulang dengan kolom 11 kompetensi terisi.</p></div>`
+          : !gaps.length ? `<div class="empty-state">${iconSvg('check',{size:24})}<p style="margin-top:8px;">Tidak ada gap kompetensi di periode ini.</p></div>`
+          : recRows || `<div class="empty-state"><p>Belum ada modul published yang membangun kompetensi ber-gap untuk level ini.</p></div>`}
+        ${uncovered.length ? `<div style="padding:12px 20px; background:var(--amber-bg); font-size:12px; color:#92400E;">Belum ada modul untuk: <strong>${uncovered.map(g => escapeHtml(compById[g.id]?.nama || g.id)).join(', ')}</strong>. Pertimbangkan penugasan/coaching, atau minta tim training membuat modulnya (lalu tag kompetensinya).</div>` : ''}
+      </div>`;
+  }
+
+  onAuth(async (user) => {
+    const gate = F('gate'), shell = F('appShell');
+    if(!user){
+      gate.style.display = 'block'; shell.style.display = 'none';
+      F('gateTitle').textContent = 'Silakan login';
+      F('gateSub').innerHTML = `<a href="../index.html">Login dulu di sini</a>.`;
+      return;
+    }
+    currentUser = user;
+    currentProfile = await ensureUserProfile(user);
+    gate.style.display = 'none'; shell.style.display = 'block';
+    F('userAvatar').src = currentProfile.photoURL;
+    F('userName').textContent = currentProfile.displayName;
+    loadAll();
+  });
+</script>
+</body>
+</html>

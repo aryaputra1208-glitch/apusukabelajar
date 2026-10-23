@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IDP Saya — Anteraja TMS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../lms-design-system.css">
+<style>
+  .avatar { width: 28px; height: 28px; border-radius: 50%; }
+  .user-chip { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); }
+  .stat-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 24px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); padding: 18px; }
+  .stat-num { font-size: 26px; font-weight: 700; color: var(--pink); font-family: var(--font-display); line-height: 1; }
+  .stat-label { font-size: 12px; color: var(--text-2); margin-top: 6px; }
+  .comp-block + .comp-block { margin-top: 16px; }
+  .act { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--border); }
+  .act:last-child { border-bottom: none; }
+</style>
+</head>
+<body>
+
+<div id="gate" class="locked-state">
+  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Memuat...</p>
+  <p class="text-sub" id="gateSub"></p>
+</div>
+
+<div id="appShell" style="display:none;">
+  <div class="topbar">
+    <div style="display:flex; align-items:center; gap:16px;">
+      <a href="index.html" class="sidebar-logo" style="margin:0; text-decoration:none;">anteraja TMS</a>
+      <a href="index.html" class="text-sub" style="text-decoration:none; display:flex; align-items:center; gap:4px;">← Menu TMS</a>
+    </div>
+    <div class="user-chip">
+      <a href="../index.html" class="btn btn-outline btn-sm" style="margin-right:6px;">Ke LMS</a>
+      <img class="avatar" id="userAvatar" src="">
+      <span id="userName"></span>
+    </div>
+  </div>
+  <div class="wrap">
+    <h1 class="text-h1">IDP Saya</h1>
+    <p class="text-sub" style="margin-bottom:6px;" id="periodeInfo"></p>
+    <div class="card" id="catatanBox" style="display:none; margin:14px 0 20px; border-left:3px solid var(--pink); border-radius:0;"></div>
+    <div class="stat-row">
+      <div class="stat-card"><div class="stat-num" id="sTotal">-</div><div class="stat-label">Aksi Pengembangan</div></div>
+      <div class="stat-card"><div class="stat-num" id="sDone">-</div><div class="stat-label">Selesai</div></div>
+      <div class="stat-card"><div class="stat-num" id="sTraining">-</div><div class="stat-label">Training di LMS Belum Selesai</div></div>
+    </div>
+    <div id="blocks"></div>
+    <p class="text-meta" style="margin-top:20px;">IDP disusun oleh tim HR/OD bersama atasan Anda. Item training otomatis selesai saat Anda lulus post-test di LMS. Untuk aksi lain (mentoring, coaching, penugasan), konfirmasi progres ke HR/OD.</p>
+  </div>
+</div>
+
+<script type="module">
+  import { db, onAuth, ensureUserProfile } from '../firebase-shared.js';
+  import { iconSvg } from '../lms-icons.js';
+  import { escapeHtml, periodeRank, periodeLabel, IDP_JENIS, IDP_STATUS, idpItemStatus } from '../competency-shared.js?v=20261023c';
+  import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+
+  const F = id => document.getElementById(id);
+  const STATUS_BADGE = { rencana: 'badge-gray', berjalan: 'badge-purple', selesai: 'badge-green', batal: 'badge-red' };
+  const fmtDate = d => { if(!d) return ''; const x = new Date(d); return isNaN(x) ? d : x.toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' }); };
+
+  async function load(user){
+    const email = (user.email || '').toLowerCase();
+    let plans = [];
+    try{ (await getDocs(query(collection(db, 'developmentPlans'), where('email', '==', email)))).forEach(d => plans.push(d.data())); }
+    catch(err){ console.error('Gagal baca developmentPlans:', err.code, err.message); }
+    if(!plans.length){
+      F('gateTitle').textContent = 'Belum ada IDP';
+      F('gateSub').innerHTML = `Rencana pengembangan Anda belum disusun oleh HR/OD. <a href="../index.html">Kembali ke LMS</a>.`;
+      return false;
+    }
+    const plan = plans.sort((a,b) => periodeRank(b.periode) - periodeRank(a.periode))[0];
+
+    // Riwayat training sendiri: online (uid/email) + offline (NIK) — untuk status item training.
+    const attempts = [];
+    const run = async q => { try{ (await getDocs(q)).forEach(d => attempts.push(d.data())); } catch(err){ console.error('Gagal baca attempts:', err.code, err.message); } };
+    await Promise.all([ run(query(collection(db, 'attempts'), where('uid', '==', user.uid))), run(query(collection(db, 'attempts'), where('nik', '==', plan.nik))) ]);
+
+    const items = (plan.items || []).filter(it => it.status !== 'batal').map(it => ({ ...it, eff: idpItemStatus(it, attempts) }));
+    F('periodeInfo').textContent = `Periode ${periodeLabel(plan.periode)} · ${items.length} aksi untuk ${new Set(items.map(i => i.kompetensiId)).size} kompetensi`;
+    if(plan.catatan){ F('catatanBox').style.display = 'block'; F('catatanBox').innerHTML = `<div class="text-h3" style="margin-bottom:6px;">Fokus Pengembangan</div><div>${escapeHtml(plan.catatan)}</div>`; }
+    F('sTotal').textContent = items.length;
+    F('sDone').textContent = items.filter(i => i.eff.status === 'selesai').length;
+    F('sTraining').textContent = items.filter(i => i.jenis === 'training' && i.eff.status !== 'selesai').length;
+
+    const byComp = {};
+    items.forEach(it => (byComp[it.kompetensiNama || it.kompetensiId] = byComp[it.kompetensiNama || it.kompetensiId] || []).push(it));
+    F('blocks').innerHTML = Object.entries(byComp).map(([comp, list]) => `
+      <div class="panel comp-block">
+        <div class="panel-head"><h3 class="text-h2" style="margin:0;">${escapeHtml(comp)}</h3><span class="text-meta">${list.filter(i => i.eff.status==='selesai').length}/${list.length} selesai</span></div>
+        ${list.map(it => `<div class="act">
+          <div>
+            <div style="font-weight:700;">${it.jenis === 'training' ? escapeHtml(it.judul || 'Modul training') : escapeHtml(it.deskripsi || '')}</div>
+            <div class="text-meta">${escapeHtml(IDP_JENIS[it.jenis] || it.jenis)}${it.mentorNama ? ' · ' + (it.jenis === 'coaching' ? 'Coach: ' : 'Mentor: ') + escapeHtml(it.mentorNama) : ''}${it.targetTanggal ? ' · target ' + escapeHtml(fmtDate(it.targetTanggal)) : ''}</div>
+            ${it.jenis === 'training' && it.moduleId && it.eff.status !== 'selesai' ? (it.mode === 'offline' ? '<div class="text-meta" style="margin-top:6px;">Training tatap muka — jadwal diinfokan tim training.</div>' : `<a href="../trainee-learn.html?module=${encodeURIComponent(it.moduleId)}" class="btn btn-primary btn-sm" style="margin-top:8px;">Mulai Belajar</a>`) : ''}
+          </div>
+          <span class="badge ${STATUS_BADGE[it.eff.status] || 'badge-gray'}">${escapeHtml(IDP_STATUS[it.eff.status] || it.eff.status)}</span>
+        </div>`).join('')}
+      </div>`).join('');
+    return true;
+  }
+
+  onAuth(async (user) => {
+    if(!user){
+      F('gateTitle').textContent = 'Silakan login';
+      F('gateSub').innerHTML = `<a href="../index.html">Login dulu di LMS</a>.`;
+      return;
+    }
+    const profile = await ensureUserProfile(user);
+    F('userAvatar').src = profile.photoURL || '';
+    F('userName').textContent = profile.displayName;
+    if(await load(user)){ F('gate').style.display = 'none'; F('appShell').style.display = 'block'; }
+  });
+</script>
+</body>
+</html>

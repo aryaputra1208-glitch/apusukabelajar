@@ -149,7 +149,17 @@ service cloud.firestore {
       );
       allow write: if isSignedIn() && myRole() == 'admin';
     }
-    // Rekomendasi training per karyawan (by email) — TIDAK berisi skor, cuma daftar modul.
+    // IDP: disusun admin (HR/OD). Karyawan baca IDP miliknya (dicocokkan by email, tanpa skor),
+    // atasan DH+ di garis atasan baca IDP timnya.
+    match /developmentPlans/{planId} {
+      allow read: if isSignedIn() && (
+        myRole() == 'admin' ||
+        (myEmail() != null && resource.data.email != '' && resource.data.email == myEmail()) ||
+        (myEmail() != null && myEmail() in resource.data.viewerEmails)
+      );
+      allow write: if isSignedIn() && myRole() == 'admin';
+    }
+    // (Lama, tidak dipakai lagi sejak IDP) Rekomendasi training per karyawan — TIDAK berisi skor.
     match /recommendations/{email} {
       allow read: if isSignedIn() && (myEmail() == email || myRole() == 'admin');
       allow write: if isSignedIn() && myRole() == 'admin';

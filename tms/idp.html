@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IDP — Anteraja TMS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../lms-design-system.css">
+<style>
+  .avatar { width: 28px; height: 28px; border-radius: 50%; }
+  .user-chip { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); }
+  .wrap.wide { max-width: 1100px; }
+  .filter-row { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+  .filter-row input, .filter-row select { margin-bottom: 0; }
+  table.data-table tr.clickable { cursor: pointer; }
+  table.data-table tr.selected td { background: var(--pink-bg); }
+  .gap-row { display: grid; grid-template-columns: 220px 1fr; gap: 14px; padding: 14px 20px; border-bottom: 1px solid var(--border); align-items: start; }
+  .gap-row:last-child { border-bottom: none; }
+  .sug { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .item { border-bottom: 1px solid var(--border); padding: 14px 20px; display: grid; grid-template-columns: 1.1fr 0.9fr 2fr 0.9fr 0.9fr auto; gap: 10px; align-items: start; }
+  .item:last-child { border-bottom: none; }
+  .item input, .item select, .item textarea { margin-bottom: 0; }
+  .item .lbl { font-size: 11px; color: var(--text-3); font-weight: 700; margin-bottom: 4px; letter-spacing: .03em; }
+  .link-add { color: var(--pink); font-weight: 700; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+  .profile-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin: 28px 0 16px; flex-wrap: wrap; }
+  .section-gap { margin-top: 20px; }
+  .sticky-save { position: sticky; bottom: 0; background: var(--bg); padding: 12px 0; display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--border); margin-top: 16px; }
+</style>
+</head>
+<body>
+
+<div id="gate" class="locked-state" style="display:none;">
+  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Memuat...</p>
+  <p class="text-sub" id="gateSub"></p>
+</div>
+
+<div id="appShell" style="display:none;">
+  <div class="topbar">
+    <div style="display:flex; align-items:center; gap:16px;">
+      <a href="index.html" class="sidebar-logo" style="margin:0; text-decoration:none;">anteraja TMS</a>
+      <a href="index.html" class="text-sub" style="text-decoration:none; display:flex; align-items:center; gap:4px;">← Menu TMS</a>
+    </div>
+    <div class="user-chip">
+      <a href="../index.html" class="btn btn-outline btn-sm" style="margin-right:6px;">Ke LMS</a>
+      <img class="avatar" id="userAvatar" src="">
+      <span id="userName"></span>
+    </div>
+  </div>
+
+  <div class="wrap wide">
+    <h1 class="text-h1">IDP (Individual Development Plan)</h1>
+    <p class="text-sub" style="margin-bottom:20px;">Susun rencana pengembangan untuk setiap gap kompetensi: training (modul LMS), mentoring, coaching, penugasan, atau aksi lain. Item training otomatis selesai saat karyawan lulus post-test (≥ <span id="passScore"></span>). Karyawan bisa melihat IDP-nya sendiri tanpa skor; item training juga muncul sebagai tugas belajar di LMS.</p>
+
+    <div class="filter-row">
+      <select id="periodeSelect" style="max-width:220px;"></select>
+      <input type="text" id="searchBox" placeholder="Cari nama / NIK / jabatan..." style="max-width:280px;">
+      <select id="idpFilter" style="max-width:220px;">
+        <option value="">Semua</option>
+        <option value="needIdp">Punya gap, belum ada IDP</option>
+        <option value="hasIdp">Sudah ada IDP</option>
+      </select>
+      <span class="text-meta" id="rowCount"></span>
+    </div>
+
+    <div class="panel">
+      <div style="overflow-x:auto; max-height:380px; overflow-y:auto;">
+      <table class="data-table">
+        <thead><tr><th>Nama</th><th>Jabatan</th><th>Gap</th><th>IDP</th></tr></thead>
+        <tbody id="listBody"></tbody>
+      </table>
+      </div>
+      <div id="listEmpty" class="empty-state" style="display:none;"></div>
+    </div>
+
+    <div id="editor" style="display:none;"></div>
+  </div>
+</div>
+
+<datalist id="employeeList"></datalist>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { db, onAuth, ensureUserProfile } from '../firebase-shared.js';
+  import { iconSvg } from '../lms-icons.js';
+  import {
+    KATEGORI_ORDER, DEFAULT_SCALE, escapeHtml, levelLabel, periodeRank, periodeLabel, round2, gapsFor, recommendModules,
+    viewerEmailsFor, gapStatuses, PASSING_SCORE, IDP_JENIS, IDP_STATUS, idpItemStatus,
+  } from '../competency-shared.js?v=20261023c';
+  import { collection, getDocs, doc, getDoc, setDoc, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+
+  const F = id => document.getElementById(id);
+  const params = new URLSearchParams(location.search);
+  let currentProfile = null;
+  let assessments = [], plans = {}, competencies = [], modules = [], employees = [], employeesByNik = {}, scale = DEFAULT_SCALE;
+  let selectedPeriode = params.get('periode') || '', selectedNik = params.get('nik') || '';
+  let draft = null; // { items: [...], catatan } yang sedang diedit
+  let attemptList = [];
+  F('passScore').textContent = PASSING_SCORE;
+
+  function showToast(msg){ const t = F('toast'); t.textContent = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
+  const fmt = n => n == null ? '-' : String(round2(n)).replace('.', ',');
+  const standar = () => scale.standar || 3;
+  const compName = id => competencies.find(c => c.id === id)?.nama || id;
+  const newId = () => Math.random().toString(36).slice(2, 10);
+
+  async function grab(col){
+    try{ const s = await getDocs(collection(db, col)); const out = []; s.forEach(d => out.push({ id: d.id, ...d.data() })); return out; }
+    catch(err){ console.error(`Gagal baca ${col}:`, err.code, err.message); showToast(`Gagal memuat ${col}: ${err.message}`); return []; }
+  }
+
+  async function loadAll(){
+    const [asses, pl, comps, mods, emps, scaleSnap] = await Promise.all([
+      grab('assessments'), grab('developmentPlans'), grab('competencies'), grab('modules'), grab('employees'),
+      getDoc(doc(db, 'settings', 'competencyScale')).catch(() => null),
+    ]);
+    assessments = asses; modules = mods;
+    plans = {}; pl.forEach(p => plans[p.id] = p);
+    competencies = comps.sort((a,b) => (KATEGORI_ORDER.indexOf(a.kategori) - KATEGORI_ORDER.indexOf(b.kategori)) || ((a.urutan ?? 999) - (b.urutan ?? 999)));
+    employees = emps.map(e => ({ ...e, nik: e.id })); employeesByNik = {}; employees.forEach(e => employeesByNik[e.nik] = e);
+    if(scaleSnap?.exists()) scale = scaleSnap.data();
+    F('employeeList').innerHTML = employees.filter(e => (e.status || 'Aktif') === 'Aktif')
+      .map(e => `<option value="${escapeHtml(e.nik)} — ${escapeHtml(e.nama || '')}"></option>`).join('');
+
+    const periodes = [...new Set(assessments.map(a => a.periode))].sort((a,b) => periodeRank(b) - periodeRank(a));
+    if(!periodes.includes(selectedPeriode)) selectedPeriode = periodes[0] || '';
+    F('periodeSelect').innerHTML = periodes.length
+      ? periodes.map(p => `<option value="${escapeHtml(p)}" ${p===selectedPeriode?'selected':''}>${escapeHtml(periodeLabel(p))}</option>`).join('')
+      : '<option value="">Belum ada periode</option>';
+    renderList();
+    if(selectedNik) openEditor(selectedNik);
+  }
+
+  function renderList(){
+    const q = (F('searchBox').value || '').toLowerCase();
+    const flt = F('idpFilter').value;
+    let rows = assessments.filter(a => a.periode === selectedPeriode)
+      .filter(a => [a.nama, a.nik, a.jabatan].some(v => String(v||'').toLowerCase().includes(q)));
+    const planOf = a => plans[`${a.periode}_${a.nik}`];
+    if(flt === 'needIdp') rows = rows.filter(a => gapsFor(a.kompetensi, standar()).length && !(planOf(a)?.items || []).length);
+    if(flt === 'hasIdp') rows = rows.filter(a => (planOf(a)?.items || []).length);
+    rows.sort((a,b) => (a.nama||'').localeCompare(b.nama||''));
+    F('rowCount').textContent = `${rows.length} orang`;
+    F('listBody').innerHTML = rows.map(a => {
+      const n = gapsFor(a.kompetensi, standar()).length;
+      const items = (planOf(a)?.items || []).filter(it => it.status !== 'batal');
+      const done = items.filter(it => it.status === 'selesai').length;
+      const noScore = !Object.keys(a.kompetensi || {}).length;
+      return `<tr class="clickable ${a.nik===selectedNik?'selected':''}" data-nik="${escapeHtml(a.nik)}">
+        <td><strong>${escapeHtml(a.nama || a.nik)}</strong><div class="text-meta">${escapeHtml(a.nik)}</div></td>
+        <td class="text-meta">${escapeHtml(a.jabatan || '-')}</td>
+        <td>${noScore ? '<span class="badge badge-gray">Belum ada skor kompetensi</span>' : n ? `<span class="badge badge-amber">${n} kompetensi</span>` : '<span class="badge badge-green">Tidak ada</span>'}</td>
+        <td>${items.length ? `<span class="badge badge-blue">${items.length} aksi</span> <span class="text-meta">${done} selesai</span>` : (n ? '<span class="badge badge-red">Belum ada IDP</span>' : '<span class="text-meta">-</span>')}</td>
+      </tr>`;
+    }).join('');
+    const empty = F('listEmpty');
+    empty.style.display = rows.length ? 'none' : 'block';
+    empty.innerHTML = iconSvg('inbox',{size:24}) + `<p style="margin-top:8px;">${assessments.length ? 'Tidak ada yang cocok dengan filter.' : 'Belum ada data performa. Import dulu di Data Performa.'}</p>`;
+    F('listBody').querySelectorAll('tr[data-nik]').forEach(tr => tr.addEventListener('click', () => {
+      if(draft?.dirty && !confirm('Perubahan IDP yang belum disimpan akan hilang. Lanjut?')) return;
+      openEditor(tr.dataset.nik);
+      F('editor').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }));
+  }
+  F('periodeSelect').addEventListener('change', e => { selectedPeriode = e.target.value; selectedNik = ''; draft = null; F('editor').style.display = 'none'; renderList(); });
+  F('searchBox').addEventListener('input', renderList);
+  F('idpFilter').addEventListener('change', renderList);
+
+  async function loadAttempts(a){
+    const out = [];
+    const run = async (q, label) => { try{ (await getDocs(q)).forEach(d => out.push(d.data())); } catch(err){ console.error('Gagal baca attempts', label, err.code, err.message); } };
+    const email = a.email || employeesByNik[a.nik]?.email;
+    await Promise.all([ email ? run(query(collection(db, 'attempts'), where('email', '==', email)), 'email') : null, run(query(collection(db, 'attempts'), where('nik', '==', a.nik)), 'nik') ]);
+    return out;
+  }
+
+  async function openEditor(nik){
+    selectedNik = nik;
+    history.replaceState(null, '', `?nik=${encodeURIComponent(nik)}&periode=${encodeURIComponent(selectedPeriode)}`);
+    renderList();
+    const a = assessments.find(x => x.nik === nik && x.periode === selectedPeriode);
+    if(!a){ F('editor').style.display = 'none'; return; }
+    const existing = plans[`${a.periode}_${a.nik}`];
+    draft = { items: JSON.parse(JSON.stringify(existing?.items || [])), catatan: existing?.catatan || '', dirty: false };
+    F('editor').style.display = 'block';
+    F('editor').innerHTML = '<p class="text-sub" style="margin-top:24px;">Memuat...</p>';
+    attemptList = await loadAttempts(a);
+    if(selectedNik !== nik) return;
+    renderEditor();
+  }
+
+  function moduleOptions(kompetensiId, selected){
+    const pub = modules.filter(m => m.status === 'published');
+    const tagged = pub.filter(m => (m.kompetensiIds || []).includes(kompetensiId));
+    const others = pub.filter(m => !(m.kompetensiIds || []).includes(kompetensiId));
+    const opt = m => `<option value="${escapeHtml(m.id)}" ${m.id===selected?'selected':''}>${escapeHtml(m.judul || m.id)}${m.mode==='offline'?' (offline)':''}</option>`;
+    return `<option value="">- Pilih modul -</option>`
+      + (tagged.length ? `<optgroup label="Membangun ${escapeHtml(compName(kompetensiId))}">${tagged.map(opt).join('')}</optgroup>` : '')
+      + (others.length ? `<optgroup label="Modul lain">${others.map(opt).join('')}</optgroup>` : '');
+  }
+
+  function renderEditor(){
+    const a = assessments.find(x => x.nik === selectedNik && x.periode === selectedPeriode);
+    const emp = employeesByNik[a.nik] || {};
+    const gaps = gapsFor(a.kompetensi, standar());
+    const previous = assessments.filter(x => x.nik === a.nik && periodeRank(x.periode) < periodeRank(a.periode)).sort((x,y) => periodeRank(y.periode) - periodeRank(x.periode))[0] || null;
+    const statuses = gapStatuses({ assessment: a, previous, attempts: attemptList, modules, standar: standar(), idpItems: draft.items });
+    const recs = recommendModules(gaps, modules, { level: a.level, divisi: a.divisi });
+    const stBadge = st => ({ open: '<span class="badge badge-amber">Gap terbuka</span>', development: '<span class="badge badge-purple">Dalam pengembangan</span>' }[st] || '');
+
+    const gapRows = gaps.map(g => {
+      const already = new Set(draft.items.filter(it => it.kompetensiId === g.id && it.jenis === 'training').map(it => it.moduleId));
+      const sug = recs.filter(r => r.kompetensiIds.includes(g.id) && !already.has(r.moduleId));
+      return `<div class="gap-row">
+        <div><strong>${escapeHtml(compName(g.id))}</strong><div class="text-meta">Skor ${fmt(g.skor)} · gap ${fmt(g.gap)}</div><div style="margin-top:6px;">${stBadge(statuses[g.id]?.status)}</div></div>
+        <div class="sug">
+          ${sug.map(r => `<span class="chip" data-add-training="${escapeHtml(g.id)}" data-module="${escapeHtml(r.moduleId)}" title="Tambah sebagai item training">+ ${escapeHtml(r.judul)}</span>`).join('')}
+          ${!sug.length ? `<span class="text-meta">${already.size ? 'Modul yang cocok sudah masuk IDP.' : 'Belum ada modul yang membangun kompetensi ini untuk level ini.'}</span>` : ''}
+          <span class="link-add" data-add-other="${escapeHtml(g.id)}">${iconSvg('plus',{size:12})} Mentoring / coaching / penugasan</span>
+        </div>
+      </div>`;
+    }).join('');
+
+    const compSelect = sel => `<option value="">- Kompetensi -</option>` + competencies.map(c => `<option value="${escapeHtml(c.id)}" ${c.id===sel?'selected':''}>${escapeHtml(c.nama)}</option>`).join('');
+    const itemRows = draft.items.map((it, i) => {
+      const eff = idpItemStatus(it, attemptList);
+      const isTraining = it.jenis === 'training';
+      return `<div class="item" data-i="${i}">
+        <div><div class="lbl">KOMPETENSI</div><select data-f="kompetensiId">${compSelect(it.kompetensiId)}</select></div>
+        <div><div class="lbl">JENIS</div><select data-f="jenis">${Object.entries(IDP_JENIS).map(([k,v]) => `<option value="${k}" ${k===it.jenis?'selected':''}>${v}</option>`).join('')}</select></div>
+        <div>
+          ${isTraining
+            ? `<div class="lbl">MODUL LMS</div><select data-f="moduleId">${moduleOptions(it.kompetensiId, it.moduleId)}</select>`
+            : `<div class="lbl">DESKRIPSI AKSI</div><textarea rows="2" data-f="deskripsi" placeholder="Contoh: Mendampingi atasan menyusun rencana mingguan selama 4 minggu">${escapeHtml(it.deskripsi || '')}</textarea>
+               ${['mentoring','coaching'].includes(it.jenis) ? `<div class="lbl" style="margin-top:8px;">${it.jenis === 'mentoring' ? 'MENTOR' : 'COACH'}</div><input type="text" list="employeeList" data-f="mentor" value="${escapeHtml(it.mentorNik ? `${it.mentorNik} — ${it.mentorNama || ''}` : '')}" placeholder="Ketik nama / NIK">` : ''}`}
+        </div>
+        <div><div class="lbl">TARGET</div><input type="date" data-f="targetTanggal" value="${escapeHtml(it.targetTanggal || '')}"></div>
+        <div><div class="lbl">STATUS</div>
+          ${eff.auto
+            ? `<span class="badge ${eff.status==='selesai'?'badge-green':'badge-purple'}">${IDP_STATUS[eff.status]}</span><div class="text-meta" style="margin-top:4px;">Otomatis dari post-test${eff.score != null ? ' (' + eff.score + ')' : ''}</div>`
+            : `<select data-f="status">${Object.entries(IDP_STATUS).map(([k,v]) => `<option value="${k}" ${k===(it.status||'rencana')?'selected':''}>${v}</option>`).join('')}</select>`}
+        </div>
+        <div style="padding-top:18px;"><button class="icon-btn tone-red" data-del="${i}" title="Hapus aksi">${iconSvg('trash',{size:14})}</button></div>
+      </div>`;
+    }).join('');
+
+    const plan = plans[`${a.periode}_${a.nik}`];
+    F('editor').innerHTML = `
+      <div class="profile-head">
+        <div>
+          <h2 class="text-h1" style="margin:0;">${escapeHtml(a.nama || a.nik)}</h2>
+          <div class="text-sub">${escapeHtml(a.jabatan || '-')} · NIK ${escapeHtml(a.nik)} · ${escapeHtml(levelLabel(a.levelKey) || a.level || '')}</div>
+          <div style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;">
+            <span class="badge badge-gray">IDP ${escapeHtml(periodeLabel(a.periode))}</span>
+            ${emp.email ? '' : '<span class="badge badge-amber">Tanpa email — karyawan belum bisa melihat IDP-nya</span>'}
+            ${plan?.updatedBy ? `<span class="text-meta">Terakhir diubah oleh ${escapeHtml(plan.updatedBy)}</span>` : ''}
+          </div>
+        </div>
+        <a href="profile.html?nik=${encodeURIComponent(a.nik)}&periode=${encodeURIComponent(a.periode)}" class="btn btn-outline btn-sm">Lihat Profil Kompetensi</a>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h3 class="text-h2" style="margin:0;">Gap Kompetensi</h3><span class="text-meta">Klik saran modul untuk menambahkannya ke IDP</span></div>
+        ${!Object.keys(a.kompetensi || {}).length ? '<div class="empty-state"><p>Skor per kompetensi belum ada untuk periode ini — gap belum bisa dihitung. Aksi tetap bisa ditambahkan manual di bawah.</p></div>'
+          : gapRows || `<div class="empty-state">${iconSvg('check',{size:24})}<p style="margin-top:8px;">Tidak ada gap kompetensi. IDP tetap bisa diisi untuk pengembangan lanjutan.</p></div>`}
+      </div>
+
+      <div class="panel section-gap">
+        <div class="panel-head"><h3 class="text-h2" style="margin:0;">Rencana Pengembangan</h3><span class="link-add" id="addBlankBtn">${iconSvg('plus',{size:12})} Tambah aksi</span></div>
+        ${itemRows || '<div class="empty-state"><p>Belum ada aksi. Tambahkan dari saran modul di atas atau lewat "Tambah aksi".</p></div>'}
+      </div>
+
+      <div class="card section-gap">
+        <label>Catatan / tujuan pengembangan (terlihat oleh karyawan)</label>
+        <textarea id="planCatatan" rows="2" placeholder="Contoh: Fokus semester ini menguatkan perencanaan mingguan tim hub.">${escapeHtml(draft.catatan)}</textarea>
+      </div>
+
+      <div class="sticky-save">
+        <span class="text-meta" id="dirtyInfo" style="align-self:center;">${draft.dirty ? 'Ada perubahan yang belum disimpan.' : ''}</span>
+        <button class="btn btn-primary" id="savePlanBtn">Simpan IDP</button>
+      </div>`;
+    bindEditor();
+  }
+
+  function markDirty(){ draft.dirty = true; const d = F('dirtyInfo'); if(d) d.textContent = 'Ada perubahan yang belum disimpan.'; }
+
+  function bindEditor(){
+    const ed = F('editor');
+    ed.querySelectorAll('[data-add-training]').forEach(ch => ch.addEventListener('click', () => {
+      draft.items.push({ id: newId(), kompetensiId: ch.dataset.addTraining, jenis: 'training', moduleId: ch.dataset.module, status: 'rencana', targetTanggal: '', dibuat: new Date().toISOString() });
+      draft.dirty = true; renderEditor();
+    }));
+    ed.querySelectorAll('[data-add-other]').forEach(el => el.addEventListener('click', () => {
+      draft.items.push({ id: newId(), kompetensiId: el.dataset.addOther, jenis: 'mentoring', deskripsi: '', status: 'rencana', targetTanggal: '', dibuat: new Date().toISOString() });
+      draft.dirty = true; renderEditor();
+    }));
+    F('addBlankBtn').addEventListener('click', () => {
+      draft.items.push({ id: newId(), kompetensiId: '', jenis: 'training', moduleId: '', status: 'rencana', targetTanggal: '', dibuat: new Date().toISOString() });
+      draft.dirty = true; renderEditor();
+    });
+    ed.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => {
+      draft.items.splice(Number(b.dataset.del), 1); draft.dirty = true; renderEditor();
+    }));
+    ed.querySelectorAll('.item').forEach(row => {
+      const it = draft.items[Number(row.dataset.i)];
+      row.querySelectorAll('[data-f]').forEach(inp => {
+        const f = inp.dataset.f;
+        const rerender = ['jenis', 'kompetensiId'].includes(f);
+        inp.addEventListener(inp.tagName === 'SELECT' ? 'change' : 'input', () => {
+          if(f === 'mentor'){
+            const m = inp.value.match(/^\s*(\S+)\s+—/);
+            const emp = m && employeesByNik[m[1]];
+            it.mentorNik = emp ? emp.nik : ''; it.mentorNama = emp ? (emp.nama || '') : inp.value.trim();
+          } else it[f] = inp.value;
+          if(f === 'jenis' && inp.value === 'training'){ delete it.deskripsi; delete it.mentorNik; delete it.mentorNama; }
+          if(f === 'jenis' && inp.value !== 'training'){ delete it.moduleId; }
+          markDirty();
+          if(rerender) renderEditor();
+        });
+      });
+    });
+    F('planCatatan').addEventListener('input', e => { draft.catatan = e.target.value; markDirty(); });
+    F('savePlanBtn').addEventListener('click', savePlan);
+  }
+
+  async function savePlan(){
+    const a = assessments.find(x => x.nik === selectedNik && x.periode === selectedPeriode);
+    const bad = draft.items.findIndex(it => !it.kompetensiId || (it.jenis === 'training' ? !it.moduleId : !String(it.deskripsi || '').trim()));
+    if(bad !== -1){ showToast(`Aksi ke-${bad + 1} belum lengkap: pilih kompetensi dan ${draft.items[bad].jenis === 'training' ? 'modul' : 'isi deskripsi'}.`); return; }
+    const emp = employeesByNik[a.nik] || {};
+    const items = draft.items.map(it => {
+      const clean = { id: it.id, kompetensiId: it.kompetensiId, kompetensiNama: compName(it.kompetensiId), jenis: it.jenis,
+        targetTanggal: it.targetTanggal || '', status: it.status || 'rencana', dibuat: it.dibuat || new Date().toISOString() };
+      if(it.jenis === 'training'){ const m = modules.find(x => x.id === it.moduleId); clean.moduleId = it.moduleId; clean.judul = m?.judul || ''; clean.mode = m?.mode || 'online'; }
+      else { clean.deskripsi = String(it.deskripsi || '').trim(); if(it.mentorNama || it.mentorNik){ clean.mentorNik = it.mentorNik || ''; clean.mentorNama = it.mentorNama || ''; } }
+      return clean;
+    });
+    const data = {
+      nik: a.nik, email: (emp.email || a.email || '').toLowerCase(), nama: a.nama || emp.nama || '', jabatan: a.jabatan || '', level: a.level || '',
+      periode: a.periode, periodeRank: periodeRank(a.periode), items, catatan: draft.catatan.trim(),
+      viewerEmails: viewerEmailsFor(a.nik, employeesByNik), updatedAt: serverTimestamp(), updatedBy: currentProfile.email,
+    };
+    try{
+      await setDoc(doc(db, 'developmentPlans', `${a.periode}_${a.nik}`), data);
+      plans[`${a.periode}_${a.nik}`] = data;
+      draft.dirty = false;
+      showToast('IDP tersimpan.');
+      renderList(); renderEditor();
+    } catch(err){ console.error('Gagal simpan developmentPlans:', err.code, err.message, data); showToast('Gagal simpan: ' + err.message); }
+  }
+
+  window.addEventListener('beforeunload', e => { if(draft?.dirty){ e.preventDefault(); e.returnValue = ''; } });
+
+  onAuth(async (user) => {
+    const gate = F('gate'), shell = F('appShell');
+    if(!user){
+      gate.style.display = 'block'; shell.style.display = 'none';
+      F('gateTitle').textContent = 'Silakan login';
+      F('gateSub').innerHTML = `<a href="../index.html">Login dulu di sini</a>.`;
+      return;
+    }
+    currentProfile = await ensureUserProfile(user);
+    if(currentProfile.role !== 'admin'){
+      gate.style.display = 'block'; shell.style.display = 'none';
+      F('gateTitle').textContent = 'Akses ditolak';
+      F('gateSub').textContent = 'Halaman ini cuma buat Admin (HR/OD).';
+      return;
+    }
+    gate.style.display = 'none'; shell.style.display = 'block';
+    F('userAvatar').src = currentProfile.photoURL;
+    F('userName').textContent = currentProfile.displayName;
+    loadAll();
+  });
+</script>
+</body>
+</html>
