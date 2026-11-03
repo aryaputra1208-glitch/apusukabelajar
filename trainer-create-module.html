@@ -30,6 +30,17 @@
   .btn-row { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }
   .avatar { width: 28px; height: 28px; border-radius: 50%; }
   .user-chip { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); }
+  /* Dropdown pilih banyak (Target Level & Kompetensi) */
+  .ms { position: relative; }
+  .ms-btn { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--r-control); background: var(--surface); font-size: 13px; font-family: inherit; color: var(--text); cursor: pointer; text-align: left; }
+  .ms-btn .ph { color: var(--text-3); }
+  .ms.open .ms-btn { border-color: var(--pink); box-shadow: 0 0 0 3px var(--pink-bg); }
+  .ms-panel { display: none; position: absolute; left: 0; right: 0; top: calc(100% + 4px); background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-control); box-shadow: var(--shadow-card); max-height: 260px; overflow-y: auto; z-index: 30; padding: 6px; }
+  .ms.open .ms-panel { display: block; }
+  .ms-opt { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 8px; font-size: 13px; cursor: pointer; margin: 0; font-weight: 500; color: var(--text); }
+  .ms-opt:hover { background: var(--surface-2); }
+  .ms-opt input { margin: 0; accent-color: var(--pink); }
+  .ms-group { font-size: 11px; font-weight: 700; color: var(--text-3); letter-spacing: .03em; text-transform: uppercase; padding: 8px 8px 2px; }
 </style>
 </head>
 <body>
@@ -86,10 +97,9 @@
       <label>Target Divisi</label>
       <input type="text" id="mDivisi" placeholder="Pisahkan koma kalau lebih dari 1, mis. OPERATION, HUMAN CAPITAL">
       <label>Target Level</label>
-      <div id="chipLevel" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;"></div>
+      <div id="chipLevel" class="ms" style="margin-bottom:14px;"></div>
       <label>Kompetensi yang Dibangun</label>
-      <p class="text-meta" style="margin:-2px 0 8px;">Pilih kompetensi yang dikembangkan modul ini. Dipakai untuk merekomendasikan modul ke karyawan yang punya gap di kompetensi tersebut.</p>
-      <div id="chipKompetensi" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;"></div>
+      <div id="chipKompetensi" class="ms" style="margin-bottom:14px;"></div>
     </div>
 
     <div class="card" id="cardOffline" style="display:none;">
@@ -417,6 +427,37 @@
       competencyList = [];
     }
   }
+  /**
+   * Dropdown pilih banyak. options: [{ value, label, group? }]. selectedArr diubah langsung (in-place).
+   */
+  function renderMultiSelect(containerId, options, selectedArr, placeholder){
+    const el = document.getElementById(containerId);
+    const labelOf = v => options.find(o => o.value === v)?.label || v;
+    const summary = () => selectedArr.length
+      ? escapeHtml(selectedArr.map(labelOf).join(', '))
+      : `<span class="ph">${escapeHtml(placeholder)}</span>`;
+    let lastGroup = null;
+    el.innerHTML = `<button type="button" class="ms-btn"><span class="ms-sum">${summary()}</span>${iconSvg('chevron-down', { size: 14 })}</button>
+      <div class="ms-panel">${options.map(o => {
+        const g = o.group && o.group !== lastGroup ? `<div class="ms-group">${escapeHtml(o.group)}</div>` : '';
+        lastGroup = o.group || lastGroup;
+        return g + `<label class="ms-opt"><input type="checkbox" value="${escapeHtml(o.value)}" ${selectedArr.includes(o.value) ? 'checked' : ''}>${escapeHtml(o.label)}</label>`;
+      }).join('')}</div>`;
+    el.querySelector('.ms-btn').addEventListener('click', e => {
+      e.stopPropagation();
+      document.querySelectorAll('.ms.open').forEach(x => { if(x !== el) x.classList.remove('open'); });
+      el.classList.toggle('open');
+    });
+    el.querySelector('.ms-panel').addEventListener('click', e => e.stopPropagation());
+    el.querySelectorAll('.ms-panel input').forEach(cb => cb.addEventListener('change', () => {
+      const idx = selectedArr.indexOf(cb.value);
+      if(cb.checked && idx === -1) selectedArr.push(cb.value);
+      if(!cb.checked && idx !== -1) selectedArr.splice(idx, 1);
+      el.querySelector('.ms-sum').innerHTML = summary();
+    }));
+  }
+  document.addEventListener('click', () => document.querySelectorAll('.ms.open').forEach(x => x.classList.remove('open')));
+
   function renderKompetensiChips(){
     const el = document.getElementById('chipKompetensi');
     if(!competencyList.length){
@@ -425,30 +466,15 @@
     }
     // Tag lama yang kompetensinya sudah dihapus dari kamus tetap disimpan, tidak dibuang diam-diam.
     const known = new Set(competencyList.map(c => c.id));
-    const orphan = selectedKompetensi.filter(id => !known.has(id));
-    el.innerHTML = competencyList.map(c =>
-      `<span class="chip ${selectedKompetensi.includes(c.id)?'selected':''}" data-val="${escapeHtml(c.id)}" title="${escapeHtml(c.kategori || '')}">${escapeHtml(c.nama)}</span>`
-    ).join('') + orphan.map(id => `<span class="chip selected" data-val="${escapeHtml(id)}" title="Tidak ada lagi di kamus">${escapeHtml(id)} (lama)</span>`).join('');
-    el.querySelectorAll('.chip').forEach(chip => chip.addEventListener('click', () => {
-      const val = chip.dataset.val;
-      const idx = selectedKompetensi.indexOf(val);
-      if(idx === -1) selectedKompetensi.push(val); else selectedKompetensi.splice(idx, 1);
-      chip.classList.toggle('selected');
-    }));
+    const options = competencyList.map(c => ({ value: c.id, label: c.nama, group: c.kategori || 'Lainnya' }))
+      .concat(selectedKompetensi.filter(id => !known.has(id)).map(id => ({ value: id, label: id + ' (lama)', group: 'Tidak ada lagi di kamus' })));
+    renderMultiSelect('chipKompetensi', options, selectedKompetensi, 'Pilih kompetensi');
   }
 
   function renderChips(containerId, options, selectedArr){
-    const el = document.getElementById(containerId);
-    el.innerHTML = options.map(o => `<span class="chip ${selectedArr.includes(o)?'selected':''}" data-val="${o}">${o}</span>`).join('');
-    el.querySelectorAll('.chip').forEach(chip => {
-      chip.addEventListener('click', () => {
-        const val = chip.dataset.val;
-        const idx = selectedArr.indexOf(val);
-        if(idx === -1) selectedArr.push(val); else selectedArr.splice(idx,1);
-        chip.classList.toggle('selected');
-      });
-    });
+    renderMultiSelect(containerId, options.map(o => ({ value: o, label: o })), selectedArr, 'Semua level');
   }
+
 
   function renderAiDrafts(){
     const box = document.getElementById('aiDraftsBox');
