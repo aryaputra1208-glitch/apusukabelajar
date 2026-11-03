@@ -81,11 +81,29 @@ async function loadBadges() {
   } catch (err) { console.error('Sidebar: gagal hitung submission', err.code, err.message); }
 }
 
+function unrender() {
+  document.querySelector('.admin-sidebar')?.remove();
+  document.body.classList.remove('has-admin-sidebar');
+}
+
+/**
+ * Sidebar HANYA untuk admin. Dicek ulang setiap kali status login berubah
+ * (logout, ganti akun di tab yang sama), dan harus lolos DUA cek:
+ * profil users/{uid}.role === 'admin' DAN email ada di whitelist admins.
+ */
+let authSeq = 0;
 onAuth(async (user) => {
-  if (!user) return;
+  const seq = ++authSeq;
+  unrender();
+  if (!user || user.isAnonymous || !user.email) return;
   try {
-    const snap = await getDoc(doc(db, 'users', user.uid));
-    if (!snap.exists() || snap.data().role !== 'admin') return;
+    const [prof, wl] = await Promise.all([
+      getDoc(doc(db, 'users', user.uid)),
+      getDoc(doc(db, 'admins', user.email)),
+    ]);
+    if (seq !== authSeq) return; // sudah ganti akun selagi menunggu
+    const isAdmin = prof.exists() && prof.data().role === 'admin' && wl.exists();
+    if (!isAdmin) return;
     render();
     loadBadges();
   } catch (err) { console.error('Sidebar admin: gagal cek role', err.code, err.message); }
