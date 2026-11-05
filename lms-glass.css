@@ -81,9 +81,9 @@ input[type=text], input[type=email], input[type=number], input[type=date], input
   .card, .panel, .stat-card, .menu-card, .module-card, .kpi-card2, .score-card { background: rgba(255,255,255,.94) !important; }
   .topbar, .sidebar, .admin-sidebar { background: #FAFAFC !important; }
 }
-@media (prefers-reduced-transparency: reduce) {
-  .card, .panel, .stat-card, .menu-card, .module-card, .kpi-card2, .score-card { background: rgba(255,255,255,.96) !important; -webkit-backdrop-filter: none; backdrop-filter: none; }
-}
+/* Catatan: TIDAK mengikuti prefers-reduced-transparency — di Windows setting itu aktif
+   saat "Transparency effects" dimatikan dan membuat kartu jadi putih solid (sama seperti OD Hub). */
+
 /* HP: kartu solid tanpa blur (ringan), latar gradien tetap */
 @media (max-width: 900px) {
   .card, .panel, .stat-card, .menu-card, .module-card, .kpi-card2, .score-card, .topbar {
@@ -105,3 +105,42 @@ a.btn, a.btn:hover { text-decoration: none; }
 
 /* Bar simpan yang menempel di bawah (IDP) */
 .sticky-save { background: rgba(255,255,255,.55) !important; -webkit-backdrop-filter: var(--g-blur); backdrop-filter: var(--g-blur); border-top: .5px solid rgba(60,60,67,.1) !important; padding-left: 16px !important; padding-right: 16px !important; border-radius: 14px 14px 0 0; }
+
+/* ===== SISTEM TOMBOL (sama dengan OD Hub: knob putih ala segmented control Apple) ===== */
+:root { --seg-track: rgba(120,120,128,.12); --seg-knob: 0 1px 3px rgba(0,0,0,.1), 0 0 0 .5px rgba(0,0,0,.05); }
+body .btn {
+  height: 34px; padding: 0 14px; border: none !important; border-radius: 8px;
+  background: #fff; color: var(--text); font: 500 13px/1 var(--font-body); box-shadow: var(--seg-knob);
+  transition: box-shadow .15s, transform .1s, background .15s, filter .15s;
+}
+body .btn:hover { background: #fff; filter: none; box-shadow: 0 2px 6px rgba(0,0,0,.12), 0 0 0 .5px rgba(0,0,0,.06); }
+body .btn:active { transform: scale(.97); }
+body .btn-sm { height: 30px; padding: 0 12px; font-size: 12px; }
+body .btn-outline { background: #fff; color: var(--text); }
+body .btn-primary { background: var(--pink) !important; color: #fff !important; font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0,0,0,.12), 0 0 0 .5px rgba(0,0,0,.06), inset 0 1px 0 rgba(255,255,255,.22); }
+body .btn-primary:hover { filter: brightness(1.06); box-shadow: 0 3px 10px rgba(230,0,122,.35), inset 0 1px 0 rgba(255,255,255,.22); }
+body .btn:disabled, body .btn[disabled] { opacity: .5; cursor: default; transform: none; filter: none; }
+body .btn-primary:disabled { background: var(--pink) !important; }
+body .btn:focus-visible, body .tab-btn:focus-visible, body .icon-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(230,0,122,.25); }
+
+/* Icon button: kotak 30px, sudut 8px, warna lembut tetap */
+body .icon-btn { width: 30px; height: 30px; border-radius: 8px; box-shadow: var(--seg-knob); transition: box-shadow .15s, filter .15s; }
+body .icon-btn:hover { filter: none; box-shadow: 0 2px 6px rgba(0,0,0,.12), 0 0 0 .5px rgba(0,0,0,.06); }
+body .icon-btn:not([class*="tone-"]) { background: #fff; }
+
+/* Tab = segmented control (track abu-abu, pilihan aktif knob putih) */
+body .tabs { display: inline-flex !important; width: fit-content; max-width: 100%; flex-wrap: wrap; gap: 2px !important;
+  background: var(--seg-track); border-radius: 10px; padding: 2px; }
+body .tabs .tab-btn { height: 30px; display: inline-flex; align-items: center; padding: 0 16px; border: none !important;
+  border-radius: 8px; background: transparent; color: var(--text); font-size: 13px; font-weight: 500; box-shadow: none; transition: background .15s, box-shadow .15s; }
+body .tabs .tab-btn:hover:not(.active) { background: rgba(255,255,255,.45); }
+body .tabs .tab-btn.active { background: #fff; color: var(--text); font-weight: 600; box-shadow: var(--seg-knob); }
+
+/* Chip filter: pil putih ber-knob, terpilih = pink */
+body .chip { border: none !important; background: #fff; box-shadow: var(--seg-knob); font-weight: 500; transition: box-shadow .15s, background .15s; }
+body .chip:hover:not(.selected) { box-shadow: 0 2px 6px rgba(0,0,0,.12), 0 0 0 .5px rgba(0,0,0,.06); }
+body .chip.selected { background: var(--pink); color: #fff; box-shadow: 0 1px 3px rgba(230,0,122,.3), inset 0 1px 0 rgba(255,255,255,.22); }
+
+/* Dropdown pilih banyak: tombolnya sama dengan sistem tombol */
+body .ms-btn { border: none !important; background: #fff !important; box-shadow: var(--seg-knob); border-radius: 8px; }
