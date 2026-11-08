@@ -147,3 +147,43 @@ body .chip.selected { background: var(--pink); color: #fff; box-shadow: 0 1px 3p
 
 /* Dropdown pilih banyak: tombolnya sama dengan sistem tombol */
 body .ms-btn { border: none !important; background: #fff !important; box-shadow: var(--seg-knob); border-radius: 8px; }
+
+/* ===== MOTION: liquid-glass lens (kaca pembesar) — pasangan lms-motion.js ===== */
+:root {
+  --spring: linear(0, 0.018, 0.062, 0.123, 0.192, 0.266, 0.339, 0.41, 0.477, 0.539, 0.596, 0.647, 0.693, 0.734, 0.771, 0.802, 0.83, 0.855, 0.876, 0.894, 0.909, 0.923, 0.935, 0.944, 0.953, 0.96, 0.966, 0.972, 0.976, 0.98, 0.983, 0.986, 0.988, 0.99, 0.991, 0.993, 1);
+  --lens-e: linear(0, 0.018, 0.063, 0.126, 0.199, 0.276, 0.353, 0.429, 0.5, 0.566, 0.626, 0.681, 0.729, 0.771, 0.808, 0.84, 0.868, 0.891, 0.911, 0.928, 0.942, 0.953, 0.963, 0.971, 0.977, 0.982, 0.987, 0.99, 0.993, 0.995, 0.996, 0.998, 0.998, 0.999, 1);
+  --lens-d: .48s;
+}
+.lz { isolation: isolate; }
+.lens { position: absolute; left: 0; top: 0; width: 0; height: 0; border-radius: 10px; pointer-events: none; z-index: -1; opacity: 0;
+  background: radial-gradient(120px 60px at var(--mx,50%) var(--my,0%), rgba(255,255,255,.9), transparent 70%), linear-gradient(180deg, rgba(255,255,255,.62), rgba(255,255,255,.34));
+  box-shadow: inset 0 1px 0 #fff, inset 0 -1px 0 rgba(255,255,255,.5), inset 0 0 12px rgba(255,255,255,.4), 0 4px 14px rgba(31,38,135,.10), 0 0 0 .5px rgba(60,60,67,.08);
+  -webkit-backdrop-filter: blur(2px) brightness(1.05) saturate(1.5); backdrop-filter: blur(2px) brightness(1.05) saturate(1.5);
+  transition: transform var(--lens-d) var(--lens-e), width var(--lens-d) var(--lens-e), height var(--lens-d) var(--lens-e), opacity .22s ease; will-change: transform, width; }
+.lens.on { opacity: 1; }
+.lz .li { transition: transform .3s var(--spring), color .2s ease; }
+.lz .li:active { transform: scale(.97); transition-duration: .12s; }
+
+/* sidebar admin: lensa mengikuti hover, menu aktif tetap kapsul pink */
+.admin-sidebar > .lens { border-radius: 8px; }
+body .admin-sidebar a.as-item:hover:not(.active) { background: transparent; }
+.admin-sidebar a.as-item.li { position: relative; transform-origin: left center; }
+.admin-sidebar a.as-item.mag:not(.active) { transform: translateX(2px); color: var(--text); }
+
+/* tab: lensa = knob aktif yang meluncur */
+body .tabs.lz .tab-btn.active { background: transparent; box-shadow: none; }
+body .tabs.lz .tab-btn { position: relative; }
+.tabs.lz > .lens { border-radius: 8px; background: #fff; box-shadow: var(--seg-knob); -webkit-backdrop-filter: none; backdrop-filter: none; }
+
+/* baris: lensa menggantikan tint hover datar */
+.rows-lz > .lens { border-radius: 10px; z-index: 0; }
+.rows-lz .data-table tr:hover td { background: transparent !important; }
+.rows-lz .data-table, .rows-lz .ah-row, .rows-lz .rec-row, .rows-lz .act, .rows-lz .gap-row, .rows-lz .comp-row, .rows-lz .ms-opt, .rows-lz .u-row { position: relative; z-index: 1; }
+.rows-lz .ms-opt:hover { background: transparent; }
+
+/* kartu: kilau pojok berubah jadi cahaya yang mengikuti kursor */
+.card::after, .stat-card::after, .menu-card::after, .kpi-card2::after, .score-card::after {
+  background: radial-gradient(320px circle at var(--mx, 0%) var(--my, 0%), rgba(255,255,255,.5), transparent 60%);
+}
+
+@media (prefers-reduced-motion: reduce) { .lens, .lz .li { transition: none !important; } }
