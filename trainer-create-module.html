@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Buat Modul — Anteraja LMS</title>
+<title>Create Module — Anteraja LMS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./lms-design-system.css?v=20261105b">
@@ -47,7 +47,7 @@
 <body>
 
 <div id="gate" class="locked-state" style="display:none;">
-  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Memuat...</p>
+  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Loading...</p>
   <p class="text-sub" id="gateSub"></p>
 </div>
 
@@ -55,7 +55,7 @@
   <div class="topbar">
     <div style="display:flex; align-items:center; gap:16px;">
       <div class="sidebar-logo" style="margin:0;">anteraja LMS</div>
-      <a href="index.html" class="text-sub" style="text-decoration:none; display:flex; align-items:center; gap:4px;">← Menu Utama</a>
+      <a href="index.html" class="text-sub" style="text-decoration:none; display:flex; align-items:center; gap:4px;">← Main Menu</a>
     </div>
     <div class="user-chip">
       <img class="avatar" id="userAvatar" src="">
@@ -64,25 +64,24 @@
   </div>
 
   <div class="wrap">
-    <h1 class="text-h1" id="pageTitle">Buat Modul Baru</h1>
-    <p class="text-sub" style="margin-bottom:24px;">Isi materi dan susun post-test — modul disimpan sebagai draft, kirim ke admin untuk publish saat sudah siap.</p>
+    <h1 class="text-h1" id="pageTitle">Create New Module</h1>
 
     <div class="card">
-      <h2 class="text-h2" style="margin-bottom:14px;">Informasi Modul</h2>
-      <label>Mode Training</label>
+      <h2 class="text-h2" style="margin-bottom:14px;">Module Information</h2>
+      <label>Training Mode</label>
       <div class="chip-group" id="chipMode" style="display:flex; gap:8px; margin-bottom:14px;">
         <span class="chip selected" data-mode="online">Online (LMS)</span>
-        <span class="chip" data-mode="offline">Offline (tatap muka)</span>
+        <span class="chip" data-mode="offline">Offline (in-person)</span>
       </div>
-      <label>Judul Modul</label>
-      <input type="text" id="mJudul" placeholder="mis. Dasar Coaching untuk Section Head">
+      <label>Module Title</label>
+      <input type="text" id="mJudul" placeholder="e.g. Coaching Basics for Section Heads">
 
-      <label>Deskripsi Singkat</label>
-      <textarea id="mDeskripsi" rows="2" placeholder="Apa yang akan dipelajari trainee di modul ini"></textarea>
+      <label>Short Description</label>
+      <textarea id="mDeskripsi" rows="2" placeholder="What trainees will learn in this module"></textarea>
 
       <div class="row">
         <div>
-          <label>Kategori</label>
+          <label>Category</label>
           <select id="mKategori">
             <option value="Basic/Fundamental">Basic/Fundamental</option>
             <option value="Core/Mandatory">Core/Mandatory</option>
@@ -90,34 +89,34 @@
           </select>
         </div>
         <div>
-          <label>Estimasi Durasi (menit)</label>
-          <input type="number" id="mDurasi" placeholder="mis. 15">
+          <label>Estimated Duration (min)</label>
+          <input type="number" id="mDurasi" placeholder="e.g. 15">
         </div>
       </div>
 
-      <label>Target Divisi</label>
-      <input type="text" id="mDivisi" placeholder="Pisahkan koma kalau lebih dari 1, mis. OPERATION, HUMAN CAPITAL">
+      <label>Target Division</label>
+      <input type="text" id="mDivisi" placeholder="Comma-separated, e.g. OPERATION, HUMAN CAPITAL">
       <label>Target Level</label>
       <div id="chipLevel" class="ms" style="margin-bottom:14px;"></div>
-      <label>Kompetensi yang Dibangun</label>
+      <label>Competencies Developed</label>
       <div id="chipKompetensi" class="ms" style="margin-bottom:14px;"></div>
     </div>
 
     <div class="card" id="cardOffline" style="display:none;">
-      <h2 class="text-h2" style="margin-bottom:14px;">Jadwal & Sesi (Offline)</h2>
+      <h2 class="text-h2" style="margin-bottom:14px;">Schedule & Sessions (Offline)</h2>
       <div class="row">
-        <div><label>Tanggal Mulai</label><input type="date" id="mTglMulai"></div>
-        <div><label>Tanggal Selesai</label><input type="date" id="mTglSelesai"></div>
+        <div><label>Start Date</label><input type="date" id="mTglMulai"></div>
+        <div><label>End Date</label><input type="date" id="mTglSelesai"></div>
       </div>
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
-        <label style="margin:0;">Sesi & Trainer</label>
+        <label style="margin:0;">Sessions & Trainers</label>
         <span class="link-add" id="addSesiBtn"></span>
       </div>
       <div id="sesiList" style="display:flex; flex-direction:column; gap:8px; margin-bottom:14px;"></div>
 
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
-        <label style="margin:0;">Roster Peserta</label>
-        <span class="link-add" id="downloadTemplateBtn">Download Template Excel</span>
+        <label style="margin:0;">Participant Roster</label>
+        <span class="link-add" id="downloadTemplateBtn">Download Excel Template</span>
       </div>
       <div id="rosterList" style="display:flex; flex-direction:column; gap:6px; margin-bottom:8px;"></div>
       <div class="dropzone" id="rosterDropzone"></div>
@@ -125,7 +124,7 @@
       <div id="rosterResult" class="text-meta" style="margin-top:6px;"></div>
 
       <div id="linkFormBox" style="display:none; margin-top:6px;">
-        <label>Link Form Trainee</label>
+        <label>Trainee Form Link</label>
         <div style="display:flex; gap:8px;">
           <input type="text" id="linkFormOutput" readonly style="flex:1;">
           <button class="btn btn-outline btn-sm" id="copyLinkBtn">Copy</button>
@@ -135,20 +134,20 @@
 
     <div class="card">
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
-        <h2 class="text-h2" style="margin:0;">Materi</h2>
+        <h2 class="text-h2" style="margin:0;">Materials</h2>
         <span class="link-add" id="openAiBtn"></span>
       </div>
       <div id="videoField">
-        <label>Link Video YouTube (unlisted)</label>
+        <label>YouTube Video Link (unlisted)</label>
         <input type="url" id="mVideo" placeholder="https://youtu.be/...">
       </div>
 
       <div id="aiDraftsBox" style="display:none; margin-bottom:16px;">
-        <label>Draft dari AI Generator (.pptx — belum jadi PDF materi resmi)</label>
+        <label>AI Generator Drafts (.pptx, not yet official PDF material)</label>
         <div id="aiDraftsList"></div>
       </div>
 
-      <label>File Materi (PDF — export dari PPT/Word jadi PDF dulu sebelum upload)</label>
+      <label>Material Files (PDF only)</label>
       <div id="materiList"></div>
       <div class="dropzone" id="materiDropzone"></div>
       <input type="file" id="materiFileInput" accept=".pdf" style="display:none">
@@ -156,15 +155,15 @@
 
     <div class="card">
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
-        <h2 class="text-h2" style="margin:0;">Soal Post-Test</h2>
+        <h2 class="text-h2" style="margin:0;">Post-Test Questions</h2>
         <span class="link-add" id="addQuestionBtn"></span>
       </div>
       <div id="questionList"></div>
     </div>
 
     <div class="btn-row">
-      <button class="btn btn-outline" id="saveDraftBtn">Simpan Draft</button>
-      <button class="btn btn-primary" id="submitApprovalBtn">Kirim ke Admin</button>
+      <button class="btn btn-outline" id="saveDraftBtn">Save Draft</button>
+      <button class="btn btn-primary" id="submitApprovalBtn">Submit to Admin</button>
     </div>
   </div>
 </div>
@@ -174,7 +173,7 @@
 <script type="module">
   import { auth, db, onAuth, ensureUserProfile } from './firebase-shared.js';
   import { iconSvg } from './lms-icons.js';
-  import { KATEGORI_ORDER, escapeHtml } from './competency-shared.js?v=20261023c';
+  import { KATEGORI_ORDER, escapeHtml } from './competency-shared.js?v=20261108';
   import {
     collection, addDoc, doc, getDoc, updateDoc, serverTimestamp,
     query, where, getDocs, writeBatch
@@ -202,10 +201,10 @@
   let sesiRows = [];
   let rosterRows = [];
 
-  document.getElementById('addSesiBtn').innerHTML = iconSvg('plus', { size: 12 }) + ' Tambah sesi';
+  document.getElementById('addSesiBtn').innerHTML = iconSvg('plus', { size: 12 }) + ' Add session';
 
   /* ===== AI Generator (Fase 1: Konsultasi + Generate PPT/Audio) ===== */
-  document.getElementById('openAiBtn').innerHTML = iconSvg('sparkles', { size: 14 }) + ' Buat Materi dengan AI';
+  document.getElementById('openAiBtn').innerHTML = iconSvg('sparkles', { size: 14 }) + ' Create Material with AI';
   let aiMessages = [];
   let aiFunctions = null;
   let aiDrafts = [];
@@ -215,7 +214,7 @@
     document.getElementById('aiModal').style.display = 'flex';
     if(!aiMessages.length){
       renderAiChat();
-      appendAiBubble('assistant', 'Halo! Mau bikin materi training soal apa? Ceritakan topiknya, siapa target pesertanya, dan apa yang ingin mereka pahami setelah training ini.');
+      appendAiBubble('assistant', 'Hi! What training material would you like to create? Tell me the topic, the target participants, and what they should understand after the training.');
     }
   });
   document.getElementById('closeAiBtn').innerHTML = iconSvg('x', { size: 18 });
@@ -242,7 +241,7 @@
     const thinking = document.createElement('div');
     thinking.id = 'aiThinking';
     thinking.style.cssText = 'align-self:flex-start; color:var(--text-3); font-size:12px;';
-    thinking.textContent = 'AI sedang berpikir...';
+    thinking.textContent = 'AI is thinking...';
     document.getElementById('aiChatBody').appendChild(thinking);
 
     try{
@@ -254,7 +253,7 @@
       document.getElementById('aiGenerateRow').style.display = 'flex';
     } catch(err){
       thinking.remove();
-      appendAiBubble('assistant', 'Maaf, ada error: ' + err.message);
+      appendAiBubble('assistant', 'Sorry, an error occurred: ' + err.message);
     }
   }
   document.getElementById('aiSendBtn').addEventListener('click', sendAiMessage);
@@ -270,13 +269,13 @@
     const btnId = withAudio ? 'aiGenPptAudioBtn' : 'aiGenPptBtn';
     const btn = document.getElementById(btnId);
     const original = btn.textContent;
-    btn.disabled = true; btn.textContent = 'Menyusun materi...';
+    btn.disabled = true; btn.textContent = 'Building material...';
     try{
       const call = httpsCallable(aiFunctions, 'aiGenerateMateri', { timeout: 300000 });
       const res = await call({ messages: aiMessages, withAudio });
       showAiResult(res.data);
     } catch(err){
-      showToast('Gagal generate: ' + err.message);
+      showToast('Generation failed: ' + err.message);
     } finally {
       btn.disabled = false; btn.textContent = original;
     }
@@ -290,11 +289,11 @@
     const card = document.createElement('div');
     card.style.cssText = 'align-self:stretch; border:1px solid var(--border); border-radius:var(--r-card); padding:16px; background:var(--pink-bg);';
     card.innerHTML = `
-      <div style="font-weight:700; font-size:14px; margin-bottom:6px;">${iconSvg('check',{size:15})} Draft siap — ${data.slideCount} slide</div>
-      <p class="text-sub" style="margin-bottom:12px;">File .pptx bisa dibuka & diedit di PowerPoint. Untuk dipakai di modul <strong>online</strong> (butuh tracking baca), export dulu jadi PDF dari PowerPoint, baru upload lewat tombol upload PDF Materi. Untuk training <strong>offline</strong>, langsung pakai file ini apa adanya. Draft ini juga sudah tersimpan di bagian "Draft AI" di halaman utama.</p>
-      <a href="${data.pptxUrl}" target="_blank" class="btn btn-primary" style="width:100%; display:block; text-align:center; text-decoration:none; margin-bottom:${(data.audio&&data.audio.length)?'10px':'0'};">Download ${data.judul || 'Materi'}.pptx</a>
+      <div style="font-weight:700; font-size:14px; margin-bottom:6px;">${iconSvg('check',{size:15})} Draft ready: ${data.slideCount} slides</div>
+      <p class="text-sub" style="margin-bottom:12px;">Open and edit the .pptx in PowerPoint. For <strong>online</strong> modules, export it to PDF and upload it under Material Files. For <strong>offline</strong> training, use the file as is. The draft is also saved under AI Drafts.</p>
+      <a href="${data.pptxUrl}" target="_blank" class="btn btn-primary" style="width:100%; display:block; text-align:center; text-decoration:none; margin-bottom:${(data.audio&&data.audio.length)?'10px':'0'};">Download ${data.judul || 'Material'}.pptx</a>
       ${(data.audio && data.audio.length) ? `
-        <div class="text-meta" style="margin:10px 0 6px;">Audio narasi per slide (urutannya samakan dengan slide setelah di-export PDF):</div>
+        <div class="text-meta" style="margin:10px 0 6px;">Narration audio per slide (match the slide order after PDF export):</div>
         ${data.audio.map(a => `
           <div style="display:flex; align-items:center; gap:8px; padding:6px 0;">
             <span class="text-meta" style="width:60px; flex-shrink:0;">Slide ${a.slideNo}</span>
@@ -323,12 +322,12 @@
     const el = document.getElementById('sesiList');
     el.innerHTML = sesiRows.map((s,i) => `
       <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:8px; border:1px solid var(--border); border-radius:8px;">
-        <input class="q-text" style="flex:1 1 140px; margin-bottom:0;" placeholder="Nama Sesi" data-i="${i}" data-f="namaSesi" value="${s.namaSesi||''}">
+        <input class="q-text" style="flex:1 1 140px; margin-bottom:0;" placeholder="Session Name" data-i="${i}" data-f="namaSesi" value="${s.namaSesi||''}">
         <input class="q-text" style="flex:1 1 100px; margin-bottom:0;" placeholder="NIK Trainer" data-i="${i}" data-f="trainerNik" value="${s.trainerNik||''}">
-        <input class="q-text" style="flex:1 1 120px; margin-bottom:0;" placeholder="Nama Trainer" data-i="${i}" data-f="trainerNama" value="${s.trainerNama||''}">
+        <input class="q-text" style="flex:1 1 120px; margin-bottom:0;" placeholder="Trainer Name" data-i="${i}" data-f="trainerNama" value="${s.trainerNama||''}">
         <input class="q-text" style="flex:1 1 120px; margin-bottom:0;" type="date" data-i="${i}" data-f="tanggal" value="${s.tanggal||''}">
         <input class="q-text" style="flex:0 1 100px; margin-bottom:0;" type="time" data-i="${i}" data-f="jamMulai" value="${s.jamMulai||''}">
-        <input class="q-text" style="flex:0 1 70px; margin-bottom:0;" type="number" step="0.5" placeholder="Jam" data-i="${i}" data-f="durasiJam" value="${s.durasiJam||''}">
+        <input class="q-text" style="flex:0 1 70px; margin-bottom:0;" type="number" step="0.5" placeholder="Hours" data-i="${i}" data-f="durasiJam" value="${s.durasiJam||''}">
         <button class="icon-btn tone-red" data-i="${i}" data-action="remove-sesi">${iconSvg('trash',{size:13})}</button>
       </div>`).join('');
     el.querySelectorAll('input[data-f]').forEach(inp => inp.addEventListener('input', () => {
@@ -343,7 +342,7 @@
 
   document.getElementById('copyLinkBtn').addEventListener('click', () => {
     const val = document.getElementById('linkFormOutput').value;
-    navigator.clipboard.writeText(val).then(() => showToast('Link disalin.')).catch(() => {});
+    navigator.clipboard.writeText(val).then(() => showToast('Link copied.')).catch(() => {});
   });
 
   /* ===== Roster: template download + upload Excel ===== */
@@ -361,7 +360,7 @@
 
   const rosterDz = document.getElementById('rosterDropzone');
   const rosterInput = document.getElementById('rosterFileInput');
-  rosterDz.innerHTML = iconSvg('upload', {size:18}) + ' <span>Drag &amp; drop file Excel roster, atau klik untuk pilih</span>';
+  rosterDz.innerHTML = iconSvg('upload', {size:18}) + ' <span>Drag &amp; drop the roster Excel file, or click to browse</span>';
   rosterDz.addEventListener('click', () => rosterInput.click());
   rosterInput.addEventListener('change', e => { if(e.target.files[0]) handleRosterFile(e.target.files[0]); });
   rosterDz.addEventListener('dragover', e => { e.preventDefault(); rosterDz.classList.add('drag-over'); });
@@ -387,10 +386,10 @@
           level: String(r.Level || r.level || '').trim(),
         })).filter(r => r.nik);
         renderRosterList();
-        document.getElementById('rosterResult').textContent = `${rosterRows.length} peserta terbaca dari file.`;
-        showToast(`${rosterRows.length} peserta terbaca.`);
+        document.getElementById('rosterResult').textContent = `${rosterRows.length} participants read from file.`;
+        showToast(`${rosterRows.length} participants read.`);
       } catch(err){
-        showToast('Gagal baca file: ' + err.message);
+        showToast('Could not read file: ' + err.message);
       }
     };
     reader.readAsBinaryString(file);
@@ -399,16 +398,16 @@
   function renderRosterList(){
     const el = document.getElementById('rosterList');
     if(!rosterRows.length){ el.innerHTML = ''; return; }
-    el.innerHTML = `<div class="file-item">${iconSvg('users',{size:16})} <span>${rosterRows.length} peserta ter-upload</span>
-      <button class="icon-btn" id="clearRosterBtn" title="Hapus semua">${iconSvg('trash',{size:14})}</button></div>`;
+    el.innerHTML = `<div class="file-item">${iconSvg('users',{size:16})} <span>${rosterRows.length} participants uploaded</span>
+      <button class="icon-btn" id="clearRosterBtn" title="Remove all">${iconSvg('trash',{size:14})}</button></div>`;
     document.getElementById('clearRosterBtn').addEventListener('click', () => {
       rosterRows = []; document.getElementById('rosterResult').textContent = ''; renderRosterList();
     });
   }
 
   document.getElementById('materiDropzone').innerHTML =
-    iconSvg('upload', { size: 20 }) + ' <span>Drag &amp; drop file di sini, atau klik untuk pilih</span>';
-  document.getElementById('addQuestionBtn').innerHTML = iconSvg('plus', { size: 14 }) + ' Tambah soal';
+    iconSvg('upload', { size: 20 }) + ' <span>Drag &amp; drop a file here, or click to browse</span>';
+  document.getElementById('addQuestionBtn').innerHTML = iconSvg('plus', { size: 14 }) + ' Add question';
 
   function showToast(msg){
     const t = document.getElementById('toast');
@@ -462,18 +461,18 @@
   function renderKompetensiChips(){
     const el = document.getElementById('chipKompetensi');
     if(!competencyList.length){
-      el.innerHTML = '<span class="text-meta">Kamus kompetensi belum diisi admin — bagian ini bisa dilewati dulu.</span>';
+      el.innerHTML = '<span class="text-meta">Competency dictionary is empty. You can skip this for now.</span>';
       return;
     }
     // Tag lama yang kompetensinya sudah dihapus dari kamus tetap disimpan, tidak dibuang diam-diam.
     const known = new Set(competencyList.map(c => c.id));
-    const options = competencyList.map(c => ({ value: c.id, label: c.nama, group: c.kategori || 'Lainnya' }))
-      .concat(selectedKompetensi.filter(id => !known.has(id)).map(id => ({ value: id, label: id + ' (lama)', group: 'Tidak ada lagi di kamus' })));
-    renderMultiSelect('chipKompetensi', options, selectedKompetensi, 'Pilih kompetensi');
+    const options = competencyList.map(c => ({ value: c.id, label: c.nama, group: c.kategori || 'Other' }))
+      .concat(selectedKompetensi.filter(id => !known.has(id)).map(id => ({ value: id, label: id + ' (old)', group: 'No longer in dictionary' })));
+    renderMultiSelect('chipKompetensi', options, selectedKompetensi, 'Select competencies');
   }
 
   function renderChips(containerId, options, selectedArr){
-    renderMultiSelect(containerId, options.map(o => ({ value: o, label: o })), selectedArr, 'Semua level');
+    renderMultiSelect(containerId, options.map(o => ({ value: o, label: o })), selectedArr, 'All levels');
   }
 
 
@@ -484,11 +483,11 @@
     box.style.display = 'block';
     list.innerHTML = aiDrafts.map((d, i) => `
       <div class="file-item">
-        <span style="display:flex; align-items:center; gap:8px;">${iconSvg('sparkles',{size:15})} ${d.judul || 'Materi AI'}.pptx <span class="text-meta">(${d.slideCount} slide)</span></span>
+        <span style="display:flex; align-items:center; gap:8px;">${iconSvg('sparkles',{size:15})} ${d.judul || 'AI Material'}.pptx <span class="text-meta">(${d.slideCount} slides)</span></span>
         <span style="display:flex; gap:6px;">
           <button class="btn btn-outline btn-sm" data-action="preview" data-url="${d.pptxUrl}" style="padding:5px 10px;">Preview</button>
-          <a class="btn btn-outline btn-sm" href="${d.pptxUrl}" target="_blank" download style="padding:5px 10px; text-decoration:none;">Unduh</a>
-          <button class="icon-btn" data-i="${i}" title="Hapus dari daftar">${iconSvg('trash',{size:14})}</button>
+          <a class="btn btn-outline btn-sm" href="${d.pptxUrl}" target="_blank" download style="padding:5px 10px; text-decoration:none;">Download</a>
+          <button class="icon-btn" data-i="${i}" title="Remove from list">${iconSvg('trash',{size:14})}</button>
         </span>
       </div>
       ${(d.audio && d.audio.length) ? `
@@ -513,11 +512,11 @@
     if(!materiFiles.length){ el.innerHTML = ''; return; }
     el.innerHTML = materiFiles.map((f,i) => `
       <div class="file-item">
-        <span style="display:flex; align-items:center; gap:8px;">${iconSvg('file-text',{size:16})} ${f.nama} <span class="text-meta">(${f.pageCount||'?'} halaman)</span></span>
+        <span style="display:flex; align-items:center; gap:8px;">${iconSvg('file-text',{size:16})} ${f.nama} <span class="text-meta">(${f.pageCount||'?'} pages)</span></span>
         <span style="display:flex; gap:6px; align-items:center;">
           <button class="btn btn-outline btn-sm" data-action="preview" data-url="${f.url}" style="padding:5px 10px;">Preview</button>
-          <button class="btn btn-outline btn-sm" data-action="download" data-url="${f.url}" data-nama="${f.nama.replace(/"/g,'&quot;')}" style="padding:5px 10px;">Unduh</button>
-          <button class="icon-btn" data-i="${i}" title="Hapus">${iconSvg('trash',{size:14})}</button>
+          <button class="btn btn-outline btn-sm" data-action="download" data-url="${f.url}" data-nama="${f.nama.replace(/"/g,'&quot;')}" style="padding:5px 10px;">Download</button>
+          <button class="icon-btn" data-i="${i}" title="Remove">${iconSvg('trash',{size:14})}</button>
         </span>
       </div>
       <div class="audio-slots" id="audioSlots-${i}"></div>`).join('');
@@ -537,7 +536,7 @@
           const a = document.createElement('a'); a.href = objUrl; a.download = btn.dataset.nama;
           document.body.appendChild(a); a.click(); a.remove();
           URL.revokeObjectURL(objUrl);
-        } catch(err){ showToast('Gagal unduh: ' + err.message); }
+        } catch(err){ showToast('Download failed: ' + err.message); }
         finally { btn.textContent = original; }
       });
     });
@@ -549,12 +548,12 @@
     const el = document.getElementById(`audioSlots-${fileIdx}`);
     if(!el) return;
     const pages = Array.from({length: f.pageCount||1}, (_,i) => i+1);
-    el.innerHTML = `<div class="text-meta" style="margin-bottom:6px; font-weight:600;">🔊 Audio narasi per halaman (opsional)</div>` +
+    el.innerHTML = `<div class="text-meta" style="margin-bottom:6px; font-weight:600;">🔊 Narration audio per page (optional)</div>` +
       pages.map(p => {
         const a = f.audio && f.audio[p];
         return `<div class="audio-row">
-          <span class="halaman">Hal. ${p}</span>
-          ${a ? `<audio controls src="${a.url}"></audio><button class="audio-btn" data-file="${fileIdx}" data-page="${p}" data-action="remove-audio">Hapus</button>`
+          <span class="halaman">Page ${p}</span>
+          ${a ? `<audio controls src="${a.url}"></audio><button class="audio-btn" data-file="${fileIdx}" data-page="${p}" data-action="remove-audio">Remove</button>`
               : `<button class="audio-btn" data-file="${fileIdx}" data-page="${p}" data-action="upload-audio">Upload audio</button>`}
           <input type="file" accept="audio/*" data-file="${fileIdx}" data-page="${p}" id="audioInput-${fileIdx}-${p}">
         </div>`;
@@ -577,7 +576,7 @@
   }
 
   async function uploadAudio(fileIdx, page, audioFile){
-    if(!currentUser){ showToast('Anda belum login.'); return; }
+    if(!currentUser){ showToast('You are not signed in.'); return; }
     try{
       const path = `materi-audio/${currentUser.uid}/${Date.now()}_hal${page}_${audioFile.name}`;
       const audioRef = ref(storage, path);
@@ -585,25 +584,25 @@
       const url = await getDownloadURL(audioRef);
       materiFiles[fileIdx].audio[page] = { url, nama: audioFile.name };
       renderAudioSlots(fileIdx);
-      showToast(`Audio halaman ${page} terupload.`);
+      showToast(`Audio for page ${page} uploaded.`);
     } catch(err){
-      showToast('Gagal upload audio: ' + err.message);
+      showToast('Audio upload failed: ' + err.message);
     }
   }
 
   function renderQuestions(){
     const el = document.getElementById('questionList');
-    if(!questions.length){ el.innerHTML = `<p class="text-meta">Belum ada soal.</p>`; return; }
+    if(!questions.length){ el.innerHTML = `<p class="text-meta">No questions yet.</p>`; return; }
     el.innerHTML = questions.map((q,i) => `
       <div class="q-card">
         <div class="q-head">
           <select data-i="${i}" data-f="tipe">
-            <option value="multiple_choice" ${q.tipe==='multiple_choice'?'selected':''}>Pilihan Ganda</option>
-            <option value="likert" ${q.tipe==='likert'?'selected':''}>Skala 1-4</option>
-            <option value="free_text" ${q.tipe==='free_text'?'selected':''}>Jawaban Teks</option>
-            <option value="file_upload" ${q.tipe==='file_upload'?'selected':''}>Submission File</option>
+            <option value="multiple_choice" ${q.tipe==='multiple_choice'?'selected':''}>Multiple Choice</option>
+            <option value="likert" ${q.tipe==='likert'?'selected':''}>Scale 1-4</option>
+            <option value="free_text" ${q.tipe==='free_text'?'selected':''}>Text Answer</option>
+            <option value="file_upload" ${q.tipe==='file_upload'?'selected':''}>File Submission</option>
           </select>
-          <input type="text" data-i="${i}" data-f="pertanyaan" value="${(q.pertanyaan||'').replace(/"/g,'&quot;')}" placeholder="Teks pertanyaan">
+          <input type="text" data-i="${i}" data-f="pertanyaan" value="${(q.pertanyaan||'').replace(/"/g,'&quot;')}" placeholder="Question text">
           <button class="icon-btn tone-red" data-i="${i}" data-action="remove">${iconSvg('trash',{size:14})}</button>
         </div>
         ${q.tipe === 'multiple_choice' ? `
@@ -611,18 +610,18 @@
             ${(q.pilihan||[]).map((opt,oi) => `
               <div class="opt-row">
                 <input type="radio" name="jawaban-${i}" data-i="${i}" data-oi="${oi}" data-f="jawabanBenar" ${q.jawabanBenar===opt?'checked':''}>
-                <input type="text" data-i="${i}" data-oi="${oi}" data-f="opsi" value="${opt.replace(/"/g,'&quot;')}" placeholder="Pilihan ${oi+1}">
+                <input type="text" data-i="${i}" data-oi="${oi}" data-f="opsi" value="${opt.replace(/"/g,'&quot;')}" placeholder="Option ${oi+1}">
                 <button class="icon-btn" data-i="${i}" data-oi="${oi}" data-action="remove-opsi">${iconSvg('x',{size:13})}</button>
               </div>`).join('')}
-            <span class="link-add" data-i="${i}" data-action="add-opsi">${iconSvg('plus',{size:12})} Tambah pilihan</span>
+            <span class="link-add" data-i="${i}" data-action="add-opsi">${iconSvg('plus',{size:12})} Add option</span>
           </div>` : ''}
-        ${q.tipe === 'file_upload' ? `<p class="text-meta">Trainee upload file jawaban — dinilai manual oleh Anda setelah submit.</p>` : ''}
+        ${q.tipe === 'file_upload' ? `<p class="text-meta">Trainee uploads an answer file; you grade it manually.</p>` : ''}
       </div>`).join('');
 
     el.querySelectorAll('[data-f="tipe"]').forEach(sel => sel.addEventListener('change', e => {
       const i = Number(e.target.dataset.i);
       questions[i].tipe = e.target.value;
-      if(e.target.value === 'multiple_choice' && !questions[i].pilihan) questions[i].pilihan = ['Pilihan 1','Pilihan 2'];
+      if(e.target.value === 'multiple_choice' && !questions[i].pilihan) questions[i].pilihan = ['Option 1','Option 2'];
       renderQuestions();
     }));
     el.querySelectorAll('[data-f="pertanyaan"]').forEach(inp => inp.addEventListener('input', e => {
@@ -641,7 +640,7 @@
     }));
     el.querySelectorAll('[data-action="add-opsi"]').forEach(link => link.addEventListener('click', e => {
       const i = Number(e.currentTarget.dataset.i);
-      questions[i].pilihan.push(`Pilihan ${questions[i].pilihan.length+1}`);
+      questions[i].pilihan.push(`Option ${questions[i].pilihan.length+1}`);
       renderQuestions();
     }));
     el.querySelectorAll('[data-action="remove-opsi"]').forEach(btn => btn.addEventListener('click', e => {
@@ -651,7 +650,7 @@
   }
 
   document.getElementById('addQuestionBtn').addEventListener('click', () => {
-    questions.push({ tipe:'multiple_choice', pertanyaan:'', pilihan:['Pilihan 1','Pilihan 2'], jawabanBenar:'' });
+    questions.push({ tipe:'multiple_choice', pertanyaan:'', pilihan:['Option 1','Option 2'], jawabanBenar:'' });
     renderQuestions();
   });
 
@@ -667,10 +666,10 @@
   });
 
   async function uploadMateri(file){
-    if(!currentUser){ showToast('Anda belum login.'); return; }
-    if(!/\.pdf$/i.test(file.name)){ showToast('Cuma file PDF yang diterima — export dulu dari PPT/Word ke PDF.'); return; }
+    if(!currentUser){ showToast('You are not signed in.'); return; }
+    if(!/\.pdf$/i.test(file.name)){ showToast('Only PDF files are accepted. Export from PPT/Word to PDF first.'); return; }
     const original = dz.innerHTML;
-    dz.innerHTML = `⏳ Mengupload ${file.name}...`;
+    dz.innerHTML = `⏳ Uploading ${file.name}...`;
     try{
       const path = `materi/${currentUser.uid}/${Date.now()}_${file.name}`;
       const fileRef = ref(storage, path);
@@ -683,9 +682,9 @@
       } catch(e){ /* biarkan default 1 kalau gagal deteksi */ }
       materiFiles.push({ nama: file.name, url, pageCount, audio: {} });
       renderMateriList();
-      showToast(`${file.name} berhasil diupload.`);
+      showToast(`${file.name} uploaded.`);
     } catch(err){
-      showToast('Gagal upload: ' + err.message);
+      showToast('Upload failed: ' + err.message);
     } finally {
       dz.innerHTML = original;
     }
@@ -752,14 +751,14 @@
 
   function showLinkForm(){
     if(mode !== 'offline') return;
-    const base = FORMS_BASE_URL || '[FORMS_BASE_URL belum di-setup]';
+    const base = FORMS_BASE_URL || '[FORMS_BASE_URL not set up]';
     document.getElementById('linkFormOutput').value = `${base}?training=${moduleId}`;
     document.getElementById('linkFormBox').style.display = 'block';
   }
 
   async function saveModule(status){
     const judul = document.getElementById('mJudul').value.trim();
-    if(!judul){ showToast('Judul modul wajib diisi.'); return; }
+    if(!judul){ showToast('Module title is required.'); return; }
     try{
       const data = collectModuleData(status);
       if(!moduleId){
@@ -772,9 +771,9 @@
       await saveQuestions();
       await saveSesiAndRoster();
       showLinkForm();
-      showToast(status === 'draft' ? 'Draft tersimpan.' : 'Modul dikirim ke admin untuk approval.');
+      showToast(status === 'draft' ? 'Draft saved.' : 'Module submitted to admin for approval.');
     } catch(err){
-      showToast('Gagal simpan: ' + err.message);
+      showToast('Save failed: ' + err.message);
     }
   }
 
@@ -785,13 +784,13 @@
 
   async function loadForEdit(id){
     const snap = await getDoc(doc(db, 'modules', id));
-    if(!snap.exists()){ showToast('Training tidak ditemukan.'); return; }
+    if(!snap.exists()){ showToast('Training not found.'); return; }
     const m = snap.data();
     if(m.createdBy !== currentUser.uid && currentProfile.role !== 'admin'){
       document.getElementById('gate').style.display = 'block';
       document.getElementById('appShell').style.display = 'none';
-      document.getElementById('gateTitle').textContent = 'Akses ditolak';
-      document.getElementById('gateSub').textContent = 'Anda bukan pembuat training ini.';
+      document.getElementById('gateTitle').textContent = 'Access denied';
+      document.getElementById('gateSub').textContent = 'You did not create this training.';
       return;
     }
     moduleId = id;
@@ -826,7 +825,7 @@
       rosterRows = [];
       rSnap.forEach(d => rosterRows.push(d.data()));
       renderRosterList();
-      if(rosterRows.length) document.getElementById('rosterResult').textContent = `${rosterRows.length} peserta (tersimpan sebelumnya).`;
+      if(rosterRows.length) document.getElementById('rosterResult').textContent = `${rosterRows.length} participants (saved earlier).`;
 
       showLinkForm();
     }
@@ -843,16 +842,16 @@
     const shell = document.getElementById('appShell');
     if(!user){
       gate.style.display = 'block'; shell.style.display = 'none';
-      document.getElementById('gateTitle').textContent = 'Silakan login';
-      document.getElementById('gateSub').innerHTML = `<a href="login_test.html">Login dulu di sini</a>, baru buka halaman ini lagi.`;
+      document.getElementById('gateTitle').textContent = 'Please sign in';
+      document.getElementById('gateSub').innerHTML = `<a href="login_test.html">Sign in here</a>, then reopen this page.`;
       return;
     }
     currentUser = user;
     currentProfile = await ensureUserProfile(user);
     if(currentProfile.role !== 'trainer' && currentProfile.role !== 'admin'){
       gate.style.display = 'block'; shell.style.display = 'none';
-      document.getElementById('gateTitle').textContent = 'Akses ditolak';
-      document.getElementById('gateSub').textContent = 'Halaman ini cuma buat Trainer/Admin. Akun Anda role-nya: ' + currentProfile.role;
+      document.getElementById('gateTitle').textContent = 'Access denied';
+      document.getElementById('gateSub').textContent = 'This page is for Trainers and Admins only. Your role: ' + currentProfile.role;
       return;
     }
     gate.style.display = 'none'; shell.style.display = 'block';
@@ -873,7 +872,7 @@
 <div id="aiModal" style="display:none; position:fixed; inset:0; background:rgba(26,26,26,.55); z-index:60; align-items:center; justify-content:center;">
   <div style="background:#fff; border-radius:var(--r-card); width:640px; max-width:94vw; height:82vh; display:flex; flex-direction:column; overflow:hidden;">
     <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border);">
-      <span style="font-weight:700; font-size:14px;">✨ Konsultasi Materi dengan AI</span>
+      <span style="font-weight:700; font-size:14px;">✨ Plan Material with AI</span>
       <button class="icon-btn" id="closeAiBtn"></button>
     </div>
     <div id="aiChatBody" style="flex:1; overflow-y:auto; padding:16px 20px; display:flex; flex-direction:column; gap:12px;"></div>
@@ -883,14 +882,14 @@
         <button class="btn btn-primary" id="aiGenPptAudioBtn" style="flex:1;">Generate PPT + Audio</button>
       </div>
       <div style="display:flex; gap:8px;">
-        <textarea id="aiInput" placeholder="Ketik topik atau pertanyaan Anda..." rows="1" style="flex:1; margin-bottom:0; resize:none; max-height:160px; overflow-y:auto; line-height:1.4;"></textarea>
-        <button class="btn btn-primary" id="aiSendBtn">Kirim</button>
+        <textarea id="aiInput" placeholder="Type your topic or question..." rows="1" style="flex:1; margin-bottom:0; resize:none; max-height:160px; overflow-y:auto; line-height:1.4;"></textarea>
+        <button class="btn btn-primary" id="aiSendBtn">Send</button>
       </div>
     </div>
   </div>
 </div>
 
-<script type="module" src="./admin-shell.js?v=20261103"></script>
+<script type="module" src="./admin-shell.js?v=20261108"></script>
 <script src="./lms-motion.js?v=20261108" defer></script>
 </body>
 </html>

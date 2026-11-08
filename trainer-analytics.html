@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Analitik Modul — Anteraja LMS</title>
+<title>Module Analytics — Anteraja LMS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./lms-design-system.css?v=20261105b">
@@ -24,7 +24,7 @@
 <body>
 
 <div id="gate" class="locked-state" style="display:none;">
-  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Memuat...</p>
+  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Loading...</p>
   <p class="text-sub" id="gateSub"></p>
 </div>
 
@@ -32,7 +32,7 @@
   <div class="topbar">
     <div style="display:flex; align-items:center; gap:16px;">
       <a href="index.html" class="sidebar-logo" style="margin:0; text-decoration:none;">anteraja LMS</a>
-      <a href="index.html" class="text-sub" style="text-decoration:none; display:flex; align-items:center; gap:4px;">← Menu Utama</a>
+      <a href="index.html" class="text-sub" style="text-decoration:none; display:flex; align-items:center; gap:4px;">← Main Menu</a>
     </div>
     <div class="user-chip">
       <img class="avatar" id="userAvatar" src="">
@@ -41,8 +41,7 @@
   </div>
 
   <div class="wrap" style="max-width:900px;">
-    <h1 class="text-h1">Analitik Modul</h1>
-    <p class="text-sub" style="margin-bottom:20px;">Performa post-test peserta per modul yang Anda buat.</p>
+    <h1 class="text-h1">Module Analytics</h1>
 
     <div class="mod-select" id="modSelect"></div>
     <div id="analyticsBody"></div>
@@ -77,7 +76,7 @@
   async function loadAnalytics(moduleId){
     const body = document.getElementById('analyticsBody');
     const empty = document.getElementById('emptyState');
-    body.innerHTML = `<p class="text-meta">Memuat...</p>`;
+    body.innerHTML = `<p class="text-meta">Loading...</p>`;
     empty.style.display = 'none';
 
     const q = query(collection(db, 'attempts'), where('moduleId', '==', moduleId));
@@ -88,7 +87,7 @@
     if(!attempts.length){
       body.innerHTML = '';
       empty.style.display = 'block';
-      empty.innerHTML = iconSvg('inbox',{size:28}) + `<p style="margin-top:8px;">Belum ada trainee yang mengerjakan post-test modul ini.</p>`;
+      empty.innerHTML = iconSvg('inbox',{size:28}) + `<p style="margin-top:8px;">No trainee has taken this module's post-test yet.</p>`;
       return;
     }
 
@@ -99,26 +98,26 @@
 
     body.innerHTML = `
       <div class="kpi-row">
-        <div class="kpi-card"><div class="kpi-label">TOTAL PESERTA</div><div class="kpi-value">${attempts.length}</div></div>
-        <div class="kpi-card"><div class="kpi-label">RATA-RATA SKOR</div><div class="kpi-value">${avg ?? '-'}</div></div>
-        <div class="kpi-card"><div class="kpi-label">SKOR TERTINGGI</div><div class="kpi-value">${max ?? '-'}</div></div>
-        <div class="kpi-card"><div class="kpi-label">SKOR TERENDAH</div><div class="kpi-value">${min ?? '-'}</div></div>
+        <div class="kpi-card"><div class="kpi-label">TOTAL PARTICIPANTS</div><div class="kpi-value">${attempts.length}</div></div>
+        <div class="kpi-card"><div class="kpi-label">AVERAGE SCORE</div><div class="kpi-value">${avg ?? '-'}</div></div>
+        <div class="kpi-card"><div class="kpi-label">HIGHEST SCORE</div><div class="kpi-value">${max ?? '-'}</div></div>
+        <div class="kpi-card"><div class="kpi-label">LOWEST SCORE</div><div class="kpi-value">${min ?? '-'}</div></div>
       </div>
       <div class="panel" style="padding:18px 20px; margin-bottom:20px;">
-        <h3 class="text-h2" style="margin-bottom:12px;">Distribusi Skor</h3>
+        <h3 class="text-h2" style="margin-bottom:12px;">Score Distribution</h3>
         <div style="height:220px;"><canvas id="scoreChart"></canvas></div>
       </div>
       <div class="panel">
-        <div class="panel-head"><h3>Daftar Peserta</h3></div>
+        <div class="panel-head"><h3>Participants</h3></div>
         <table class="data-table">
-          <thead><tr><th>Nama</th><th>Email</th><th>Skor</th><th>Tanggal</th></tr></thead>
+          <thead><tr><th>Name</th><th>Email</th><th>Score</th><th>Date</th></tr></thead>
           <tbody>
             ${attempts.sort((a,b)=>(b.submittedAt?.seconds||0)-(a.submittedAt?.seconds||0)).map(a => `
               <tr>
                 <td>${a.nama||'-'}</td>
                 <td class="text-meta">${a.email||'-'}</td>
                 <td>${a.score ?? '-'}</td>
-                <td class="text-meta">${a.submittedAt ? new Date(a.submittedAt.seconds*1000).toLocaleDateString('id-ID') : '-'}</td>
+                <td class="text-meta">${a.submittedAt ? new Date(a.submittedAt.seconds*1000).toLocaleDateString('en-GB') : '-'}</td>
               </tr>`).join('')}
           </tbody>
         </table>
@@ -156,15 +155,15 @@
     const shell = document.getElementById('appShell');
     if(!user){
       gate.style.display = 'block'; shell.style.display = 'none';
-      document.getElementById('gateTitle').textContent = 'Silakan login';
-      document.getElementById('gateSub').innerHTML = `<a href="index.html">Login dulu di sini</a>.`;
+      document.getElementById('gateTitle').textContent = 'Please sign in';
+      document.getElementById('gateSub').innerHTML = `<a href="index.html">Sign in here</a>.`;
       return;
     }
     currentProfile = await ensureUserProfile(user);
     if(currentProfile.role !== 'trainer' && currentProfile.role !== 'admin'){
       gate.style.display = 'block'; shell.style.display = 'none';
-      document.getElementById('gateTitle').textContent = 'Akses ditolak';
-      document.getElementById('gateSub').textContent = 'Halaman ini cuma buat Trainer/Admin.';
+      document.getElementById('gateTitle').textContent = 'Access denied';
+      document.getElementById('gateSub').textContent = 'This page is for Trainers and Admins only.';
       return;
     }
     gate.style.display = 'none'; shell.style.display = 'block';
@@ -179,7 +178,7 @@
 
     if(!myModules.length){
       document.getElementById('emptyState').style.display = 'block';
-      document.getElementById('emptyState').innerHTML = iconSvg('inbox',{size:28}) + `<p style="margin-top:8px;">Anda belum punya modul.</p>`;
+      document.getElementById('emptyState').innerHTML = iconSvg('inbox',{size:28}) + `<p style="margin-top:8px;">You have no modules yet.</p>`;
       return;
     }
     activeModuleId = myModules[0].id;
@@ -187,7 +186,7 @@
     loadAnalytics(activeModuleId);
   });
 </script>
-<script type="module" src="./admin-shell.js?v=20261103"></script>
+<script type="module" src="./admin-shell.js?v=20261108"></script>
 <script src="./lms-motion.js?v=20261108" defer></script>
 </body>
 </html>

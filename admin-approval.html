@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Approval Modul — Anteraja LMS</title>
+<title>Module Approval — Anteraja LMS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./lms-design-system.css?v=20261105b">
@@ -29,7 +29,7 @@
 <body>
 
 <div id="gate" class="locked-state" style="display:none;">
-  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Memuat...</p>
+  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Loading...</p>
   <p class="text-sub" id="gateSub"></p>
 </div>
 
@@ -37,7 +37,7 @@
   <div class="topbar">
     <div style="display:flex; align-items:center; gap:16px;">
       <div class="sidebar-logo" style="margin:0;">anteraja LMS</div>
-      <a href="index.html" class="text-sub" style="text-decoration:none; display:flex; align-items:center; gap:4px;">← Menu Utama</a>
+      <a href="index.html" class="text-sub" style="text-decoration:none; display:flex; align-items:center; gap:4px;">← Main Menu</a>
     </div>
     <div class="user-chip">
       <img class="avatar" id="userAvatar" src="">
@@ -46,13 +46,12 @@
   </div>
 
   <div class="wrap">
-    <h1 class="text-h1">Approval Modul</h1>
-    <p class="text-sub" style="margin-bottom:20px;">Review modul dari trainer sebelum tayang ke trainee.</p>
+    <h1 class="text-h1">Module Approval</h1>
 
     <div class="tabs">
-      <div class="tab-btn active" data-status="pending_approval" id="tabPending">Menunggu</div>
+      <div class="tab-btn active" data-status="pending_approval" id="tabPending">Pending</div>
       <div class="tab-btn" data-status="published" id="tabPublished">Published</div>
-      <div class="tab-btn" data-status="rejected" id="tabRejected">Ditolak</div>
+      <div class="tab-btn" data-status="rejected" id="tabRejected">Rejected</div>
     </div>
 
     <div id="moduleList"></div>
@@ -122,7 +121,7 @@
       document.body.appendChild(a); a.click(); a.remove();
       URL.revokeObjectURL(objUrl);
     } catch(err){
-      showToast('Gagal unduh: ' + err.message);
+      showToast('Download failed: ' + err.message);
     } finally {
       btn.textContent = original;
     }
@@ -140,7 +139,7 @@
 
     const el = document.getElementById('moduleList');
     const empty = document.getElementById('emptyState');
-    el.innerHTML = `<p class="text-meta">Memuat...</p>`;
+    el.innerHTML = `<p class="text-meta">Loading...</p>`;
 
     const q = query(collection(db, 'modules'), where('status', '==', status));
     const snap = await getDocs(q);
@@ -151,7 +150,7 @@
     if(!modules.length){
       el.innerHTML = '';
       empty.style.display = 'block';
-      empty.innerHTML = iconSvg('inbox', {size:28}) + `<p style="margin-top:8px;">Tidak ada modul di status ini.</p>`;
+      empty.innerHTML = iconSvg('inbox', {size:28}) + `<p style="margin-top:8px;">No modules with this status.</p>`;
       return;
     }
     empty.style.display = 'none';
@@ -161,19 +160,19 @@
         <div class="mod-head">
           <div class="avatar-sm">${initials(m.createdByName)}</div>
           <div>
-            <div style="font-weight:700; font-size:14px;">${m.judul || '(Tanpa judul)'}</div>
-            <div class="text-meta">oleh ${m.createdByName || '-'}</div>
+            <div style="font-weight:700; font-size:14px;">${m.judul || '(Untitled)'}</div>
+            <div class="text-meta">by ${m.createdByName || '-'}</div>
           </div>
         </div>
         <div class="meta-row">
-          <span class="meta-pill">Kategori: ${m.kategori || '-'}</span>
-          <span class="meta-pill">Divisi: ${(m.targetDivisi||[]).join(', ') || 'Semua'}</span>
-          <span class="meta-pill">Level: ${(m.targetLevel||[]).join(', ') || 'Semua'}</span>
-          <span class="meta-pill">${m.durasiMenit || 0} menit</span>
+          <span class="meta-pill">Category: ${m.kategori || '-'}</span>
+          <span class="meta-pill">Division: ${(m.targetDivisi||[]).join(', ') || 'All'}</span>
+          <span class="meta-pill">Level: ${(m.targetLevel||[]).join(', ') || 'All'}</span>
+          <span class="meta-pill">${m.durasiMenit || 0} min</span>
         </div>
         <p class="text-sub">${m.deskripsi || ''}</p>
-        <div class="q-preview" id="qcount-${m.id}">Memuat jumlah soal...</div>
-        <span class="link-add" data-action="toggle-questions" data-id="${m.id}" style="color:var(--pink); font-weight:700; font-size:12px; cursor:pointer; display:inline-block; margin-bottom:8px;">Lihat Soal</span>
+        <div class="q-preview" id="qcount-${m.id}">Loading questions...</div>
+        <span class="link-add" data-action="toggle-questions" data-id="${m.id}" style="color:var(--pink); font-weight:700; font-size:12px; cursor:pointer; display:inline-block; margin-bottom:8px;">View Questions</span>
         <div id="questions-${m.id}" style="display:none; margin-bottom:10px;"></div>
 
         ${youtubeEmbedUrl(m.videoUrl) ? `
@@ -182,7 +181,7 @@
               src="${youtubeEmbedUrl(m.videoUrl)}" title="Preview video" frameborder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowfullscreen></iframe>
-          </div>` : `<p class="text-meta" style="margin-top:10px;">${iconSvg('file-off',{size:14})} Belum ada video</p>`}
+          </div>` : `<p class="text-meta" style="margin-top:10px;">${iconSvg('file-off',{size:14})} No video yet</p>`}
 
         ${(m.materiFiles||[]).length ? `
           <div style="margin-top:10px; display:flex; flex-direction:column; gap:6px;">
@@ -190,14 +189,14 @@
               <div style="display:flex; align-items:center; gap:8px; font-size:13px; padding:8px 10px; background:var(--surface-2); border-radius:var(--r-control);">
                 ${iconSvg('file-text',{size:15})} <span style="flex:1;">${f.nama}</span>
                 <button onclick="openPreviewModal('${f.url}', '${f.nama.replace(/'/g,"\\'")}')" style="background:none; border:none; color:var(--pink); font-weight:700; font-size:12px; cursor:pointer;">Preview</button>
-                <button onclick="downloadFile('${f.url}', '${f.nama.replace(/'/g,"\\'")}', this)" style="background:none; border:none; color:var(--text-2); font-weight:700; font-size:12px; cursor:pointer;">Unduh</button>
+                <button onclick="downloadFile('${f.url}', '${f.nama.replace(/'/g,"\\'")}', this)" style="background:none; border:none; color:var(--text-2); font-weight:700; font-size:12px; cursor:pointer;">Download</button>
               </div>`).join('')}
           </div>` : ''}
 
         ${status === 'pending_approval' ? `
           <div class="action-row" style="margin-top:14px;">
             <button class="btn btn-primary" data-action="approve" data-id="${m.id}">${iconSvg('check',{size:14})} Approve</button>
-            <button class="btn btn-reject" data-action="reject" data-id="${m.id}">${iconSvg('x',{size:14})} Tolak</button>
+            <button class="btn btn-reject" data-action="reject" data-id="${m.id}">${iconSvg('x',{size:14})} Reject</button>
           </div>` : ''}
       </div>`).join('');
 
@@ -211,26 +210,26 @@
       list.sort((a,b) => (a.urutan||0) - (b.urutan||0));
       questionsCache[m.id] = list;
       const target = document.getElementById(`qcount-${m.id}`);
-      if(target) target.textContent = `${list.length} soal post-test`;
+      if(target) target.textContent = `${list.length} post-test questions`;
     });
 
     el.querySelectorAll('[data-action="toggle-questions"]').forEach(link => link.addEventListener('click', () => {
       const id = link.dataset.id;
       const box = document.getElementById(`questions-${id}`);
-      if(box.style.display === 'block'){ box.style.display = 'none'; link.textContent = 'Lihat Soal'; return; }
+      if(box.style.display === 'block'){ box.style.display = 'none'; link.textContent = 'View Questions'; return; }
       const qs = questionsCache[id] || [];
-      const TIPE_LABEL = { multiple_choice:'Pilihan Ganda', likert:'Skala 1-4', free_text:'Jawaban Teks', file_upload:'Submission File' };
-      box.innerHTML = !qs.length ? `<p class="text-meta">Belum ada soal.</p>` : qs.map((q,i) => `
+      const TIPE_LABEL = { multiple_choice:'Multiple Choice', likert:'Scale 1-4', free_text:'Text Answer', file_upload:'File Submission' };
+      box.innerHTML = !qs.length ? `<p class="text-meta">No questions yet.</p>` : qs.map((q,i) => `
         <div style="border-top:1px solid var(--border); padding:10px 0;">
-          <div class="text-meta" style="margin-bottom:4px;">Soal ${i+1} · ${TIPE_LABEL[q.tipe]||q.tipe}</div>
-          <div style="font-size:13px; margin-bottom:6px;">${q.pertanyaan || '(kosong)'}</div>
+          <div class="text-meta" style="margin-bottom:4px;">Question ${i+1} · ${TIPE_LABEL[q.tipe]||q.tipe}</div>
+          <div style="font-size:13px; margin-bottom:6px;">${q.pertanyaan || '(empty)'}</div>
           ${q.tipe === 'multiple_choice' ? (q.pilihan||[]).map(opt => `
             <div style="font-size:12px; padding:4px 8px; border-radius:6px; margin-bottom:3px; ${opt===q.jawabanBenar ? 'background:var(--green-bg); color:var(--green); font-weight:700;' : 'color:var(--text-2);'}">
               ${opt===q.jawabanBenar ? iconSvg('check',{size:12}) : ''} ${opt}
             </div>`).join('') : ''}
         </div>`).join('');
       box.style.display = 'block';
-      link.textContent = 'Sembunyikan Soal';
+      link.textContent = 'Hide Questions';
     }));
 
     el.querySelectorAll('[data-action="approve"]').forEach(btn => btn.addEventListener('click', () => setStatus(btn.dataset.id, 'published')));
@@ -240,10 +239,10 @@
   async function setStatus(moduleId, newStatus){
     try{
       await updateDoc(doc(db, 'modules', moduleId), { status: newStatus, reviewedAt: serverTimestamp(), reviewedBy: currentProfile.email });
-      showToast(newStatus === 'published' ? 'Modul di-publish.' : 'Modul ditolak.');
+      showToast(newStatus === 'published' ? 'Module published.' : 'Module rejected.');
       loadModules(activeStatus);
     } catch(err){
-      showToast('Gagal update: ' + err.message);
+      showToast('Update failed: ' + err.message);
     }
   }
 
@@ -256,15 +255,15 @@
     const shell = document.getElementById('appShell');
     if(!user){
       gate.style.display = 'block'; shell.style.display = 'none';
-      document.getElementById('gateTitle').textContent = 'Silakan login';
-      document.getElementById('gateSub').innerHTML = `<a href="login_test.html">Login dulu di sini</a>, baru buka halaman ini lagi.`;
+      document.getElementById('gateTitle').textContent = 'Please sign in';
+      document.getElementById('gateSub').innerHTML = `<a href="login_test.html">Sign in here</a>, then reopen this page.`;
       return;
     }
     currentProfile = await ensureUserProfile(user);
     if(currentProfile.role !== 'admin'){
       gate.style.display = 'block'; shell.style.display = 'none';
-      document.getElementById('gateTitle').textContent = 'Akses ditolak';
-      document.getElementById('gateSub').textContent = 'Halaman ini cuma buat Admin. Akun Anda role-nya: ' + currentProfile.role;
+      document.getElementById('gateTitle').textContent = 'Access denied';
+      document.getElementById('gateSub').textContent = 'This page is for Admins only. Your role: ' + currentProfile.role;
       return;
     }
     gate.style.display = 'none'; shell.style.display = 'block';
@@ -273,7 +272,7 @@
     loadModules('pending_approval');
   });
 </script>
-<script type="module" src="./admin-shell.js?v=20261103"></script>
+<script type="module" src="./admin-shell.js?v=20261108"></script>
 <script src="./lms-motion.js?v=20261108" defer></script>
 </body>
 </html>

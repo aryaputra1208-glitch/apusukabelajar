@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Data Performa — Anteraja LMS</title>
+<title>Performance Data — Anteraja LMS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../lms-design-system.css?v=20261105b">
@@ -35,7 +35,7 @@
 <body>
 
 <div id="gate" class="locked-state" style="display:none;">
-  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Memuat...</p>
+  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Loading...</p>
   <p class="text-sub" id="gateSub"></p>
 </div>
 
@@ -43,63 +43,62 @@
   <div class="topbar">
     <div style="display:flex; align-items:center; gap:16px;">
       <a href="index.html" class="sidebar-logo" style="margin:0; text-decoration:none;">anteraja TMS</a>
-      <a href="index.html" class="text-sub" style="text-decoration:none; display:flex; align-items:center; gap:4px;">← Menu TMS</a>
+      <a href="index.html" class="text-sub" style="text-decoration:none; display:flex; align-items:center; gap:4px;">← TMS Menu</a>
     </div>
     <div class="user-chip">
-      <a href="../index.html" class="btn btn-outline btn-sm" style="margin-right:6px;">Ke LMS</a>
+      <a href="../index.html" class="btn btn-outline btn-sm" style="margin-right:6px;">Go to LMS</a>
       <img class="avatar" id="userAvatar" src="">
       <span id="userName"></span>
     </div>
   </div>
 
   <div class="wrap wide">
-    <h1 class="text-h1">Data Performa</h1>
-    <p class="text-sub" style="margin-bottom:20px;">Import hasil PA (skor kompetensi) dan KPI per periode. Skor dipakai untuk menghitung gap kompetensi, yang lalu ditindaklanjuti lewat <a href="idp.html" style="color:var(--pink);">IDP</a>. Skor hanya terlihat oleh admin dan atasan berlevel Department Head ke atas — karyawan hanya melihat IDP-nya, tanpa skor. Lihat per orang di <a href="profile.html" style="color:var(--pink);">Profil Kompetensi</a>.</p>
+    <h1 class="text-h1">Performance Data</h1>
 
     <div class="kpi-row">
-      <div class="kpi-card2"><div class="kpi-label2">KARYAWAN DINILAI</div><div class="kpi-value2" id="kpiDinilai">-</div><div class="kpi-sub" id="kpiDinilaiSub">Periode terpilih</div></div>
-      <div class="kpi-card2" style="--accent:var(--blue)"><div class="kpi-label2">PUNYA SKOR KPI</div><div class="kpi-value2" id="kpiKpi">-</div><div class="kpi-sub">Sisanya model PA saja</div></div>
-      <div class="kpi-card2" style="--accent:var(--amber)"><div class="kpi-label2">PUNYA GAP</div><div class="kpi-value2" id="kpiGap">-</div><div class="kpi-sub">≥1 kompetensi di bawah standar</div></div>
-      <div class="kpi-card2" style="--accent:var(--red)"><div class="kpi-label2">TANPA ATASAN DH+</div><div class="kpi-value2" id="kpiNoViewer">-</div><div class="kpi-sub">Skor hanya terlihat admin</div></div>
+      <div class="kpi-card2"><div class="kpi-label2">EMPLOYEES ASSESSED</div><div class="kpi-value2" id="kpiDinilai">-</div><div class="kpi-sub" id="kpiDinilaiSub">Selected period</div></div>
+      <div class="kpi-card2" style="--accent:var(--blue)"><div class="kpi-label2">HAVE KPI SCORE</div><div class="kpi-value2" id="kpiKpi">-</div><div class="kpi-sub">Others PA only</div></div>
+      <div class="kpi-card2" style="--accent:var(--amber)"><div class="kpi-label2">HAVE GAPS</div><div class="kpi-value2" id="kpiGap">-</div><div class="kpi-sub">≥1 competency below standard</div></div>
+      <div class="kpi-card2" style="--accent:var(--red)"><div class="kpi-label2">NO DH+ MANAGER</div><div class="kpi-value2" id="kpiNoViewer">-</div><div class="kpi-sub">Scores visible to admins only</div></div>
     </div>
 
     <div class="card" style="margin-bottom:16px;">
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
-        <h2 class="text-h2" style="margin:0;">Import Hasil PA &amp; KPI via Excel</h2>
+        <h2 class="text-h2" style="margin:0;">Import PA &amp; KPI Results via Excel</h2>
         <span class="link-add" id="downloadTemplateBtn"></span>
       </div>
-      <p class="text-sub" style="margin-bottom:12px;">Kolom: <strong>NIK, Periode</strong> (mis. <em>2026</em> untuk tahunan, <em>2026-S1</em> / <em>2026-S2</em> untuk semester), lalu <strong>satu kolom per kompetensi</strong> (judulnya = nama kompetensi di kamus, skor 1–5). Opsional: <strong>Skor KPI</strong> (kosong = level tanpa KPI), <strong>Skor PA</strong> (kosong = rata-rata skor kompetensi), <strong>Skor Final</strong> (kosong = dihitung dari bobot di bawah). Template sudah berisi daftar karyawan dan nama kompetensi. Import ulang periode yang sama akan menimpa data orang yang ada di file saja.</p>
+      <p class="text-sub" style="margin-bottom:12px;">Columns: <strong>NIK, Periode</strong> (<em>2026</em> annual, <em>2026-S1</em> / <em>2026-S2</em> semester), then <strong>one column per competency</strong> (dictionary name, score 1–5). Optional: <strong>Skor KPI</strong>, <strong>Skor PA</strong> (blank = competency average), <strong>Skor Final</strong> (blank = weighted). Re-importing a period overwrites only the people in the file.</p>
       <div class="dropzone" id="excelDropzone"></div>
       <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" style="display:none">
       <div id="previewBox" class="preview-box" style="display:none;"></div>
     </div>
 
     <details class="card" style="margin-bottom:20px;" id="weightsCard">
-      <summary>Bobot Skor Final (PA + KPI) <span class="text-meta" id="weightsStatus" style="font-family:var(--font-body); font-weight:500;"></span></summary>
-      <p class="text-sub" style="margin:12px 0;">Dipakai hanya untuk karyawan yang <strong>punya skor KPI</strong> dan <strong>tidak</strong> diisi Skor Final di file. Karyawan tanpa KPI otomatis memakai skor PA sebagai skor final. Skor KPI diasumsikan sudah dalam skala 1–5 yang sama dengan PA. Kosongkan baris level untuk memakai bobot default.</p>
+      <summary>Final Score Weights (PA + KPI) <span class="text-meta" id="weightsStatus" style="font-family:var(--font-body); font-weight:500;"></span></summary>
+      <p class="text-sub" style="margin:12px 0;">Applies only to employees with a KPI score and no Skor Final in the file. Leave a level blank to use the default.</p>
       <div class="panel">
         <div class="w-row head-row"><span>LEVEL</span><span>PA (%)</span><span>KPI (%)</span><span></span></div>
         <div id="weightsList"></div>
       </div>
       <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:12px;">
-        <button class="btn btn-primary" id="saveWeightsBtn">Simpan Bobot</button>
+        <button class="btn btn-primary" id="saveWeightsBtn">Save Weights</button>
       </div>
     </details>
 
     <div class="filter-row">
       <select id="periodeSelect" style="max-width:220px;"></select>
-      <input type="text" id="searchBox" placeholder="Cari NIK / nama..." style="max-width:260px;">
+      <input type="text" id="searchBox" placeholder="Search NIK / name..." style="max-width:260px;">
       <span class="text-meta" id="rowCount"></span>
       <span style="flex:1;"></span>
-      <button class="btn btn-outline btn-sm" id="reapplyWeightsBtn" title="Hitung ulang skor final (yang bukan dari file) memakai bobot terbaru">Terapkan Bobot ke Periode Ini</button>
-      <button class="btn btn-outline btn-sm" id="refreshRecsBtn" title="Hitung ulang atasan DH+ yang boleh melihat skor & IDP, dari struktur atasan terbaru di Data Karyawan">Perbarui Akses Atasan</button>
+      <button class="btn btn-outline btn-sm" id="reapplyWeightsBtn" title="Recalculate computed final scores with the latest weights">Apply Weights to This Period</button>
+      <button class="btn btn-outline btn-sm" id="refreshRecsBtn" title="Recalculate which DH+ managers can see scores & IDPs from the latest reporting lines">Refresh Manager Access</button>
     </div>
 
     <div class="panel">
       <div style="overflow-x:auto">
       <table class="data-table">
         <thead><tr>
-          <th>NIK</th><th>Nama</th><th>Level</th><th>Model</th><th>PA</th><th>KPI</th><th>Final</th><th>Gap</th><th>Dilihat oleh</th>
+          <th>NIK</th><th>Name</th><th>Level</th><th>Model</th><th>PA</th><th>KPI</th><th>Final</th><th>Gap</th><th>Visible to</th>
         </tr></thead>
         <tbody id="tableBody"></tbody>
       </table>
@@ -117,7 +116,7 @@
   import {
     LEVEL_COLUMNS, KATEGORI_ORDER, DEFAULT_SCALE, DEFAULT_WEIGHTS, slugify, escapeHtml, levelLabel,
     normalizePeriode, periodeRank, periodeLabel, scoreLabel, round2, computeFinal, viewerEmailsFor, gapsFor,
-  } from '../competency-shared.js?v=20261023c';
+  } from '../competency-shared.js?v=20261108';
   import { collection, getDocs, doc, getDoc, setDoc, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const F = id => document.getElementById(id);
@@ -162,7 +161,7 @@
     if(!periodes.includes(selectedPeriode)) selectedPeriode = periodes[0] || '';
     F('periodeSelect').innerHTML = periodes.length
       ? periodes.map(p => `<option value="${escapeHtml(p)}" ${p===selectedPeriode?'selected':''}>${escapeHtml(periodeLabel(p))}</option>`).join('')
-      : '<option value="">Belum ada periode</option>';
+      : '<option value="">No periods yet</option>';
     renderWeights(); renderTable();
   }
 
@@ -174,11 +173,11 @@
       .sort((a,b) => (a.nama||'').localeCompare(b.nama||''));
     const standar = scale.standar || 3;
     F('kpiDinilai').textContent = inPeriode.length;
-    F('kpiDinilaiSub').textContent = selectedPeriode ? periodeLabel(selectedPeriode) : 'Belum ada data';
+    F('kpiDinilaiSub').textContent = selectedPeriode ? periodeLabel(selectedPeriode) : 'No data yet';
     F('kpiKpi').textContent = inPeriode.filter(a => a.skorKPI != null).length;
     F('kpiGap').textContent = inPeriode.filter(a => gapsFor(a.kompetensi, standar).length).length;
     F('kpiNoViewer').textContent = inPeriode.filter(a => !(a.viewerEmails||[]).length).length;
-    F('rowCount').textContent = `${rows.length} karyawan`;
+    F('rowCount').textContent = `${rows.length} employees`;
 
     F('tableBody').innerHTML = rows.slice(0, 400).map(a => {
       const nGap = gapsFor(a.kompetensi, standar).length;
@@ -187,12 +186,12 @@
         <td>${escapeHtml(a.nik)}</td>
         <td><a href="profile.html?nik=${encodeURIComponent(a.nik)}&periode=${encodeURIComponent(a.periode)}" style="color:var(--text); font-weight:700; text-decoration:none;">${escapeHtml(a.nama || a.nik)}</a><div class="text-meta">${escapeHtml(a.jabatan || '')}</div></td>
         <td class="text-meta">${escapeHtml(levelLabel(a.levelKey) || a.level || '-')}</td>
-        <td><span class="badge ${a.modelSkor === 'PA + KPI' ? 'badge-blue' : 'badge-gray'}">${escapeHtml(a.modelSkor || '-')}</span></td>
+        <td><span class="badge ${a.modelSkor === 'PA + KPI' ? 'badge-blue' : 'badge-gray'}">${escapeHtml(a.modelSkor === 'PA saja' ? 'PA only' : (a.modelSkor || '-'))}</span></td>
         <td class="num">${fmt(a.skorPA)}</td>
         <td class="num">${fmt(a.skorKPI)}</td>
         <td class="num"><strong>${fmt(a.skorFinal)}</strong>${label ? `<div class="text-meta">${escapeHtml(label)}${a.skorFinalSumber === 'import' ? ' · dari file' : ''}</div>` : ''}</td>
-        <td>${!Object.keys(a.kompetensi || {}).length ? '<span class="badge badge-gray" title="Skor per kompetensi tidak ada di file import — gap tidak bisa dihitung">Belum ada skor kompetensi</span>' : nGap ? `<span class="badge badge-amber">${nGap} kompetensi</span>` : '<span class="badge badge-green">Tidak ada</span>'}</td>
-        <td class="text-meta">${(a.viewerEmails||[]).length ? escapeHtml(a.viewerEmails.join(', ')) : '<span style="color:var(--red);">hanya admin</span>'}</td>
+        <td>${!Object.keys(a.kompetensi || {}).length ? '<span class="badge badge-gray" title="No per-competency scores in the import file, so gaps cannot be calculated">No competency scores</span>' : nGap ? `<span class="badge badge-amber">${nGap} ${nGap === 1 ? 'competency' : 'competencies'}</span>` : '<span class="badge badge-green">None</span>'}</td>
+        <td class="text-meta">${(a.viewerEmails||[]).length ? escapeHtml(a.viewerEmails.join(', ')) : '<span style="color:var(--red);">admins only</span>'}</td>
       </tr>`;
     }).join('');
     const empty = F('emptyState');
@@ -207,7 +206,7 @@
     F('weightsStatus').textContent = weightsFromDb ? '' : '— belum diatur, sementara default 50/50';
     const row = (key, label, w, isDefault) => `
       <div class="w-row" data-key="${key}">
-        <span>${isDefault ? '<strong>Default (semua level)</strong>' : escapeHtml(label)}</span>
+        <span>${isDefault ? '<strong>Default (all levels)</strong>' : escapeHtml(label)}</span>
         <input type="number" min="0" max="100" data-f="pa" value="${w?.pa ?? ''}" placeholder="${isDefault ? '' : weights.default.pa}">
         <input type="number" min="0" max="100" data-f="kpi" value="${w?.kpi ?? ''}" placeholder="${isDefault ? '' : weights.default.kpi}">
         <span class="text-meta" data-sum></span>
@@ -217,9 +216,9 @@
       const upd = () => {
         const pa = r.querySelector('[data-f=pa]').value, kpi = r.querySelector('[data-f=kpi]').value;
         const s = r.querySelector('[data-sum]');
-        if(pa === '' && kpi === ''){ s.textContent = r.dataset.key === 'default' ? '' : 'pakai default'; s.style.color = ''; return; }
+        if(pa === '' && kpi === ''){ s.textContent = r.dataset.key === 'default' ? '' : 'uses default'; s.style.color = ''; return; }
         const tot = (Number(pa)||0) + (Number(kpi)||0);
-        s.textContent = tot === 100 ? 'total 100%' : `total ${tot}% — harus 100%`;
+        s.textContent = tot === 100 ? 'total 100%' : `total ${tot}% (must be 100%)`;
         s.style.color = tot === 100 ? 'var(--green)' : 'var(--red)';
       };
       r.querySelectorAll('input').forEach(i => i.addEventListener('input', upd)); upd();
@@ -231,19 +230,19 @@
       const pa = r.querySelector('[data-f=pa]').value, kpi = r.querySelector('[data-f=kpi]').value;
       if(pa === '' && kpi === ''){ if(r.dataset.key === 'default'){ showToast('Bobot default wajib diisi.'); return; } continue; }
       const w = { pa: Number(pa)||0, kpi: Number(kpi)||0 };
-      if(w.pa + w.kpi !== 100){ showToast('Total PA + KPI tiap baris harus 100%.'); return; }
+      if(w.pa + w.kpi !== 100){ showToast('PA + KPI must total 100% on each row.'); return; }
       if(r.dataset.key === 'default') next.default = w; else next.perLevel[r.dataset.key] = w;
     }
     try{
       await setDoc(doc(db, 'settings', 'scoreWeights'), { ...next, updatedAt: serverTimestamp(), updatedBy: currentProfile.email });
       weights = next; weightsFromDb = true; renderWeights();
-      showToast('Bobot tersimpan. Klik "Terapkan Bobot ke Periode Ini" untuk menghitung ulang data yang sudah ada.');
-    } catch(err){ console.error('Gagal simpan bobot:', err.code, err.message); showToast('Gagal simpan: ' + err.message); }
+      showToast('Weights saved. Click "Apply Weights to This Period" to recalculate existing data.');
+    } catch(err){ console.error('Gagal simpan bobot:', err.code, err.message); showToast('Save failed: ' + err.message); }
   });
 
   /* ===== Import Excel ===== */
   const dz = F('excelDropzone'), input = F('excelFileInput');
-  dz.innerHTML = iconSvg('upload', {size:20}) + ' <span>Drag &amp; drop file .xlsx di sini, atau klik untuk pilih</span>';
+  dz.innerHTML = iconSvg('upload', {size:20}) + ' <span>Drag &amp; drop an .xlsx file here, or click to browse</span>';
   dz.addEventListener('click', () => input.click());
   input.addEventListener('change', e => { if(e.target.files[0]) handleFile(e.target.files[0]); input.value = ''; });
   dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
@@ -253,7 +252,7 @@
   const normHead = s => slugify(String(s).split(/\r?\n/)[0].replace(/\(.*?\)/g, ''));
 
   function handleFile(file){
-    if(!competencies.length){ showToast('Kamus kompetensi masih kosong — isi dulu di halaman Kamus Kompetensi.'); return; }
+    if(!competencies.length){ showToast('The competency dictionary is empty. Fill it in first.'); return; }
     const reader = new FileReader();
     reader.onload = (e) => {
       try{
@@ -261,31 +260,31 @@
         const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '', raw: false });
         pending = parseRows(rows);
         renderPreview();
-      } catch(err){ console.error('Gagal baca file performa:', err); showToast('Gagal baca file: ' + err.message); }
+      } catch(err){ console.error('Gagal baca file performa:', err); showToast('Could not read file: ' + err.message); }
     };
     reader.readAsBinaryString(file);
   }
 
   function parseRows(rows){
     const headerIdx = rows.findIndex(r => r.some(h => normHead(h) === 'nik'));
-    if(headerIdx === -1) throw new Error('Kolom NIK tidak ditemukan.');
+    if(headerIdx === -1) throw new Error('NIK column not found.');
     const header = rows[headerIdx].map(normHead);
     const col = name => header.indexOf(name);
     const iNik = col('nik'), iPer = col('periode'), iKpi = col('skor-kpi'), iPa = col('skor-pa'), iFin = col('skor-final');
     const compCols = competencies.map(c => ({ id: c.id, nama: c.nama, i: header.indexOf(slugify(c.nama)) }));
     const missingComps = compCols.filter(c => c.i === -1).map(c => c.nama);
     const warnings = [], records = [];
-    if(iPer === -1) warnings.push('Kolom Periode tidak ada — semua baris akan dilewati.');
-    if(missingComps.length) warnings.push(`Kolom kompetensi tidak ditemukan (skornya dianggap kosong): ${missingComps.join(', ')}.`);
+    if(iPer === -1) warnings.push('No Periode column; all rows will be skipped.');
+    if(missingComps.length) warnings.push(`Competency columns not found (scores treated as empty): ${missingComps.join(', ')}.`);
 
     rows.slice(headerIdx + 1).forEach((r, idx) => {
       const line = headerIdx + idx + 2;
       const nik = String(r[iNik] ?? '').trim();
       if(!nik) return;
       const periode = iPer >= 0 ? normalizePeriode(r[iPer]) : null;
-      if(!periode){ warnings.push(`Baris ${line} (NIK ${nik}): periode kosong/tidak dikenal — dilewati.`); return; }
+      if(!periode){ warnings.push(`Row ${line} (NIK ${nik}): empty/unknown period, skipped.`); return; }
       const emp = employeesByNik[nik];
-      if(!emp){ warnings.push(`Baris ${line}: NIK ${nik} tidak ada di Data Karyawan — dilewati.`); return; }
+      if(!emp){ warnings.push(`Row ${line}: NIK ${nik} not in Employees, skipped.`); return; }
       const kompetensi = {};
       let bad = false;
       const invalid = [];
@@ -296,15 +295,15 @@
         if(isNaN(v) || v < 0 || v > 5){ invalid.push(`${c.nama} "${r[c.i]}"`); return; }
         kompetensi[c.id] = v;
       });
-      if(invalid.length){ warnings.push(`Baris ${line} (${emp.nama}): skor di luar 0–5 — ${invalid.length > 3 ? invalid.slice(0,3).join(', ') + ` dan ${invalid.length - 3} lainnya` : invalid.join(', ')}. Baris dilewati.`); bad = true; }
+      if(invalid.length){ warnings.push(`Row ${line} (${emp.nama}): scores outside 0–5: ${invalid.length > 3 ? invalid.slice(0,3).join(', ') + ` and ${invalid.length - 3} more` : invalid.join(', ')}. Row skipped.`); bad = true; }
       const kpi = iKpi >= 0 ? toNum(r[iKpi]) : null;
       const paImp = iPa >= 0 ? toNum(r[iPa]) : null;
       const finImp = iFin >= 0 ? toNum(r[iFin]) : null;
-      [['KPI', kpi], ['PA', paImp], ['Final', finImp]].forEach(([n, v]) => { if(v !== null && (isNaN(v) || v < 0 || v > 5)){ warnings.push(`Baris ${line} (${emp.nama}): Skor ${n} "${v}" di luar 0–5.`); bad = true; } });
+      [['KPI', kpi], ['PA', paImp], ['Final', finImp]].forEach(([n, v]) => { if(v !== null && (isNaN(v) || v < 0 || v > 5)){ warnings.push(`Row ${line} (${emp.nama}): ${n} score "${v}" outside 0–5.`); bad = true; } });
       if(bad) return;
-      if(!Object.keys(kompetensi).length && paImp === null){ warnings.push(`Baris ${line} (${emp.nama}): tidak ada skor kompetensi maupun Skor PA — dilewati.`); return; }
-      if(!Object.keys(kompetensi).length) warnings.push(`Baris ${line} (${emp.nama}): hanya ada Skor PA, skor per kompetensi kosong — gap tidak bisa dihitung untuk orang ini.`);
-      if(!emp.levelKey) warnings.push(`Baris ${line} (${emp.nama}): level "${emp.level || '-'}" belum terpetakan ke kamus — gap tetap dihitung, tapi indikator yang diharapkan tidak bisa ditampilkan.`);
+      if(!Object.keys(kompetensi).length && paImp === null){ warnings.push(`Row ${line} (${emp.nama}): no competency scores or PA score, skipped.`); return; }
+      if(!Object.keys(kompetensi).length) warnings.push(`Row ${line} (${emp.nama}): PA score only, no competency scores; gaps can't be calculated.`);
+      if(!emp.levelKey) warnings.push(`Row ${line} (${emp.nama}): level "${emp.level || '-'}" not mapped to the dictionary; gaps still calculated, expected indicators not shown.`);
       const vals = Object.values(kompetensi);
       const skorPA = paImp !== null ? paImp : round2(vals.reduce((s, v) => s + v, 0) / vals.length);
       records.push({ nik, periode, kompetensi, skorPA, skorKPI: kpi, skorFinalImport: finImp });
@@ -322,13 +321,13 @@
     const nTimpa = records.filter(r => existing.has(`${r.periode}_${r.nik}`)).length;
     box.style.display = 'block';
     box.innerHTML = `
-      <div style="font-weight:700; margin-bottom:6px;">Pratinjau: ${records.length} penilaian siap disimpan</div>
-      <div class="text-sub">${Object.entries(perPeriode).map(([p, n]) => `${escapeHtml(periodeLabel(p))}: ${n} orang`).join(' · ') || '-'}</div>
-      <div class="text-sub">${records.filter(r => r.skorKPI != null).length} punya KPI, ${records.filter(r => r.skorKPI == null).length} model PA saja. ${nTimpa ? `${nTimpa} menimpa data lama di periode yang sama.` : ''}</div>
-      ${warnings.length ? `<ul class="warn-list">${warnings.slice(0, 60).map(w => `<li>${escapeHtml(w)}</li>`).join('')}${warnings.length > 60 ? `<li>… dan ${warnings.length - 60} lainnya</li>` : ''}</ul>` : ''}
+      <div style="font-weight:700; margin-bottom:6px;">Preview: ${records.length} assessments ready to save</div>
+      <div class="text-sub">${Object.entries(perPeriode).map(([p, n]) => `${escapeHtml(periodeLabel(p))}: ${n} people`).join(' · ') || '-'}</div>
+      <div class="text-sub">${records.filter(r => r.skorKPI != null).length} with KPI, ${records.filter(r => r.skorKPI == null).length} PA only. ${nTimpa ? `${nTimpa} overwrite existing data for the same period.` : ''}</div>
+      ${warnings.length ? `<ul class="warn-list">${warnings.slice(0, 60).map(w => `<li>${escapeHtml(w)}</li>`).join('')}${warnings.length > 60 ? `<li>… and ${warnings.length - 60} more</li>` : ''}</ul>` : ''}
       <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
-        <button class="btn btn-outline btn-sm" id="cancelUploadBtn">Batal</button>
-        <button class="btn btn-primary btn-sm" id="confirmUploadBtn" ${records.length ? '' : 'disabled'}>Simpan ke Database</button>
+        <button class="btn btn-outline btn-sm" id="cancelUploadBtn">Cancel</button>
+        <button class="btn btn-primary btn-sm" id="confirmUploadBtn" ${records.length ? '' : 'disabled'}>Save to Database</button>
       </div>`;
     F('cancelUploadBtn').addEventListener('click', () => { pending = null; box.style.display = 'none'; });
     F('confirmUploadBtn').addEventListener('click', saveImport);
@@ -357,7 +356,7 @@
   }
 
   async function saveImport(){
-    const btn = F('confirmUploadBtn'); btn.disabled = true; btn.textContent = 'Menyimpan...';
+    const btn = F('confirmUploadBtn'); btn.disabled = true; btn.textContent = 'Saving...';
     try{
       const docs = pending.records.map(r => ({ id: `${r.periode}_${r.nik}`, data: buildAssessment(r) }));
       await writeInBatches(docs, (b, d) => b.set(doc(db, 'assessments', d.id), d.data));
@@ -366,22 +365,22 @@
       pending = null; F('previewBox').style.display = 'none';
       await loadAll();
       selectedPeriode = lastPeriode; F('periodeSelect').value = lastPeriode; renderTable();
-      showToast(`${docs.length} penilaian tersimpan. Lanjutkan ke halaman IDP untuk menyusun rencana pengembangan.`);
+      showToast(`${docs.length} assessments saved. Continue to IDP to build development plans.`);
     } catch(err){
       console.error('Gagal simpan assessments:', err.code, err.message);
-      showToast('Gagal simpan: ' + err.message);
-      btn.disabled = false; btn.textContent = 'Simpan ke Database';
+      showToast('Save failed: ' + err.message);
+      btn.disabled = false; btn.textContent = 'Save to Database';
     }
   }
 
   /* ===== Tombol ulang ===== */
   F('reapplyWeightsBtn').addEventListener('click', async () => {
     const list = assessments.filter(a => a.periode === selectedPeriode && a.skorFinalSumber !== 'import');
-    if(!list.length){ showToast('Tidak ada skor final hasil hitung di periode ini.'); return; }
+    if(!list.length){ showToast('No computed final scores in this period.'); return; }
     try{
       await writeInBatches(list, (b, a) => b.set(doc(db, 'assessments', a.id),
         { ...computeFinal({ skorPA: a.skorPA, skorKPI: a.skorKPI, skorFinalImport: null, levelKey: a.levelKey, weights }), updatedAt: serverTimestamp(), updatedBy: currentProfile.email }, { merge: true }));
-      showToast(`Skor final ${list.length} karyawan dihitung ulang.`);
+      showToast(`Final scores recalculated for ${list.length} employees.`);
       await loadAll();
     } catch(err){ console.error('Gagal terapkan bobot:', err.code, err.message); showToast('Gagal: ' + err.message); }
   });
@@ -402,15 +401,15 @@
         nIdp = changedIdp.length;
       } catch(err){ console.error('Gagal perbarui akses IDP:', err.code, err.message); }
       await loadAll();
-      showToast(`Akses atasan diperbarui: ${changed.length} penilaian, ${nIdp} IDP.`);
+      showToast(`Manager access updated: ${changed.length} assessments, ${nIdp} IDPs.`);
     } catch(err){ console.error('Gagal perbarui akses:', err.code, err.message); showToast('Gagal: ' + err.message); }
     btn.disabled = false;
   });
 
   /* ===== Template: berisi daftar karyawan aktif + kolom kompetensi ===== */
-  F('downloadTemplateBtn').innerHTML = iconSvg('file-text', {size:13}) + ' Download Template (isi daftar karyawan)';
+  F('downloadTemplateBtn').innerHTML = iconSvg('file-text', {size:13}) + ' Download Template (with employee list)';
   F('downloadTemplateBtn').addEventListener('click', () => {
-    if(!competencies.length){ showToast('Kamus kompetensi masih kosong.'); return; }
+    if(!competencies.length){ showToast('The competency dictionary is empty.'); return; }
     const header = ['NIK', 'Nama', 'Level', 'Periode', 'Skor KPI', 'Skor PA', 'Skor Final', ...competencies.map(c => c.nama)];
     const body = employees.filter(e => (e.status || 'Aktif') === 'Aktif').sort((a,b) => (a.nama||'').localeCompare(b.nama||''))
       .map(e => [e.nik, e.nama || '', e.level || '', '', '', '', '', ...competencies.map(() => '')]);
@@ -425,15 +424,15 @@
     const gate = F('gate'), shell = F('appShell');
     if(!user){
       gate.style.display = 'block'; shell.style.display = 'none';
-      F('gateTitle').textContent = 'Silakan login';
-      F('gateSub').innerHTML = `<a href="../index.html">Login dulu di sini</a>.`;
+      F('gateTitle').textContent = 'Please sign in';
+      F('gateSub').innerHTML = `<a href="../index.html">Sign in here</a>.`;
       return;
     }
     currentProfile = await ensureUserProfile(user);
     if(currentProfile.role !== 'admin'){
       gate.style.display = 'block'; shell.style.display = 'none';
-      F('gateTitle').textContent = 'Akses ditolak';
-      F('gateSub').textContent = 'Halaman ini cuma buat Admin.';
+      F('gateTitle').textContent = 'Access denied';
+      F('gateSub').textContent = 'This page is for Admins only.';
       return;
     }
     gate.style.display = 'none'; shell.style.display = 'block';

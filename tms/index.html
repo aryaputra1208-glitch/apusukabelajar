@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -20,7 +20,7 @@
 <body>
 
 <div id="gate" class="locked-state">
-  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Memuat...</p>
+  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Loading...</p>
   <p class="text-sub" id="gateSub"></p>
 </div>
 
@@ -28,14 +28,13 @@
   <div class="topbar">
     <div class="sidebar-logo" style="margin:0;">anteraja TMS</div>
     <div class="user-chip">
-      <a href="../index.html" class="btn btn-outline btn-sm" style="margin-right:6px;">Ke LMS</a>
+      <a href="../index.html" class="btn btn-outline btn-sm" style="margin-right:6px;">Go to LMS</a>
       <img class="avatar" id="userAvatar" src="">
       <span id="userName"></span>
     </div>
   </div>
   <div class="wrap">
     <h1 class="text-h1">Talent Management</h1>
-    <p class="text-sub" style="margin-bottom:20px;">Kompetensi, performa, dan rencana pengembangan karyawan. Belajar modul tetap di <a href="../index.html" style="color:var(--pink);">LMS</a>.</p>
     <div id="sections"></div>
   </div>
 </div>
@@ -57,8 +56,8 @@
 
   onAuth(async (user) => {
     if(!user){
-      F('gateTitle').textContent = 'Silakan login';
-      F('gateSub').innerHTML = `<a href="../index.html">Login dulu di LMS</a>, lalu buka TMS lagi.`;
+      F('gateTitle').textContent = 'Please sign in';
+      F('gateSub').innerHTML = `<a href="../index.html">Sign in to the LMS first</a>, then reopen TMS.`;
       return;
     }
     const profile = await ensureUserProfile(user);
@@ -71,28 +70,28 @@
 
     let html = '';
     if(isAdmin){
-      html += section('Pengembangan Karyawan', [
-        { href: 'profile.html', icon: 'user-check', title: 'Profil Kompetensi', desc: 'Diharapkan vs aktual, gap, status pengembangan' },
-        { href: 'idp.html', icon: 'check', title: 'IDP', desc: 'Susun rencana: training, mentoring, coaching, penugasan' },
+      html += section('Employee Development', [
+        { href: 'profile.html', icon: 'user-check', title: 'Competency Profile', desc: 'Expected vs actual, gaps, progress' },
+        { href: 'idp.html', icon: 'check', title: 'IDP', desc: 'Plan training, mentoring, coaching, assignments' },
       ]);
-      html += section('Data Master (HR/OD)', [
-        { href: 'employees.html', icon: 'users', title: 'Data Karyawan', desc: 'NIK, level, atasan & email' },
-        { href: 'competencies.html', icon: 'layout-grid', title: 'Kamus Kompetensi', desc: 'Indikator perilaku per level jabatan' },
-        { href: 'performance.html', icon: 'chart-bar', title: 'Data Performa', desc: 'Import skor PA & KPI per periode' },
+      html += section('Master Data (HR/OD)', [
+        { href: 'employees.html', icon: 'users', title: 'Employees', desc: 'NIK, level, manager & email' },
+        { href: 'competencies.html', icon: 'layout-grid', title: 'Competency Dictionary', desc: 'Behavioral indicators by job level' },
+        { href: 'performance.html', icon: 'chart-bar', title: 'Performance Data', desc: 'Import PA & KPI scores by period' },
       ]);
     } else if(isViewer){
-      html += section('Tim Anda', [
-        { href: 'profile.html', icon: 'user-check', title: 'Profil Kompetensi Tim', desc: 'Gap, IDP & perkembangan anggota tim' },
+      html += section('Your Team', [
+        { href: 'profile.html', icon: 'user-check', title: 'Team Competency Profile', desc: 'Gaps, IDPs & team progress' },
       ]);
     }
     if(hasIdp){
-      html += section('Untuk Anda', [
-        { href: 'my-idp.html', icon: 'file-text', title: 'IDP Saya', desc: 'Rencana pengembangan Anda' },
+      html += section('For You', [
+        { href: 'my-idp.html', icon: 'file-text', title: 'My IDP', desc: 'Your development plan' },
       ]);
     }
     if(!html){
-      F('gateTitle').textContent = 'Belum ada yang bisa ditampilkan';
-      F('gateSub').innerHTML = `Akun Anda belum punya IDP atau akses tim di TMS. <a href="../index.html">Kembali ke LMS</a>.`;
+      F('gateTitle').textContent = 'Nothing to show yet';
+      F('gateSub').innerHTML = `Your account has no IDP or team access in TMS yet. <a href="../index.html">Back to LMS</a>.`;
       return;
     }
     F('gate').style.display = 'none'; F('appShell').style.display = 'block';

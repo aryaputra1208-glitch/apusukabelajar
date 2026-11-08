@@ -6,13 +6,13 @@
 export const LEVEL_COLUMNS = [
   { key: 'STAFF',  label: 'Staff' },
   { key: 'COORD',  label: 'Coordinator' },
-  { key: 'SPV_M',  label: 'Supervisor (Memiliki Bawahan)' },
-  { key: 'SPV_I',  label: 'Supervisor (Tanpa Bawahan)' },
-  { key: 'SH_M',   label: 'Section Head (Memiliki Bawahan)' },
-  { key: 'SH_I',   label: 'Section Head (Tanpa Bawahan)' },
+  { key: 'SPV_M',  label: 'Supervisor (With Reports)' },
+  { key: 'SPV_I',  label: 'Supervisor (No Reports)' },
+  { key: 'SH_M',   label: 'Section Head (With Reports)' },
+  { key: 'SH_I',   label: 'Section Head (No Reports)' },
   { key: 'DH',     label: 'Department Head' },
   { key: 'AVP',    label: 'AVP' },
-  { key: 'DIVH',   label: 'Division Head (VP dan SVP)' },
+  { key: 'DIVH',   label: 'Division Head (VP & SVP)' },
 ];
 
 export const KATEGORI_ORDER = ['Core', 'Managerial', 'Values'];
@@ -53,7 +53,7 @@ export function levelLabel(key) {
 /** Cocokkan judul kolom Excel ke key level. Return null kalau bukan kolom level. */
 export function matchLevelHeader(header) {
   const h = String(header || '').toLowerCase();
-  const tanpa = h.includes('tanpa');
+  const tanpa = h.includes('tanpa') || h.includes('no report') || h.includes('without');
   if (h.includes('division head') || h.includes('svp')) return 'DIVH';
   if (h.includes('avp')) return 'AVP';
   if (h.includes('department')) return 'DH';
@@ -105,6 +105,13 @@ export function periodeRank(p) {
 }
 
 export function periodeLabel(p) {
+  const m = String(p || '').match(/^(\d{4})(?:-S([12]))?$/);
+  if (!m) return p || '-';
+  return m[2] ? `Semester ${m[2]} ${m[1]}` : `Annual ${m[1]}`;
+}
+
+/** Versi Bahasa Indonesia untuk halaman karyawan (IDP Saya). */
+export function periodeLabelId(p) {
   const m = String(p || '').match(/^(\d{4})(?:-S([12]))?$/);
   if (!m) return p || '-';
   return m[2] ? `Semester ${m[2]} ${m[1]}` : `Tahunan ${m[1]}`;
@@ -253,8 +260,11 @@ export function gapStatuses({ assessment, previous, attempts, modules, standar =
 /* ============================================================
    IDP (Individual Development Plan) — dikelola HR/OD di TMS
    ============================================================ */
-export const IDP_JENIS = { training: 'Training', mentoring: 'Mentoring', coaching: 'Coaching', penugasan: 'Penugasan / Proyek', lainnya: 'Lainnya' };
-export const IDP_STATUS = { rencana: 'Rencana', berjalan: 'Berjalan', selesai: 'Selesai', batal: 'Batal' };
+export const IDP_JENIS = { training: 'Training', mentoring: 'Mentoring', coaching: 'Coaching', penugasan: 'Assignment / Project', lainnya: 'Other' };
+export const IDP_STATUS = { rencana: 'Planned', berjalan: 'In Progress', selesai: 'Done', batal: 'Cancelled' };
+// Label Bahasa Indonesia untuk halaman karyawan (IDP Saya). Key-nya sama — hanya label tampilan.
+export const IDP_JENIS_ID = { training: 'Training', mentoring: 'Mentoring', coaching: 'Coaching', penugasan: 'Penugasan / Proyek', lainnya: 'Lainnya' };
+export const IDP_STATUS_ID = { rencana: 'Rencana', berjalan: 'Berjalan', selesai: 'Selesai', batal: 'Batal' };
 
 /**
  * Status efektif satu item IDP. Item training mengikuti hasil post-test di LMS

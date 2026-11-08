@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -98,23 +98,23 @@
 <body>
 
 <div id="gate" class="locked-state" style="display:none;">
-  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Memuat...</p>
+  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Loading...</p>
   <p class="text-sub" id="gateSub"></p>
 </div>
 
 <div class="app" id="appShell" style="display:none;">
   <div class="sidebar">
     <div class="logo">anteraja <span>Training Dashboard</span></div>
-    <a href="index.html" style="color:var(--pink); text-decoration:none; font-weight:700; font-size:13px; display:flex; align-items:center; gap:6px; margin:10px 0 16px;">← Kembali ke Menu Utama</a>
+    <a href="index.html" style="color:var(--pink); text-decoration:none; font-weight:700; font-size:13px; display:flex; align-items:center; gap:6px; margin:10px 0 16px;">← Back to Main Menu</a>
     <div class="menu-label">MENU</div>
     <div class="menu-item active" data-tab="home"><span id="icHome"></span> Dashboard</div>
-    <div class="menu-label">MODUL</div>
+    <div class="menu-label">MODULES</div>
     <div class="menu-item" data-tab="training"><span id="icTraining"></span> Training</div>
     <div class="menu-item" data-tab="attendance"><span id="icAttendance"></span> Attendance</div>
     <div class="menu-item" data-tab="analytics"><span id="icTrainerpool"></span> Analytics</div>
     <div class="sidebar-info">
-      <div id="lastSync">Memuat data...</div>
-      <div style="margin-top:6px">Set Training baru? Buka <a href="index.html" style="color:var(--pink);">Anteraja LMS</a></div>
+      <div id="lastSync">Loading data...</div>
+      <div style="margin-top:6px">New training? Open <a href="index.html" style="color:var(--pink);">Anteraja LMS</a></div>
     </div>
   </div>
 
@@ -122,7 +122,7 @@
     <div class="topbar">
       <h2 style="font-size:15px;">Training Dashboard</h2>
       <div class="spacer"></div>
-      <span class="badge badge-gray" id="syncPill">Data per —</span>
+      <span class="badge badge-gray" id="syncPill">Data as of —</span>
       <button class="btn btn-outline btn-sm" id="refreshBtn">Refresh Data</button>
       <button class="btn btn-outline btn-sm" id="exportBtn">Export PPTX</button>
       <div class="user-chip"><img class="avatar" id="userAvatar" src=""><span id="userName"></span></div>
@@ -132,8 +132,7 @@
 
       <!-- DASHBOARD HOME -->
       <div class="tab-page active" id="page-home">
-        <h1 class="text-h1">Selamat datang, Tim Training</h1>
-        <div class="subtitle">Ringkasan status Training Dashboard</div>
+        <h1 class="text-h1">Welcome, Training Team</h1>
 
         <div class="module-row">
           <div class="module-card" style="--accent:var(--pink); --accent-bg:var(--pink-bg)">
@@ -144,22 +143,22 @@
             <div class="progress-track"><div class="progress-fill" id="homeTrainingBar" style="width:0%"></div></div>
             <div class="mini-grid">
               <div class="mini-stat"><div class="mini-num" id="homeTotalTraining">-</div><div class="mini-label">Total Training</div></div>
-              <div class="mini-stat"><div class="mini-num" id="homePeserta">-</div><div class="mini-label">Total Peserta</div></div>
+              <div class="mini-stat"><div class="mini-num" id="homePeserta">-</div><div class="mini-label">Total Participants</div></div>
             </div>
-            <div class="detail-link" data-goto="training">Lihat Detail Training →</div>
+            <div class="detail-link" data-goto="training">View Training Details →</div>
           </div>
 
           <div class="module-card" style="--accent:var(--pink); --accent-bg:var(--pink-bg)">
             <div class="module-icon" id="modIconTrainer" style="background:var(--pink-bg); color:var(--pink);"></div>
             <div class="module-label">TRAINER POOL</div>
             <div class="big-num" id="homePromosiRate">-</div>
-            <div class="module-sub">Siap naik level</div>
+            <div class="module-sub">Ready to level up</div>
             <div class="progress-track"><div class="progress-fill" id="homeTrainerBar" style="width:0%; background:var(--pink)"></div></div>
             <div class="mini-grid">
               <div class="mini-stat"><div class="mini-num" style="color:var(--pink)" id="homeTotalTrainer">-</div><div class="mini-label">Total Trainer</div></div>
               <div class="mini-stat"><div class="mini-num" style="color:var(--pink)" id="homeSeniorMaster">-</div><div class="mini-label">Senior + Master</div></div>
             </div>
-            <div class="detail-link" style="color:var(--pink)" data-goto="analytics">Lihat Detail Analytics →</div>
+            <div class="detail-link" style="color:var(--pink)" data-goto="analytics">View Analytics Details →</div>
           </div>
 
           <div class="module-card" style="--accent:var(--pink); --accent-bg:var(--pink-bg)">
@@ -169,16 +168,16 @@
             <div class="module-sub">Avg attendance rate</div>
             <div class="progress-track"><div class="progress-fill" id="homeAttBar" style="width:0%; background:var(--pink)"></div></div>
             <div class="mini-grid">
-              <div class="mini-stat"><div class="mini-num" style="color:var(--pink)" id="homeAttTraining">-</div><div class="mini-label">Training Punya Roster</div></div>
-              <div class="mini-stat"><div class="mini-num" style="color:var(--pink)" id="homeAttAttended">-</div><div class="mini-label">Total Hadir</div></div>
+              <div class="mini-stat"><div class="mini-num" style="color:var(--pink)" id="homeAttTraining">-</div><div class="mini-label">Trainings with Roster</div></div>
+              <div class="mini-stat"><div class="mini-num" style="color:var(--pink)" id="homeAttAttended">-</div><div class="mini-label">Total Attended</div></div>
             </div>
-            <div class="detail-link" style="color:var(--pink)" data-goto="attendance">Lihat Detail Attendance →</div>
+            <div class="detail-link" style="color:var(--pink)" data-goto="attendance">View Attendance Details →</div>
           </div>
         </div>
 
         <div class="panel" style="padding:18px 20px;">
           <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-            <h3 class="text-h2">Kalender training <span id="calYearHome" style="color:var(--text-3); font-weight:500;"></span></h3>
+            <h3 class="text-h2">Training Calendar <span id="calYearHome" style="color:var(--text-3); font-weight:500;"></span></h3>
             <div style="display:flex; gap:14px; font-size:11px; color:var(--text-2);">
               <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:4px;"></span>Done</span>
               <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--blue);margin-right:4px;"></span>Planned</span>
@@ -192,29 +191,28 @@
       <!-- TRAINING TAB -->
       <div class="tab-page" id="page-training">
         <h1 class="text-h1">Training (Offline)</h1>
-        <div class="subtitle">Read-only — untuk bikin/edit training, buka <a href="index.html" style="color:var(--pink);">Anteraja LMS</a></div>
 
         <div class="kpi-row">
-          <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">TOTAL TRAINING</div><div class="kpi-value2" id="kpiTotalTraining">-</div><div class="kpi-sub">Tahun berjalan</div></div>
+          <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">TOTAL TRAINING</div><div class="kpi-value2" id="kpiTotalTraining">-</div><div class="kpi-sub">Year to date</div></div>
           <div class="kpi-card2" style="--accent:var(--green)"><div class="kpi-label2">COMPLETION RATE</div><div class="kpi-value2" id="kpiCompletionRate">-</div><div class="kpi-sub">Done / (Total - Rejected)</div></div>
-          <div class="kpi-card2" style="--accent:var(--amber)"><div class="kpi-label2">OUTSTANDING BULAN INI</div><div class="kpi-value2" id="kpiOutMonth">-</div><div class="kpi-sub">Lewat tanggal, belum ada post-test</div></div>
-          <div class="kpi-card2" style="--accent:var(--red)"><div class="kpi-label2">OUTSTANDING TAHUN INI</div><div class="kpi-value2" id="kpiOutYear">-</div><div class="kpi-sub">Semua bulan</div></div>
+          <div class="kpi-card2" style="--accent:var(--amber)"><div class="kpi-label2">OUTSTANDING THIS MONTH</div><div class="kpi-value2" id="kpiOutMonth">-</div><div class="kpi-sub">Past date, no post-test yet</div></div>
+          <div class="kpi-card2" style="--accent:var(--red)"><div class="kpi-label2">OUTSTANDING THIS YEAR</div><div class="kpi-value2" id="kpiOutYear">-</div><div class="kpi-sub">All months</div></div>
         </div>
 
         <div class="panel" style="margin-bottom:20px; padding:18px 20px;">
           <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-            <h3 class="text-h2">Kalender training <span id="calYear" style="color:var(--text-3); font-weight:500;"></span></h3>
+            <h3 class="text-h2">Training Calendar <span id="calYear" style="color:var(--text-3); font-weight:500;"></span></h3>
           </div>
           <div id="calGrid" style="display:grid; grid-template-columns:repeat(6,1fr); gap:8px;"></div>
         </div>
 
         <div class="panel">
-          <div class="panel-head"><h3>Daftar Training</h3></div>
+          <div class="panel-head"><h3>Trainings</h3></div>
           <div style="overflow-x:auto">
           <table class="data-table">
             <thead><tr>
-              <th>Judul</th><th>Kategori</th><th>Tanggal</th><th>Divisi</th>
-              <th>Trainer</th><th>Peserta</th><th>Avg Post-Test</th><th>Status</th>
+              <th>Title</th><th>Category</th><th>Date</th><th>Division</th>
+              <th>Trainer</th><th>Participants</th><th>Avg Post-Test</th><th>Status</th>
             </tr></thead>
             <tbody id="trainingTableBody"></tbody>
           </table>
@@ -226,20 +224,19 @@
       <!-- ATTENDANCE TAB -->
       <div class="tab-page" id="page-attendance">
         <h1 class="text-h1">Attendance</h1>
-        <div class="subtitle">Tingkat kehadiran per training — roster vs yang submit post-test</div>
 
         <div class="kpi-row">
-          <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">AVG ATTENDANCE RATE</div><div class="kpi-value2" id="kpiAttRate">-</div><div class="kpi-sub">Rata-rata semua training</div></div>
-          <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">TRAINING PUNYA ROSTER</div><div class="kpi-value2" id="kpiAttTrainingCount">-</div><div class="kpi-sub">Sudah diisi daftar peserta</div></div>
-          <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">TOTAL TERDAFTAR</div><div class="kpi-value2" id="kpiAttRosterTotal">-</div><div class="kpi-sub">Semua training</div></div>
-          <div class="kpi-card2" style="--accent:var(--green)"><div class="kpi-label2">TOTAL HADIR</div><div class="kpi-value2" id="kpiAttAttendedTotal">-</div><div class="kpi-sub">Submit post-test</div></div>
+          <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">AVG ATTENDANCE RATE</div><div class="kpi-value2" id="kpiAttRate">-</div><div class="kpi-sub">Average across trainings</div></div>
+          <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">TRAININGS WITH ROSTER</div><div class="kpi-value2" id="kpiAttTrainingCount">-</div><div class="kpi-sub">Participant list filled</div></div>
+          <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">TOTAL REGISTERED</div><div class="kpi-value2" id="kpiAttRosterTotal">-</div><div class="kpi-sub">All trainings</div></div>
+          <div class="kpi-card2" style="--accent:var(--green)"><div class="kpi-label2">TOTAL ATTENDED</div><div class="kpi-value2" id="kpiAttAttendedTotal">-</div><div class="kpi-sub">Submitted post-test</div></div>
         </div>
 
         <div class="panel">
           <div class="panel-head"><h3>Attendance per Training</h3></div>
           <div style="overflow-x:auto">
           <table class="data-table">
-            <thead><tr><th>Judul</th><th>Tanggal</th><th>Terdaftar</th><th>Hadir</th><th>Attendance Rate</th></tr></thead>
+            <thead><tr><th>Title</th><th>Date</th><th>Registered</th><th>Attended</th><th>Attendance Rate</th></tr></thead>
             <tbody id="attendanceTableBody"></tbody>
           </table>
           </div>
@@ -250,7 +247,6 @@
       <!-- ANALYTICS TAB (Trainer Pool + Course Analytics) -->
       <div class="tab-page" id="page-analytics">
         <h1 class="text-h1">Analytics</h1>
-        <div class="subtitle">Trainer Pool (training offline), Course Analytics (course online), dan Trainee Analytics (rekam jejak per trainee)</div>
 
         <div class="tabs" style="margin-bottom:20px;">
           <div class="tab-btn active" data-subtab="trainerpool" id="subtabTrainerpool">Trainer Pool</div>
@@ -260,34 +256,34 @@
 
         <div id="subpage-trainerpool">
         <div class="kpi-row">
-          <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">TOTAL TRAINER</div><div class="kpi-value2" id="kpiTotalTrainer">-</div><div class="kpi-sub">Semua level</div></div>
-          <div class="kpi-card2" style="--accent:var(--green)"><div class="kpi-label2">SIAP NAIK LEVEL</div><div class="kpi-value2" id="kpiPromosi">-</div><div class="kpi-sub">Eligible &gt; level sekarang</div></div>
-          <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">SENIOR + MASTER</div><div class="kpi-value2" id="kpiSeniorMaster">-</div><div class="kpi-sub">Trainer level atas</div></div>
-          <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">NEW COMER</div><div class="kpi-value2" id="kpiNewComer">-</div><div class="kpi-sub">Baru mulai</div></div>
+          <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">TOTAL TRAINER</div><div class="kpi-value2" id="kpiTotalTrainer">-</div><div class="kpi-sub">All levels</div></div>
+          <div class="kpi-card2" style="--accent:var(--green)"><div class="kpi-label2">READY TO LEVEL UP</div><div class="kpi-value2" id="kpiPromosi">-</div><div class="kpi-sub">Eligible &gt; current level</div></div>
+          <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">SENIOR + MASTER</div><div class="kpi-value2" id="kpiSeniorMaster">-</div><div class="kpi-sub">Top-level trainers</div></div>
+          <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">NEW COMER</div><div class="kpi-value2" id="kpiNewComer">-</div><div class="kpi-sub">Just started</div></div>
         </div>
 
         <div class="card" style="margin-bottom:20px;">
           <div style="display:flex; align-items:center; justify-content:space-between;">
             <div>
               <h2 class="text-h2" style="margin-bottom:4px;">Recalculate Score</h2>
-              <p class="text-sub">Hitung ulang Trainer Score sekarang juga — cuma menghitung training offline (formal), course online tidak masuk formula ini.</p>
+              <p class="text-sub">Offline (formal) trainings only.</p>
             </div>
-            <button class="btn btn-primary" id="recalcBtn">Recalculate Sekarang</button>
+            <button class="btn btn-primary" id="recalcBtn">Recalculate Now</button>
           </div>
         </div>
 
         <div class="card" style="margin-bottom:20px; display:flex; align-items:center; justify-content:space-between;">
-          <p class="text-sub" style="margin:0;">Mau tambah trainer baru atau assign Level Saat Ini? Itu sekarang di halaman terpisah, bukan di sini (dashboard ini read-only analitik).</p>
-          <a href="admin-trainer.html" class="btn btn-outline" style="text-decoration:none; white-space:nowrap; margin-left:12px;">Kelola Trainer →</a>
+          <p class="text-sub" style="margin:0;">Add trainers or assign levels in Manage Trainers.</p>
+          <a href="admin-trainer.html" class="btn btn-outline" style="text-decoration:none; white-space:nowrap; margin-left:12px;">Manage Trainers →</a>
         </div>
 
         <div class="panel">
-          <div class="panel-head"><h3>Daftar Trainer</h3></div>
+          <div class="panel-head"><h3>Trainers</h3></div>
           <div style="overflow-x:auto">
           <table class="data-table">
             <thead><tr>
-              <th>Nama</th><th>NIK</th><th>Email</th><th>Level Saat Ini</th>
-              <th>Semester Terakhir</th><th>Total Score</th><th>Eligible</th>
+              <th>Name</th><th>NIK</th><th>Email</th><th>Current Level</th>
+              <th>Last Semester</th><th>Total Score</th><th>Eligible</th>
             </tr></thead>
             <tbody id="trainerTableBody"></tbody>
           </table>
@@ -299,15 +295,15 @@
         <div id="subpage-courses" style="display:none">
           <div class="kpi-row">
             <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">TOTAL COURSE ONLINE</div><div class="kpi-value2" id="kpiTotalCourse">-</div><div class="kpi-sub">Status published</div></div>
-            <div class="kpi-card2" style="--accent:var(--green)"><div class="kpi-label2">AVG COMPLETION RATE</div><div class="kpi-value2" id="kpiCourseCompletion">-</div><div class="kpi-sub">Rata-rata semua course</div></div>
-            <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">TOTAL PESERTA</div><div class="kpi-value2" id="kpiCourseTotalPeserta">-</div><div class="kpi-sub">Semua course</div></div>
-            <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">AVG POST-TEST</div><div class="kpi-value2" id="kpiCourseAvgScore">-</div><div class="kpi-sub">Semua peserta</div></div>
+            <div class="kpi-card2" style="--accent:var(--green)"><div class="kpi-label2">AVG COMPLETION RATE</div><div class="kpi-value2" id="kpiCourseCompletion">-</div><div class="kpi-sub">Average across courses</div></div>
+            <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">TOTAL PARTICIPANTS</div><div class="kpi-value2" id="kpiCourseTotalPeserta">-</div><div class="kpi-sub">All courses</div></div>
+            <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">AVG POST-TEST</div><div class="kpi-value2" id="kpiCourseAvgScore">-</div><div class="kpi-sub">All participants</div></div>
           </div>
           <div class="panel">
-            <div class="panel-head"><h3>Daftar Course Online</h3></div>
+            <div class="panel-head"><h3>Online Courses</h3></div>
             <div style="overflow-x:auto">
             <table class="data-table">
-              <thead><tr><th>Judul</th><th>Kategori</th><th>Trainer</th><th>Peserta</th><th>Avg Post-Test</th></tr></thead>
+              <thead><tr><th>Title</th><th>Category</th><th>Trainer</th><th>Participants</th><th>Avg Post-Test</th></tr></thead>
               <tbody id="courseTableBody"></tbody>
             </table>
             </div>
@@ -317,28 +313,28 @@
 
         <div id="subpage-trainees" style="display:none">
           <div class="ta-filters">
-            <div class="ta-field"><label for="taDiv">DIVISI</label>
-              <select id="taDiv"><option value="">Semua Divisi</option></select></div>
-            <div class="ta-field"><label for="taDept">DEPARTEMEN</label>
-              <select id="taDept"><option value="">Semua Departemen</option></select></div>
-            <div class="ta-field grow"><label for="taSearch">CARI NIK / NAMA</label>
-              <input id="taSearch" type="text" placeholder="Ketik NIK atau nama"></div>
+            <div class="ta-field"><label for="taDiv">DIVISION</label>
+              <select id="taDiv"><option value="">All Divisions</option></select></div>
+            <div class="ta-field"><label for="taDept">DEPARTMENT</label>
+              <select id="taDept"><option value="">All Departments</option></select></div>
+            <div class="ta-field grow"><label for="taSearch">SEARCH NIK / NAME</label>
+              <input id="taSearch" type="text" placeholder="Type NIK or name"></div>
             <button class="btn btn-outline" id="taReset">Reset Filter</button>
           </div>
 
           <div class="kpi-row">
-            <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">TOTAL TRAINEE</div><div class="kpi-value2" id="kpiTaTrainee">-</div><div class="kpi-sub">Sesuai filter</div></div>
-            <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">TRAINING DIIKUTI</div><div class="kpi-value2" id="kpiTaTraining">-</div><div class="kpi-sub">Total keikutsertaan</div></div>
+            <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">TOTAL TRAINEE</div><div class="kpi-value2" id="kpiTaTrainee">-</div><div class="kpi-sub">Matching filter</div></div>
+            <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">TRAININGS ATTENDED</div><div class="kpi-value2" id="kpiTaTraining">-</div><div class="kpi-sub">Total participations</div></div>
             <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">AVG POST-TEST</div><div class="kpi-value2" id="kpiTaAvg">-</div><div class="kpi-sub" id="kpiTaPass">-</div></div>
-            <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">AVG TRAINING / ORANG</div><div class="kpi-value2" id="kpiTaPer">-</div><div class="kpi-sub">Online + offline</div></div>
+            <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">AVG TRAININGS / PERSON</div><div class="kpi-value2" id="kpiTaPer">-</div><div class="kpi-sub">Online + offline</div></div>
           </div>
 
           <div class="panel">
-            <div class="panel-head"><h3>Daftar Trainee</h3><span class="text-meta" id="taRowCount"></span></div>
+            <div class="panel-head"><h3>Trainees</h3><span class="text-meta" id="taRowCount"></span></div>
             <div style="overflow-x:auto">
             <table class="data-table">
               <thead><tr>
-                <th>Nama</th><th>NIK</th><th>Divisi / Departemen</th><th>Training</th><th>Avg Post-Test</th><th>Training Terakhir</th><th>Level</th>
+                <th>Name</th><th>NIK</th><th>Division / Department</th><th>Training</th><th>Avg Post-Test</th><th>Last Training</th><th>Level</th>
               </tr></thead>
               <tbody id="taTableBody"></tbody>
             </table>
@@ -395,7 +391,7 @@
   let state = { trainings:[], sessions:[], roster:[], attendance:[], attempts:[], trainers:[], today:new Date(), coursesLoaded:false };
 
   async function loadAll(){
-    document.getElementById('lastSync').textContent = 'Memuat data...';
+    document.getElementById('lastSync').textContent = 'Loading data...';
     try{
       const modSnap = await getDocs(query(collection(db, 'modules'), where('mode', '==', 'offline')));
       const trainings = []; modSnap.forEach(d => trainings.push({ id: d.id, ...d.data() }));
@@ -433,12 +429,12 @@
       });
 
       state.today = new Date();
-      const now = state.today.toLocaleString('id-ID');
+      const now = state.today.toLocaleString('en-GB');
       document.getElementById('lastSync').textContent = 'Live • ' + now;
-      document.getElementById('syncPill').textContent = 'Data per ' + now;
+      document.getElementById('syncPill').textContent = 'Data as of ' + now;
     } catch(err){
-      document.getElementById('lastSync').textContent = 'Gagal memuat: ' + err.message;
-      showToast('Gagal memuat data: ' + err.message);
+      document.getElementById('lastSync').textContent = 'Load failed: ' + err.message;
+      showToast('Failed to load data: ' + err.message);
     }
     renderHome(); renderTraining(); renderAttendance(); renderTrainerPool();
   }
@@ -529,12 +525,12 @@
         <td><span class="badge ${statusBadgeCls(status)}">${status}</span></td>
       </tr>`).join('');
     document.getElementById('trainingEmpty').style.display = enriched.length ? 'none' : 'block';
-    document.getElementById('trainingEmpty').innerHTML = iconSvg('inbox',{size:24}) + '<p style="margin-top:8px;">Belum ada data training offline.</p>';
+    document.getElementById('trainingEmpty').innerHTML = iconSvg('inbox',{size:24}) + '<p style="margin-top:8px;">No offline training data yet.</p>';
     renderCalendar(thisYearRows, thisYear, 'calYear', 'calGrid');
   }
 
   function renderCalendar(rows, year, yearElId, gridElId){
-    const MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     document.getElementById(yearElId).textContent = year;
     const byMonth = Array.from({length:12}, () => ({Done:0,Planned:0,Outstanding:0,Cancelled:0}));
     rows.forEach(r => { const m = new Date(r.t.tanggalMulai).getMonth(); if(!isNaN(m)) byMonth[m][r.status] = (byMonth[m][r.status]||0)+1; });
@@ -560,7 +556,7 @@
         <td>${meta.rosterCount}</td><td>${meta.attendedCount}</td>
         <td>${Math.round(meta.attendedCount/meta.rosterCount*100)}%</td></tr>`).join('');
     document.getElementById('attendanceEmpty').style.display = rows.length ? 'none' : 'block';
-    document.getElementById('attendanceEmpty').innerHTML = iconSvg('inbox',{size:24}) + '<p style="margin-top:8px;">Belum ada training dengan roster peserta.</p>';
+    document.getElementById('attendanceEmpty').innerHTML = iconSvg('inbox',{size:24}) + '<p style="margin-top:8px;">No trainings with a participant roster yet.</p>';
   }
 
   function levelBadgeCls(level){
@@ -583,7 +579,7 @@
   async function loadCourseAnalytics(){
     state.coursesLoaded = true;
     const tbody = document.getElementById('courseTableBody');
-    tbody.innerHTML = `<tr><td colspan="5" class="text-meta">Memuat...</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="text-meta">Loading...</td></tr>`;
     try{
       const modSnap = await getDocs(query(collection(db, 'modules'), where('mode', '==', 'online'), where('status', '==', 'published')));
       const courses = []; modSnap.forEach(d => courses.push({ id: d.id, ...d.data() }));
@@ -610,10 +606,10 @@
           <td>${c.kategori||'-'}</td><td>${c.createdByName||'-'}</td>
           <td>${pesertaCount}</td><td>${avg ?? '-'}</td></tr>`).join('');
       document.getElementById('courseEmpty').style.display = rows.length ? 'none' : 'block';
-      document.getElementById('courseEmpty').innerHTML = iconSvg('inbox',{size:24}) + '<p style="margin-top:8px;">Belum ada course online yang published.</p>';
+      document.getElementById('courseEmpty').innerHTML = iconSvg('inbox',{size:24}) + '<p style="margin-top:8px;">No published online courses yet.</p>';
     } catch(err){
       tbody.innerHTML = '';
-      showToast('Gagal memuat course analytics: ' + err.message);
+      showToast('Failed to load course analytics: ' + err.message);
     }
   }
 
@@ -630,7 +626,7 @@
     const d = new Date(String(v).length === 10 ? v + 'T00:00:00' : v);
     return isNaN(d) ? null : d;
   };
-  const taFmtDate = d => d ? d.toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'}) : '-';
+  const taFmtDate = d => d ? d.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}) : '-';
   const taAvg = a => a.length ? a.reduce((s,v)=>s+v,0)/a.length : null;
   const taScoreBadge = v => v == null ? '<span class="badge badge-gray">—</span>'
     : `<span class="badge ${v>=85?'badge-green':v>=TA_PASS?'badge-amber':'badge-red'}">${Math.round(v)}</span>`;
@@ -659,7 +655,7 @@
   async function loadTraineeAnalytics(){
     state.traineesLoaded = true;
     const tbody = document.getElementById('taTableBody');
-    tbody.innerHTML = `<tr><td colspan="7" class="text-meta">Memuat data trainee...</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="text-meta">Loading trainee data...</td></tr>`;
     try{
       const [modules, attempts, roster, attendance, sessions, users, approved] = await Promise.all([
         taGetAll('modules'), taGetAll('attempts'), taGetAll('roster'), taGetAll('attendanceLog'),
@@ -734,7 +730,7 @@
             ? sess.filter(s => r.hadirSesi.has(String(s.sesiKe))).reduce((s,x) => s + (Number(x.durasiJam)||0), 0)
             : (latest ? (Number(mod.durasiMenit)||0)/60 : 0);
           return {
-            moduleId: r.moduleId, judul: mod.judul || '(training dihapus)', kategori: mod.kategori || '-',
+            moduleId: r.moduleId, judul: mod.judul || '(training deleted)', kategori: mod.kategori || '-',
             mode: offline ? 'Offline' : 'Online',
             tanggal: offline ? taToDate(mod.tanggalMulai) : taToDate(latest?.submittedAt),
             score: latest ? (latest.score ?? null) : null, hasAttempt: !!latest,
@@ -759,14 +755,14 @@
       // Dropdown divisi (gabung beda huruf besar/kecil)
       const divMap = {};
       taPeople.forEach(p => { const k = taNorm(p.divisi); if(k && !divMap[k]) divMap[k] = p.divisi; });
-      document.getElementById('taDiv').innerHTML = '<option value="">Semua Divisi</option>' +
+      document.getElementById('taDiv').innerHTML = '<option value="">All Divisions</option>' +
         Object.keys(divMap).sort().map(k => `<option value="${taEsc(k)}">${taEsc(divMap[k])}</option>`).join('');
       taFillDept();
       renderTraineeAnalytics();
     } catch(err){
       state.traineesLoaded = false;
-      tbody.innerHTML = `<tr><td colspan="7" class="text-meta">Gagal memuat: ${taEsc(err.message)}</td></tr>`;
-      showToast('Gagal memuat trainee analytics: ' + err.message);
+      tbody.innerHTML = `<tr><td colspan="7" class="text-meta">Load failed: ${taEsc(err.message)}</td></tr>`;
+      showToast('Failed to load trainee analytics: ' + err.message);
     }
   }
 
@@ -774,7 +770,7 @@
     const d = document.getElementById('taDiv').value;
     const depMap = {};
     taPeople.filter(p => !d || taNorm(p.divisi) === d).forEach(p => { const k = taNorm(p.departemen); if(k && !depMap[k]) depMap[k] = p.departemen; });
-    document.getElementById('taDept').innerHTML = '<option value="">Semua Departemen</option>' +
+    document.getElementById('taDept').innerHTML = '<option value="">All Departments</option>' +
       Object.keys(depMap).sort().map(k => `<option value="${taEsc(k)}">${taEsc(depMap[k])}</option>`).join('');
   }
 
@@ -793,21 +789,21 @@
     document.getElementById('kpiTaTrainee').textContent = list.length;
     document.getElementById('kpiTaTraining').textContent = parts;
     document.getElementById('kpiTaAvg').textContent = a == null ? '-' : Math.round(a);
-    document.getElementById('kpiTaPass').textContent = allScores.length ? `${Math.round(allScores.filter(v=>v>=TA_PASS).length/allScores.length*100)}% lulus (≥${TA_PASS})` : 'Belum ada skor';
+    document.getElementById('kpiTaPass').textContent = allScores.length ? `${Math.round(allScores.filter(v=>v>=TA_PASS).length/allScores.length*100)}% passed (≥${TA_PASS})` : 'No scores yet';
     document.getElementById('kpiTaPer').textContent = list.length ? (parts/list.length).toFixed(1) : '-';
     document.getElementById('taRowCount').textContent = `${list.length} trainee`;
 
     const tbody = document.getElementById('taTableBody');
-    if(!list.length){ tbody.innerHTML = `<tr><td colspan="7" class="text-meta" style="text-align:center; padding:32px;">Tidak ada trainee yang cocok dengan filter.</td></tr>`; return; }
+    if(!list.length){ tbody.innerHTML = `<tr><td colspan="7" class="text-meta" style="text-align:center; padding:32px;">No trainees match the filter.</td></tr>`; return; }
     tbody.innerHTML = list.map(p => {
       const last = p.rows[0];
       return `<tr>
         <td><button class="name-link" data-key="${taEsc(p.key)}">${taEsc(p.nama || p.email || p.nik)}</button><div class="ta-sub">${taEsc(p.jabatan || '-')}</div></td>
-        <td>${p.nik ? taEsc(p.nik) : `<span class="text-meta" title="${taEsc(p.email)}">Akun LMS</span>`}</td>
+        <td>${p.nik ? taEsc(p.nik) : `<span class="text-meta" title="${taEsc(p.email)}">LMS account</span>`}</td>
         <td>${taEsc(p.divisi || '-')}<div class="ta-sub">${taEsc(p.departemen || '-')}</div></td>
         <td><strong>${p.rows.length}</strong></td>
         <td>${taScoreBadge(p.avg)}</td>
-        <td>${last ? `${taEsc(last.judul)}<div class="ta-sub">${taFmtDate(last.tanggal)}</div>` : '<span class="ta-sub">Belum pernah</span>'}</td>
+        <td>${last ? `${taEsc(last.judul)}<div class="ta-sub">${taFmtDate(last.tanggal)}</div>` : '<span class="ta-sub">Never</span>'}</td>
         <td><span class="badge" style="background:var(--pink-bg); color:var(--pink-dark);">${p.level.name}</span></td>
       </tr>`;
     }).join('');
@@ -824,19 +820,19 @@
 
     document.getElementById('taModal').innerHTML = `
       <div class="ta-head">
-        <button class="ta-close" aria-label="Tutup" id="taClose">×</button>
+        <button class="ta-close" aria-label="Close" id="taClose">×</button>
         <div class="ta-name">${taEsc(p.nama || p.email || p.nik)}</div>
         <div class="ta-meta">${idLine}</div>
-        <div class="ta-level">Level ${lv.idx+1} — ${lv.name} · ${lv.pts} poin</div>
+        <div class="ta-level">Level ${lv.idx+1} — ${lv.name} · ${lv.pts} pts</div>
         <div class="ta-lvl-track"><div class="ta-lvl-fill" style="width:${lv.pct}%"></div></div>
-        <div class="ta-lvl-note">${lv.next ? `${(lv.next[1]-lv.pts).toFixed(1)} poin lagi menuju ${lv.next[0]}` : 'Level tertinggi tercapai'} · level dihitung dari course online (sama dengan beranda trainee)</div>
+        <div class="ta-lvl-note">${lv.next ? `${(lv.next[1]-lv.pts).toFixed(1)} more pts to ${lv.next[0]}` : 'Top level reached'} · level based on online courses</div>
       </div>
       <div class="ta-body">
         <div class="ta-stats">
-          <div class="ta-stat"><div class="ta-stat-num">${p.rows.length}</div><div class="ta-stat-label">Training Diikuti</div></div>
+          <div class="ta-stat"><div class="ta-stat-num">${p.rows.length}</div><div class="ta-stat-label">Trainings Attended</div></div>
           <div class="ta-stat"><div class="ta-stat-num">${p.avg == null ? '-' : Math.round(p.avg)}</div><div class="ta-stat-label">Avg Post-Test</div></div>
-          <div class="ta-stat"><div class="ta-stat-num">${jam || '-'}</div><div class="ta-stat-label">Total Jam Training</div></div>
-          <div class="ta-stat"><div class="ta-stat-num">${p.totalSesi ? Math.round(p.hadir/p.totalSesi*100) + '%' : '-'}</div><div class="ta-stat-label">Kehadiran Offline${p.totalSesi ? ` (${p.hadir}/${p.totalSesi} sesi)` : ''}</div></div>
+          <div class="ta-stat"><div class="ta-stat-num">${jam || '-'}</div><div class="ta-stat-label">Total Training Hours</div></div>
+          <div class="ta-stat"><div class="ta-stat-num">${p.totalSesi ? Math.round(p.hadir/p.totalSesi*100) + '%' : '-'}</div><div class="ta-stat-label">Offline Attendance${p.totalSesi ? ` (${p.hadir}/${p.totalSesi} sessions)` : ''}</div></div>
         </div>
         ${p.rows.length ? `
         <div class="ta-split">
@@ -846,34 +842,34 @@
               <div class="ta-mode on"><div class="n">${on}</div><div class="l">Online</div></div>
               <div class="ta-mode off"><div class="n">${off}</div><div class="l">Offline</div></div>
             </div>
-            <div class="ta-sub" style="margin-top:12px;">Kategori terbanyak: <strong>${taEsc(topKat[0])}</strong> (${topKat[1]} training)</div>
+            <div class="ta-sub" style="margin-top:12px;">Top category: <strong>${taEsc(topKat[0])}</strong> (${topKat[1]} trainings)</div>
           </div>
           <div class="ta-box">
-            <h4>SKOR POST-TEST PER TRAINING</h4>
+            <h4>POST-TEST SCORE PER TRAINING</h4>
             ${p.rows.filter(r => r.score != null).map(r => `
               <div class="ta-bar-row">
                 <span class="ta-bar-label" title="${taEsc(r.judul)}">${taEsc(r.judul)}</span>
                 <div class="ta-bar-track"><div class="ta-bar-fill" style="width:${Math.max(0,Math.min(100,r.score))}%; background:${taBarColor(r.score)}"></div><div class="ta-bar-pass"></div></div>
                 <span class="ta-bar-val">${Math.round(r.score)}</span>
-              </div>`).join('') || '<div class="ta-sub">Belum ada skor post-test.</div>'}
-            <div class="text-meta" style="margin-top:6px;">Garis abu-abu = batas lulus ${TA_PASS}</div>
+              </div>`).join('') || '<div class="ta-sub">No post-test scores yet.</div>'}
+            <div class="text-meta" style="margin-top:6px;">Gray line = pass mark ${TA_PASS}</div>
           </div>
         </div>
         <div class="ta-box" style="padding:0; overflow:hidden;">
-          <div style="padding:14px 16px 0;"><h4>RIWAYAT TRAINING</h4></div>
+          <div style="padding:14px 16px 0;"><h4>TRAINING HISTORY</h4></div>
           <div style="overflow-x:auto"><table class="data-table">
-            <thead><tr><th>Training</th><th>Mode</th><th>Kategori</th><th>Tanggal</th><th>Skor</th><th>Status</th></tr></thead>
+            <thead><tr><th>Training</th><th>Mode</th><th>Category</th><th>Date</th><th>Score</th><th>Status</th></tr></thead>
             <tbody>${p.rows.map(r => {
-              const st = !r.hasAttempt ? '<span class="badge badge-gray">Belum post-test</span>'
-                : r.score == null ? '<span class="badge badge-blue">Selesai</span>'
-                : r.score >= TA_PASS ? '<span class="badge badge-green">Lulus</span>' : '<span class="badge badge-red">Belum lulus</span>';
+              const st = !r.hasAttempt ? '<span class="badge badge-gray">No post-test yet</span>'
+                : r.score == null ? '<span class="badge badge-blue">Completed</span>'
+                : r.score >= TA_PASS ? '<span class="badge badge-green">Passed</span>' : '<span class="badge badge-red">Not passed</span>';
               return `<tr>
-                <td><strong>${taEsc(r.judul)}</strong>${r.mode === 'Offline' && r.totalSesi ? `<div class="ta-sub">Hadir ${r.hadir}/${r.totalSesi} sesi</div>` : ''}</td>
+                <td><strong>${taEsc(r.judul)}</strong>${r.mode === 'Offline' && r.totalSesi ? `<div class="ta-sub">Attended ${r.hadir}/${r.totalSesi} sessions</div>` : ''}</td>
                 <td><span class="badge ${r.mode === 'Online' ? 'badge-blue' : ''}" ${r.mode === 'Offline' ? 'style="background:var(--pink-bg); color:var(--pink-dark);"' : ''}>${r.mode}</span></td>
                 <td>${taEsc(r.kategori)}</td><td>${taFmtDate(r.tanggal)}</td><td>${taScoreBadge(r.score)}</td><td>${st}</td></tr>`;
             }).join('')}</tbody>
           </table></div>
-        </div>` : `<div class="ta-box" style="text-align:center; color:var(--text-2); padding:32px;">Trainee ini belum mengikuti training apa pun.</div>`}
+        </div>` : `<div class="ta-box" style="text-align:center; color:var(--text-2); padding:32px;">This trainee has not attended any training yet.</div>`}
       </div>`;
     document.getElementById('taOverlay').classList.add('open');
     document.getElementById('taClose').onclick = closeTraineeModal;
@@ -907,20 +903,20 @@
       </tr>`;
     }).join('');
     document.getElementById('trainerEmpty').style.display = rows.length ? 'none' : 'block';
-    document.getElementById('trainerEmpty').innerHTML = iconSvg('inbox',{size:24}) + '<p style="margin-top:8px;">Belum ada data trainer.</p>';
+    document.getElementById('trainerEmpty').innerHTML = iconSvg('inbox',{size:24}) + '<p style="margin-top:8px;">No trainer data yet.</p>';
   }
 
   document.getElementById('recalcBtn').addEventListener('click', async () => {
     const btn = document.getElementById('recalcBtn');
-    btn.disabled = true; btn.textContent = 'Menghitung...';
+    btn.disabled = true; btn.textContent = 'Calculating...';
     try{
       const functions = getFunctions(getApps()[0]);
       const recalc = httpsCallable(functions, 'recalculateTrainerScoresNow');
       const result = await recalc();
-      showToast(`Selesai — ${result.data.updated} baris di-update.`);
+      showToast(`Done: ${result.data.updated} rows updated.`);
       await loadAll();
     } catch(err){
-      showToast('Gagal recalculate: ' + err.message);
+      showToast('Recalculate failed: ' + err.message);
     } finally {
       btn.disabled = false; btn.textContent = 'Recalculate Sekarang';
     }
@@ -944,25 +940,25 @@
   /* ===== Export PPTX (ringkas — Dashboard + Training + Attendance + Trainer Pool) ===== */
   const PINK='E6007A', PINK_BG='FCE7F1', BLUE='2563EB', BLUE_BG='DBEAFE', GREEN='16A34A', DARK='1A1A1A', GRAY='6B6B6B', BORDER='ECEAE3';
   document.getElementById('exportBtn').addEventListener('click', () => {
-    if(typeof PptxGenJS === 'undefined'){ showToast('Library PPTX gagal dimuat.'); return; }
+    if(typeof PptxGenJS === 'undefined'){ showToast('PPTX library failed to load.'); return; }
     const pptx = new PptxGenJS();
     pptx.defineLayout({ name:'WIDE', width:10, height:5.63 }); pptx.layout = 'WIDE';
     const s0 = pptx.addSlide(); s0.background = { color: PINK };
     s0.addShape('roundRect', { x:0.6, y:1.55, w:8.8, h:2.55, fill:{color:'FFFFFF'}, rectRadius:0.12, line:{type:'none'} });
     s0.addText('anteraja', { x:0.6, y:1.85, w:8.8, h:0.6, fontSize:30, bold:true, color:PINK, align:'center', fontFace:'Arial' });
     s0.addText('Training Dashboard Report', { x:0.6, y:2.5, w:8.8, h:0.55, fontSize:19, bold:true, color:DARK, align:'center', fontFace:'Arial' });
-    s0.addText('Dibuat ' + new Date().toLocaleString('id-ID'), { x:0.6, y:3.15, w:8.8, h:0.4, fontSize:11, color:GRAY, align:'center', fontFace:'Arial' });
+    s0.addText('Generated ' + new Date().toLocaleString('en-GB'), { x:0.6, y:3.15, w:8.8, h:0.4, fontSize:11, color:GRAY, align:'center', fontFace:'Arial' });
 
     const s1 = pptx.addSlide(); s1.background = { color:'FFFFFF' };
     s1.addShape('rect', { x:0, y:0, w:10, h:1.15, fill:{color:PINK} });
     s1.addText('Training', { x:0.5, y:0.18, w:9, h:0.55, fontSize:24, bold:true, color:'FFFFFF', fontFace:'Arial' });
     const hs = computeHomeStats();
     s1.addTable([[
-      {text:'Metrik', options:{bold:true, color:'FFFFFF', fill:{color:PINK}, fontSize:10}},
-      {text:'Nilai', options:{bold:true, color:'FFFFFF', fill:{color:PINK}, fontSize:10}},
+      {text:'Metric', options:{bold:true, color:'FFFFFF', fill:{color:PINK}, fontSize:10}},
+      {text:'Value', options:{bold:true, color:'FFFFFF', fill:{color:PINK}, fontSize:10}},
     ], ...[
       ['Total Training', hs.totalTraining], ['Completion Rate', hs.completionRate+'%'],
-      ['Total Peserta', hs.totalPeserta], ['Total Trainer', hs.totalTrainer],
+      ['Total Participants', hs.totalPeserta], ['Total Trainer', hs.totalTrainer],
       ['Avg Attendance Rate', hs.attRate+'%'],
     ].map(r => r.map(c => ({text:String(c), options:{fontSize:11, color:DARK}})))],
       { x:0.5, y:1.5, w:6, colW:[3,3], fontFace:'Arial', border:{type:'solid', color:BORDER, pt:0.5} });
@@ -975,15 +971,15 @@
     const shell = document.getElementById('appShell');
     if(!user){
       gate.style.display = 'block'; shell.style.display = 'none';
-      document.getElementById('gateTitle').textContent = 'Silakan login';
-      document.getElementById('gateSub').innerHTML = `<a href="index.html">Login dulu di sini</a>.`;
+      document.getElementById('gateTitle').textContent = 'Please sign in';
+      document.getElementById('gateSub').innerHTML = `<a href="index.html">Sign in here</a>.`;
       return;
     }
     const profile = await ensureUserProfile(user);
     if(profile.role !== 'admin'){
       gate.style.display = 'block'; shell.style.display = 'none';
-      document.getElementById('gateTitle').textContent = 'Akses ditolak';
-      document.getElementById('gateSub').textContent = 'Halaman ini cuma buat Admin (Tim Training).';
+      document.getElementById('gateTitle').textContent = 'Access denied';
+      document.getElementById('gateSub').textContent = 'This page is for Admins (Training Team) only.';
       return;
     }
     gate.style.display = 'none'; shell.style.display = 'flex';

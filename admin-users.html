@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kelola User — Anteraja LMS</title>
+<title>Manage Users — Anteraja LMS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./lms-design-system.css?v=20261105b">
@@ -28,7 +28,7 @@
 <body>
 
 <div id="gate" class="locked-state" style="display:none;">
-  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Memuat...</p>
+  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Loading...</p>
   <p class="text-sub" id="gateSub"></p>
 </div>
 
@@ -36,7 +36,7 @@
   <div class="topbar">
     <div style="display:flex; align-items:center; gap:16px;">
       <a href="index.html" class="sidebar-logo" style="margin:0; text-decoration:none;">anteraja LMS</a>
-      <a href="index.html" class="text-sub" style="text-decoration:none; display:flex; align-items:center; gap:4px;">← Menu Utama</a>
+      <a href="index.html" class="text-sub" style="text-decoration:none; display:flex; align-items:center; gap:4px;">← Main Menu</a>
     </div>
     <div class="user-chip">
       <img class="avatar" id="userAvatar" src="">
@@ -45,15 +45,14 @@
   </div>
 
   <div class="wrap">
-    <h1 class="text-h1">Kelola User</h1>
-    <p class="text-sub" style="margin-bottom:20px;">Daftar orang yang boleh login ke LMS, lengkap dengan Divisi &amp; Level mereka. Bisa ditambah kapan saja — email baru, domain apa saja (@anteraja.id, @gmail, dll).</p>
+    <h1 class="text-h1">Manage Users</h1>
 
     <div class="card" style="margin-bottom:16px;">
-      <h2 class="text-h2" style="margin-bottom:6px;">Tambah 1 Orang</h2>
+      <h2 class="text-h2" style="margin-bottom:6px;">Add One Person</h2>
       <div class="add-row" style="grid-template-columns: 1.4fr 1.4fr 1fr 1fr 1fr auto;">
-        <div><label>Nama</label><input type="text" id="addNama" placeholder="Nama lengkap"></div>
-        <div><label>Email</label><input type="text" id="addEmail" placeholder="nama@domain.com"></div>
-        <div><label>Divisi</label><input type="text" id="addDivisi" placeholder="mis. OPERATION"></div>
+        <div><label>Name</label><input type="text" id="addNama" placeholder="Full name"></div>
+        <div><label>Email</label><input type="text" id="addEmail" placeholder="name@domain.com"></div>
+        <div><label>Division</label><input type="text" id="addDivisi" placeholder="e.g. OPERATION"></div>
         <div><label>Level</label><select id="addLevel"></select></div>
         <div><label>Role</label>
           <select id="addRole">
@@ -62,28 +61,28 @@
             <option value="admin">Admin</option>
           </select>
         </div>
-        <button class="btn btn-primary" id="addOneBtn" style="margin-bottom:14px;">Tambah</button>
+        <button class="btn btn-primary" id="addOneBtn" style="margin-bottom:14px;">Add</button>
       </div>
     </div>
 
     <div class="card" style="margin-bottom:20px;">
-      <h2 class="text-h2" style="margin-bottom:6px;">Tambah Banyak via Excel</h2>
-      <p class="text-sub" style="margin-bottom:12px;">Upload file .xlsx dengan kolom header: <strong>Nama, Email, Divisi, Level</strong>, dan opsional <strong>Role</strong> (isi: admin/trainer/trainee — kosong = trainee). Bisa upload berkali-kali — data lama tidak hilang, cuma ditambah/di-update (dicocokkan by email).</p>
+      <h2 class="text-h2" style="margin-bottom:6px;">Bulk Add via Excel</h2>
+      <p class="text-sub" style="margin-bottom:12px;">Columns: <strong>Nama, Email, Divisi, Level</strong>, optional <strong>Role</strong> (admin/trainer/trainee; blank = trainee). Re-uploads update by email.</p>
       <div class="dropzone" id="excelDropzone"></div>
       <input type="file" id="excelFileInput" accept=".xlsx,.xls" style="display:none">
       <div id="bulkResult" class="text-meta" style="margin-top:10px;"></div>
     </div>
 
     <div class="tabs">
-      <div class="tab-btn active" data-tab="all" id="tabAll">Semua Terdaftar</div>
-      <div class="tab-btn" data-tab="active" id="tabActive">Sudah Pernah Login</div>
-      <div class="tab-btn" data-tab="pending" id="tabPending">Belum Pernah Login</div>
+      <div class="tab-btn active" data-tab="all" id="tabAll">All Registered</div>
+      <div class="tab-btn" data-tab="active" id="tabActive">Signed In</div>
+      <div class="tab-btn" data-tab="pending" id="tabPending">Never Signed In</div>
     </div>
-    <input type="text" id="searchBox" class="search-box" placeholder="Cari nama/email...">
+    <input type="text" id="searchBox" class="search-box" placeholder="Search name/email...">
 
     <div class="panel">
       <div class="u-row" style="background:var(--surface-2); font-size:11px; color:var(--text-3); font-weight:700;">
-        <span>NAMA</span><span>STATUS</span><span>DIVISI</span><span>LEVEL</span><span>ROLE</span><span></span>
+        <span>NAME</span><span>STATUS</span><span>DIVISION</span><span>LEVEL</span><span>ROLE</span><span></span>
       </div>
       <div id="userList"></div>
     </div>
@@ -99,7 +98,7 @@
   import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const LEVEL_OPTIONS = ['','Admin','Leader','Coordinator','Staff','Supervisor','Section Head','Department Head','AVP','VP','SVP'];
-  document.getElementById('addLevel').innerHTML = LEVEL_OPTIONS.map(l => `<option value="${l}">${l||'- Pilih -'}</option>`).join('');
+  document.getElementById('addLevel').innerHTML = LEVEL_OPTIONS.map(l => `<option value="${l}">${l||'- Select -'}</option>`).join('');
 
   // Gabungan 2 sumber: approved_users (pra-daftar) + users (yang sudah login).
   // 1 baris per email; kalau sudah login, datanya diambil dari users/{uid} (lebih akurat, ada nama Google asli).
@@ -153,7 +152,7 @@
     if(!rows.length){
       el.innerHTML = '';
       empty.style.display = 'block';
-      empty.innerHTML = iconSvg('inbox',{size:24}) + `<p style="margin-top:8px;">Tidak ada data.</p>`;
+      empty.innerHTML = iconSvg('inbox',{size:24}) + `<p style="margin-top:8px;">No data.</p>`;
       return;
     }
     empty.style.display = 'none';
@@ -163,21 +162,21 @@
         <div class="u-name">
           <div class="avatar-sm" style="background:var(--pink-bg); color:var(--pink-dark);">${initials(u.nama)}</div>
           <div>
-            <div style="font-weight:600;">${u.nama || '(belum ada nama)'}</div>
+            <div style="font-weight:600;">${u.nama || '(no name yet)'}</div>
             <div class="text-meta">${u.email}</div>
           </div>
         </div>
-        ${u.active ? `<span class="badge badge-green">Aktif</span>` : `<span class="badge badge-amber">Belum login</span>`}
-        <input type="text" data-field="divisi" value="${u.divisi.replace(/"/g,'&quot;')}" placeholder="mis. OPERATION">
+        ${u.active ? `<span class="badge badge-green">Active</span>` : `<span class="badge badge-amber">Not signed in</span>`}
+        <input type="text" data-field="divisi" value="${u.divisi.replace(/"/g,'&quot;')}" placeholder="e.g. OPERATION">
         <select data-field="level">
-          ${LEVEL_OPTIONS.map(l => `<option value="${l}" ${u.level===l?'selected':''}>${l||'- Belum diisi -'}</option>`).join('')}
+          ${LEVEL_OPTIONS.map(l => `<option value="${l}" ${u.level===l?'selected':''}>${l||'- Not set -'}</option>`).join('')}
         </select>
         <select data-field="role">
           <option value="trainee" ${u.role==='trainee'?'selected':''}>Trainee</option>
           <option value="trainer" ${u.role==='trainer'?'selected':''}>Trainer</option>
           <option value="admin" ${u.role==='admin'?'selected':''}>Admin</option>
         </select>
-        <button class="icon-btn tone-pink" data-action="save" title="Simpan"></button>
+        <button class="icon-btn tone-pink" data-action="save" title="Save"></button>
       </div>`).join('');
 
     el.querySelectorAll('[data-action="save"]').forEach(btn => {
@@ -218,10 +217,10 @@
         await updateDoc(doc(db, 'users', existing.uid), { divisi, level, role });
       }
       if(existing){ existing.divisi = divisi; existing.level = level; existing.role = role; }
-      showToast('Tersimpan.');
+      showToast('Saved.');
       render();
     } catch(err){
-      showToast('Gagal simpan: ' + err.message);
+      showToast('Save failed: ' + err.message);
     }
   }
 
@@ -240,7 +239,7 @@
     const divisi = document.getElementById('addDivisi').value.trim();
     const level = document.getElementById('addLevel').value;
     const role = document.getElementById('addRole').value;
-    if(!email){ showToast('Email wajib diisi.'); return; }
+    if(!email){ showToast('Email is required.'); return; }
     await saveOne(email, divisi, level, nama, role);
     if(!merged.find(u => u.email === email)) merged.push({ email, nama, divisi, level, role, active:false, uid:null });
     document.getElementById('addNama').value = '';
@@ -254,7 +253,7 @@
   /* ===== Tambah banyak via Excel ===== */
   const excelDz = document.getElementById('excelDropzone');
   const excelInput = document.getElementById('excelFileInput');
-  excelDz.innerHTML = iconSvg('upload', {size:20}) + ' <span>Drag &amp; drop file .xlsx di sini, atau klik untuk pilih</span>';
+  excelDz.innerHTML = iconSvg('upload', {size:20}) + ' <span>Drag &amp; drop an .xlsx file here, or click to browse</span>';
   excelDz.addEventListener('click', () => excelInput.click());
   excelInput.addEventListener('change', e => { if(e.target.files[0]) handleExcelFile(e.target.files[0]); });
   excelDz.addEventListener('dragover', e => { e.preventDefault(); excelDz.classList.add('drag-over'); });
@@ -286,11 +285,11 @@
           count++;
         }
         document.getElementById('bulkResult').textContent =
-          `${count} orang ditambah/di-update.` + (skipped ? ` ${skipped} baris di-skip (email kosong).` : '');
+          `${count} people added/updated.` + (skipped ? ` ${skipped} rows skipped (empty email).` : '');
         render();
-        showToast(`${count} orang ditambah/di-update dari Excel.`);
+        showToast(`${count} people added/updated from Excel.`);
       } catch(err){
-        showToast('Gagal baca file: ' + err.message);
+        showToast('Could not read file: ' + err.message);
       }
     };
     reader.readAsBinaryString(file);
@@ -301,15 +300,15 @@
     const shell = document.getElementById('appShell');
     if(!user){
       gate.style.display = 'block'; shell.style.display = 'none';
-      document.getElementById('gateTitle').textContent = 'Silakan login';
-      document.getElementById('gateSub').innerHTML = `<a href="index.html">Login dulu di sini</a>.`;
+      document.getElementById('gateTitle').textContent = 'Please sign in';
+      document.getElementById('gateSub').innerHTML = `<a href="index.html">Sign in here</a>.`;
       return;
     }
     const profile = await ensureUserProfile(user);
     if(profile.role !== 'admin'){
       gate.style.display = 'block'; shell.style.display = 'none';
-      document.getElementById('gateTitle').textContent = 'Akses ditolak';
-      document.getElementById('gateSub').textContent = 'Halaman ini cuma buat Admin.';
+      document.getElementById('gateTitle').textContent = 'Access denied';
+      document.getElementById('gateSub').textContent = 'This page is for Admins only.';
       return;
     }
     gate.style.display = 'none'; shell.style.display = 'block';
@@ -318,7 +317,7 @@
     loadAll();
   });
 </script>
-<script type="module" src="./admin-shell.js?v=20261103"></script>
+<script type="module" src="./admin-shell.js?v=20261108"></script>
 <script src="./lms-motion.js?v=20261108" defer></script>
 </body>
 </html>

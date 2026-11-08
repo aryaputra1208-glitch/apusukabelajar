@@ -56,7 +56,7 @@
 <script type="module">
   import { db, onAuth, ensureUserProfile } from '../firebase-shared.js';
   import { iconSvg } from '../lms-icons.js';
-  import { escapeHtml, periodeRank, periodeLabel, IDP_JENIS, IDP_STATUS, idpItemStatus } from '../competency-shared.js?v=20261023c';
+  import { escapeHtml, periodeRank, periodeLabelId as periodeLabel, IDP_JENIS_ID as IDP_JENIS, IDP_STATUS_ID as IDP_STATUS, idpItemStatus } from '../competency-shared.js?v=20261108';
   import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const F = id => document.getElementById(id);

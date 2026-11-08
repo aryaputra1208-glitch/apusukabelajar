@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Daftar Training — Anteraja LMS</title>
+<title>All Trainings — Anteraja LMS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./lms-design-system.css?v=20261105b">
@@ -20,7 +20,7 @@
 <body>
 
 <div id="gate" class="locked-state" style="display:none;">
-  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Memuat...</p>
+  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Loading...</p>
   <p class="text-sub" id="gateSub"></p>
 </div>
 
@@ -28,7 +28,7 @@
   <div class="topbar">
     <div style="display:flex; align-items:center; gap:16px;">
       <a href="index.html" class="sidebar-logo" style="margin:0; text-decoration:none;">anteraja LMS</a>
-      <a href="index.html" class="text-sub" style="text-decoration:none; display:flex; align-items:center; gap:4px;">← Menu Utama</a>
+      <a href="index.html" class="text-sub" style="text-decoration:none; display:flex; align-items:center; gap:4px;">← Main Menu</a>
     </div>
     <div class="user-chip">
       <img class="avatar" id="userAvatar" src="">
@@ -37,20 +37,19 @@
   </div>
 
   <div class="wrap" style="max-width:1000px;">
-    <h1 class="text-h1">Daftar Training</h1>
-    <p class="text-sub" style="margin-bottom:20px;">Semua training (online & offline) dari semua trainer.</p>
+    <h1 class="text-h1">All Trainings</h1>
 
     <div class="tabs">
-      <div class="tab-btn active" data-mode="all">Semua</div>
+      <div class="tab-btn active" data-mode="all">All</div>
       <div class="tab-btn" data-mode="online">Online</div>
       <div class="tab-btn" data-mode="offline">Offline</div>
     </div>
-    <input type="text" id="searchBox" class="search-box" placeholder="Cari judul training...">
+    <input type="text" id="searchBox" class="search-box" placeholder="Search training title...">
 
     <div class="panel">
       <table class="data-table">
         <thead><tr>
-          <th>Judul</th><th>Mode</th><th>Kategori</th><th>Trainer</th><th>Status</th><th>Aksi</th>
+          <th>Title</th><th>Mode</th><th>Category</th><th>Trainer</th><th>Status</th><th>Actions</th>
         </tr></thead>
         <tbody id="tableBody"></tbody>
       </table>
@@ -78,7 +77,7 @@
   }
   function statusBadge(s){
     const map = { draft:'badge-gray', pending_approval:'badge-amber', published:'badge-green', rejected:'badge-red' };
-    const label = { draft:'Draft', pending_approval:'Menunggu', published:'Published', rejected:'Ditolak' };
+    const label = { draft:'Draft', pending_approval:'Pending', published:'Published', rejected:'Rejected' };
     return `<span class="badge ${map[s]||'badge-gray'}">${label[s]||s}</span>`;
   }
 
@@ -92,7 +91,7 @@
     if(!rows.length){
       body.innerHTML = '';
       empty.style.display = 'block';
-      empty.innerHTML = iconSvg('inbox',{size:24}) + `<p style="margin-top:8px;">Tidak ada training.</p>`;
+      empty.innerHTML = iconSvg('inbox',{size:24}) + `<p style="margin-top:8px;">No trainings found.</p>`;
       return;
     }
     empty.style.display = 'none';
@@ -107,7 +106,7 @@
         <td>
           <div style="display:flex; gap:6px;">
             <a class="icon-btn row-action ra-gray" href="trainer-create-module.html?edit=${m.id}" title="Edit">${iconSvg('settings',{size:14})}</a>
-            ${m.mode==='offline' ? `<button class="icon-btn row-action ${m.postTestOpen?'ra-green':'ra-gray'}" data-id="${m.id}" data-open="${!m.postTestOpen}" data-action="toggle-posttest" title="${m.postTestOpen?'Post-Test terbuka — klik untuk tutup':'Buka Post-Test'}">${iconSvg(m.postTestOpen?'lock-open':'lock',{size:14})}</button>` : ''}
+            ${m.mode==='offline' ? `<button class="icon-btn row-action ${m.postTestOpen?'ra-green':'ra-gray'}" data-id="${m.id}" data-open="${!m.postTestOpen}" data-action="toggle-posttest" title="${m.postTestOpen?'Post-test open — click to close':'Open Post-Test'}">${iconSvg(m.postTestOpen?'lock-open':'lock',{size:14})}</button>` : ''}
             ${m.mode==='offline' ? `<button class="icon-btn row-action ra-blue" data-id="${m.id}" data-judul="${(m.judul||'').replace(/"/g,'&quot;')}" data-action="copy-link" title="Copy Link Form">${iconSvg('link',{size:14})}</button>` : ''}
           </div>
         </td>
@@ -117,20 +116,20 @@
       btn.addEventListener('click', async () => {
         try{
           await updateDoc(doc(db, 'modules', btn.dataset.id), { postTestOpen: btn.dataset.open === 'true' });
-          showToast('Status Post-Test diubah.');
+          showToast('Post-test status updated.');
           const m = allModules.find(x => x.id === btn.dataset.id);
           if(m) m.postTestOpen = btn.dataset.open === 'true';
           render();
-        } catch(err){ showToast('Gagal ubah: ' + err.message); }
+        } catch(err){ showToast('Update failed: ' + err.message); }
       });
     });
 
     body.querySelectorAll('[data-action="copy-link"]').forEach(btn => {
       btn.addEventListener('click', () => {
-        const base = FORMS_BASE_URL || '[FORMS_BASE_URL belum di-setup]';
+        const base = FORMS_BASE_URL || '[FORMS_BASE_URL not set up]';
         const link = `${base}?training=${btn.dataset.id}`;
-        navigator.clipboard.writeText(link).then(() => showToast('Link disalin: ' + link)).catch(() => {
-          prompt('Copy link ini manual:', link);
+        navigator.clipboard.writeText(link).then(() => showToast('Link copied: ' + link)).catch(() => {
+          prompt('Copy this link manually:', link);
         });
       });
     });
@@ -149,15 +148,15 @@
     const shell = document.getElementById('appShell');
     if(!user){
       gate.style.display = 'block'; shell.style.display = 'none';
-      document.getElementById('gateTitle').textContent = 'Silakan login';
-      document.getElementById('gateSub').innerHTML = `<a href="index.html">Login dulu di sini</a>.`;
+      document.getElementById('gateTitle').textContent = 'Please sign in';
+      document.getElementById('gateSub').innerHTML = `<a href="index.html">Sign in here</a>.`;
       return;
     }
     const profile = await ensureUserProfile(user);
     if(profile.role !== 'admin'){
       gate.style.display = 'block'; shell.style.display = 'none';
-      document.getElementById('gateTitle').textContent = 'Akses ditolak';
-      document.getElementById('gateSub').textContent = 'Halaman ini cuma buat Admin.';
+      document.getElementById('gateTitle').textContent = 'Access denied';
+      document.getElementById('gateSub').textContent = 'This page is for Admins only.';
       return;
     }
     gate.style.display = 'none'; shell.style.display = 'block';
@@ -170,7 +169,7 @@
     render();
   });
 </script>
-<script type="module" src="./admin-shell.js?v=20261103"></script>
+<script type="module" src="./admin-shell.js?v=20261108"></script>
 <script src="./lms-motion.js?v=20261108" defer></script>
 </body>
 </html>

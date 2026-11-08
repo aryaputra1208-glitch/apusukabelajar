@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kamus Kompetensi — Anteraja LMS</title>
+<title>Competency Dictionary — Anteraja LMS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../lms-design-system.css?v=20261105b">
@@ -48,7 +48,7 @@
 <body>
 
 <div id="gate" class="locked-state" style="display:none;">
-  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Memuat...</p>
+  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Loading...</p>
   <p class="text-sub" id="gateSub"></p>
 </div>
 
@@ -56,32 +56,31 @@
   <div class="topbar">
     <div style="display:flex; align-items:center; gap:16px;">
       <a href="index.html" class="sidebar-logo" style="margin:0; text-decoration:none;">anteraja TMS</a>
-      <a href="index.html" class="text-sub" style="text-decoration:none; display:flex; align-items:center; gap:4px;">← Menu TMS</a>
+      <a href="index.html" class="text-sub" style="text-decoration:none; display:flex; align-items:center; gap:4px;">← TMS Menu</a>
     </div>
     <div class="user-chip">
-      <a href="../index.html" class="btn btn-outline btn-sm" style="margin-right:6px;">Ke LMS</a>
+      <a href="../index.html" class="btn btn-outline btn-sm" style="margin-right:6px;">Go to LMS</a>
       <img class="avatar" id="userAvatar" src="">
       <span id="userName"></span>
     </div>
   </div>
 
   <div class="wrap wide">
-    <h1 class="text-h1">Kamus Kompetensi</h1>
-    <p class="text-sub" style="margin-bottom:20px;">Daftar kompetensi beserta indikator perilaku yang diharapkan di tiap level jabatan. Dipakai untuk menandai modul training dan, nanti, untuk menghitung gap kompetensi per karyawan.</p>
+    <h1 class="text-h1">Competency Dictionary</h1>
 
     <div class="kpi-row">
-      <div class="kpi-card2"><div class="kpi-label2">TOTAL KOMPETENSI</div><div class="kpi-value2" id="kpiTotal">-</div><div class="kpi-sub">Semua kategori</div></div>
-      <div class="kpi-card2"><div class="kpi-label2">CORE</div><div class="kpi-value2" id="kpiCore">-</div><div class="kpi-sub">Berlaku semua karyawan</div></div>
-      <div class="kpi-card2"><div class="kpi-label2">MANAGERIAL</div><div class="kpi-value2" id="kpiManagerial">-</div><div class="kpi-sub">Kepemimpinan per level</div></div>
-      <div class="kpi-card2"><div class="kpi-label2">VALUES (SATRIA)</div><div class="kpi-value2" id="kpiValues">-</div><div class="kpi-sub">Nilai perusahaan</div></div>
+      <div class="kpi-card2"><div class="kpi-label2">TOTAL COMPETENCIES</div><div class="kpi-value2" id="kpiTotal">-</div><div class="kpi-sub">All categories</div></div>
+      <div class="kpi-card2"><div class="kpi-label2">CORE</div><div class="kpi-value2" id="kpiCore">-</div><div class="kpi-sub">Applies to all employees</div></div>
+      <div class="kpi-card2"><div class="kpi-label2">MANAGERIAL</div><div class="kpi-value2" id="kpiManagerial">-</div><div class="kpi-sub">Leadership by level</div></div>
+      <div class="kpi-card2"><div class="kpi-label2">VALUES (SATRIA)</div><div class="kpi-value2" id="kpiValues">-</div><div class="kpi-sub">Company values</div></div>
     </div>
 
     <div class="card" style="margin-bottom:20px;">
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
-        <h2 class="text-h2" style="margin:0;">Upload Kamus via Excel</h2>
+        <h2 class="text-h2" style="margin:0;">Upload Dictionary via Excel</h2>
         <span class="link-add" id="downloadTemplateBtn"></span>
       </div>
-      <p class="text-sub" style="margin-bottom:12px;">Format sama seperti matriks kompetensi PA: kolom pertama berisi nama kompetensi (tulis kategorinya di baris kedua dalam kurung, mis. <strong>(Core)</strong> atau <strong>(Managerial)</strong>; tanpa kurung = Values), kolom berikutnya per level jabatan. Upload ulang akan memperbarui kompetensi dengan nama yang sama — kompetensi lain tidak terhapus.</p>
+      <p class="text-sub" style="margin-bottom:12px;">Same format as the PA competency matrix: first column = competency name with category on a second line, e.g. <strong>(Core)</strong> or <strong>(Managerial)</strong> (none = Values); next columns = job levels. Re-uploads update by name.</p>
       <div class="dropzone" id="excelDropzone"></div>
       <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" style="display:none">
       <div id="previewBox" class="preview-box" style="display:none;"></div>
@@ -89,8 +88,8 @@
 
     <div class="tabs">
       <div class="tab-btn active" data-tab="perLevel">Per Level</div>
-      <div class="tab-btn" data-tab="matrix">Matriks Lengkap</div>
-      <div class="tab-btn" data-tab="scale">Skala Penilaian</div>
+      <div class="tab-btn" data-tab="matrix">Full Matrix</div>
+      <div class="tab-btn" data-tab="scale">Rating Scale</div>
     </div>
 
     <div id="tabPerLevel">
@@ -105,16 +104,16 @@
 
     <div id="tabScale" style="display:none;">
       <div class="card" style="margin-bottom:16px;">
-        <p class="text-sub" style="margin:0;">Standar = skor <strong id="scaleStandar">3</strong>. Gap kompetensi dihitung sebagai <strong>standar − skor aktual</strong> untuk kompetensi yang skornya di bawah standar.</p>
+        <p class="text-sub" style="margin:0;">Standard = score <strong id="scaleStandar">3</strong>. Gap = <strong>standard − actual score</strong>.</p>
         <ul class="warn-list" id="scaleWarnings"></ul>
       </div>
       <div class="panel">
-        <div class="scale-row head-row"><span>SKOR</span><span>LABEL</span><span>RENTANG</span><span>DESKRIPSI &amp; KATA KUNCI</span></div>
+        <div class="scale-row head-row"><span>SCORE</span><span>LABEL</span><span>RANGE</span><span>DESCRIPTION &amp; KEYWORDS</span></div>
         <div id="scaleList"></div>
       </div>
       <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:14px;">
         <span class="text-meta" id="scaleSource" style="align-self:center;"></span>
-        <button class="btn btn-primary" id="saveScaleBtn">Simpan Skala</button>
+        <button class="btn btn-primary" id="saveScaleBtn">Save Scale</button>
       </div>
     </div>
   </div>
@@ -125,7 +124,7 @@
 <script type="module">
   import { db, onAuth, ensureUserProfile } from '../firebase-shared.js';
   import { iconSvg } from '../lms-icons.js';
-  import { LEVEL_COLUMNS, KATEGORI_ORDER, DEFAULT_SCALE, matchLevelHeader, slugify, escapeHtml } from '../competency-shared.js?v=20261023c';
+  import { LEVEL_COLUMNS, KATEGORI_ORDER, DEFAULT_SCALE, matchLevelHeader, slugify, escapeHtml } from '../competency-shared.js?v=20261108';
   import { collection, getDocs, doc, getDoc, setDoc, updateDoc, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   let competencies = [];
@@ -156,7 +155,7 @@
       sortComps(competencies);
     } catch(err){
       console.error('Gagal baca competencies:', err.code, err.message);
-      showToast('Gagal memuat kamus: ' + err.message);
+      showToast('Failed to load dictionary: ' + err.message);
     }
     try{
       const s = await getDoc(doc(db, 'settings', 'competencyScale'));
@@ -190,7 +189,7 @@
     if(!competencies.length){
       list.innerHTML = '';
       empty.style.display = 'block';
-      empty.innerHTML = iconSvg('inbox',{size:24}) + '<p style="margin-top:8px;">Kamus masih kosong. Upload file Excel matriks kompetensi di atas.</p>';
+      empty.innerHTML = iconSvg('inbox',{size:24}) + '<p style="margin-top:8px;">Dictionary is empty. Upload the competency matrix Excel above.</p>';
       return;
     }
     empty.style.display = 'none';
@@ -200,12 +199,12 @@
       const text = c.indikator?.[selectedLevel] || '';
       const nextText = nextCol ? (c.indikator?.[nextCol.key] || '') : '';
       return `<div class="comp-row" data-id="${c.id}">
-        <div class="comp-head"><span class="comp-name">${escapeHtml(c.nama)}</span>${kategoriBadge(c.kategori)}${text ? '' : '<span class="badge badge-red">Indikator kosong</span>'}</div>
+        <div class="comp-head"><span class="comp-name">${escapeHtml(c.nama)}</span>${kategoriBadge(c.kategori)}${text ? '' : '<span class="badge badge-red">No indicator</span>'}</div>
         <div class="comp-edit">
           <textarea rows="2" data-field="indikator">${escapeHtml(text)}</textarea>
-          <button class="icon-btn tone-pink" data-action="save" title="Simpan indikator">${iconSvg('device-floppy',{size:15})}</button>
+          <button class="icon-btn tone-pink" data-action="save" title="Save indicator">${iconSvg('device-floppy',{size:15})}</button>
         </div>
-        ${nextCol && nextText ? `<div class="next-level"><strong>LEVEL DI ATASNYA (${escapeHtml(nextCol.label.toUpperCase())})</strong> — bahan penilaian potensi<br>${escapeHtml(nextText)}</div>` : ''}
+        ${nextCol && nextText ? `<div class="next-level"><strong>NEXT LEVEL (${escapeHtml(nextCol.label.toUpperCase())})</strong> · input for potential assessment<br>${escapeHtml(nextText)}</div>` : ''}
       </div>`;
     }).join('');
     list.querySelectorAll('[data-action="save"]').forEach(btn => btn.addEventListener('click', async () => {
@@ -216,11 +215,11 @@
         await updateDoc(doc(db, 'competencies', id), { [`indikator.${selectedLevel}`]: val, updatedAt: serverTimestamp(), updatedBy: currentProfile.email });
         const c = competencies.find(x => x.id === id);
         c.indikator = { ...(c.indikator||{}), [selectedLevel]: val };
-        showToast('Indikator tersimpan.');
+        showToast('Indicator saved.');
         renderMatrix(); renderPerLevel();
       } catch(err){
         console.error('Gagal simpan indikator:', id, selectedLevel, err.code, err.message);
-        showToast('Gagal simpan: ' + err.message);
+        showToast('Save failed: ' + err.message);
       }
     }));
   }
@@ -234,8 +233,8 @@
   /* ===== Tab: Matriks ===== */
   function renderMatrix(){
     const box = document.getElementById('matrixBox');
-    if(!competencies.length){ box.innerHTML = `<div class="empty-state">${iconSvg('inbox',{size:24})}<p style="margin-top:8px;">Belum ada data.</p></div>`; return; }
-    box.innerHTML = `<table class="matrix"><thead><tr><th>Kompetensi</th>${LEVEL_COLUMNS.map(c => `<th>${escapeHtml(c.label)}</th>`).join('')}</tr></thead><tbody>
+    if(!competencies.length){ box.innerHTML = `<div class="empty-state">${iconSvg('inbox',{size:24})}<p style="margin-top:8px;">No data yet.</p></div>`; return; }
+    box.innerHTML = `<table class="matrix"><thead><tr><th>Competency</th>${LEVEL_COLUMNS.map(c => `<th>${escapeHtml(c.label)}</th>`).join('')}</tr></thead><tbody>
       ${competencies.map(c => `<tr><td>${escapeHtml(c.nama)}<div style="margin-top:6px;">${kategoriBadge(c.kategori)}</div></td>
         ${LEVEL_COLUMNS.map(col => { const t = c.indikator?.[col.key] || ''; return `<td class="${t?'':'empty'}">${escapeHtml(t)}</td>`; }).join('')}</tr>`).join('')}
     </tbody></table>`;
@@ -244,7 +243,7 @@
   /* ===== Tab: Skala ===== */
   function renderScale(){
     document.getElementById('scaleStandar').textContent = scale.standar;
-    document.getElementById('scaleSource').textContent = scaleFromDb ? 'Tersimpan di database.' : 'Belum tersimpan — ini nilai default dari PA kualitatif.';
+    document.getElementById('scaleSource').textContent = scaleFromDb ? 'Saved in database.' : 'Not saved yet; showing PA defaults.';
     document.getElementById('scaleList').innerHTML = scale.skala.map((s,i) => `
       <div class="scale-row" data-i="${i}">
         <strong style="font-size:18px; font-family:var(--font-display); color:var(--pink);">${s.skor}</strong>
@@ -267,8 +266,8 @@
     const warns = [];
     for(let i = 1; i < ranges.length; i++){
       const prev = ranges[i-1], cur = ranges[i];
-      if(cur.min - prev.max > 0.011) warns.push(`Ada celah antara ${prev.label} (s.d. ${prev.max}) dan ${cur.label} (mulai ${cur.min}) — skor rata-rata di antara keduanya tidak masuk kategori mana pun.`);
-      else if(cur.min <= prev.max) warns.push(`Rentang ${prev.label} dan ${cur.label} tumpang tindih di ${cur.min} — skor itu masuk dua kategori.`);
+      if(cur.min - prev.max > 0.011) warns.push(`Gap between ${prev.label} (up to ${prev.max}) and ${cur.label} (from ${cur.min}): scores in between fall into no category.`);
+      else if(cur.min <= prev.max) warns.push(`${prev.label} and ${cur.label} overlap at ${cur.min}: that score falls into two categories.`);
     }
     document.getElementById('scaleWarnings').innerHTML = warns.map(w => `<li>${escapeHtml(w)}</li>`).join('');
   }
@@ -282,10 +281,10 @@
       await setDoc(doc(db, 'settings', 'competencyScale'), { standar: scale.standar, skala: scale.skala, updatedAt: serverTimestamp(), updatedBy: currentProfile.email });
       scaleFromDb = true;
       renderScale();
-      showToast('Skala tersimpan.');
+      showToast('Scale saved.');
     } catch(err){
       console.error('Gagal simpan skala:', err.code, err.message);
-      showToast('Gagal simpan: ' + err.message);
+      showToast('Save failed: ' + err.message);
     }
   });
 
@@ -301,7 +300,7 @@
   /* ===== Upload Excel ===== */
   const dz = document.getElementById('excelDropzone');
   const input = document.getElementById('excelFileInput');
-  dz.innerHTML = iconSvg('upload', {size:20}) + ' <span>Drag &amp; drop file .xlsx di sini, atau klik untuk pilih</span>';
+  dz.innerHTML = iconSvg('upload', {size:20}) + ' <span>Drag &amp; drop an .xlsx file here, or click to browse</span>';
   dz.addEventListener('click', () => input.click());
   input.addEventListener('change', e => { if(e.target.files[0]) handleFile(e.target.files[0]); input.value = ''; });
   dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
@@ -318,7 +317,7 @@
         renderPreview();
       } catch(err){
         console.error('Gagal baca file kamus:', err);
-        showToast('Gagal baca file: ' + err.message);
+        showToast('Could not read file: ' + err.message);
       }
     };
     reader.readAsBinaryString(file);
@@ -327,7 +326,7 @@
   /** Cari baris header (yang punya ≥3 kolom level), lalu baca tiap baris kompetensi di bawahnya. */
   function parseMatrix(rows){
     const headerIdx = rows.findIndex(r => r.filter(h => matchLevelHeader(h)).length >= 3);
-    if(headerIdx === -1) throw new Error('Baris judul kolom level (Staff, Coordinator, dst.) tidak ditemukan.');
+    if(headerIdx === -1) throw new Error('Level header row (Staff, Coordinator, etc.) not found.');
     const header = rows[headerIdx];
     const colMap = {};
     header.forEach((h, i) => { const k = matchLevelHeader(h); if(k && i > 0 && !(k in colMap)) colMap[k] = i; });
@@ -345,11 +344,11 @@
       LEVEL_COLUMNS.forEach(c => {
         const t = c.key in colMap ? String(r[colMap[c.key]] || '').replace(/\s+/g, ' ').trim() : '';
         indikator[c.key] = t;
-        if(!t) warnings.push(`${nama} — ${c.label}: kosong.`);
-        else if(/[,;:]$/.test(t)) warnings.push(`${nama} — ${c.label}: kalimat sepertinya terpotong ("…${t.slice(-40)}").`);
+        if(!t) warnings.push(`${nama} — ${c.label}: empty.`);
+        else if(/[,;:]$/.test(t)) warnings.push(`${nama} — ${c.label}: sentence looks cut off ("…${t.slice(-40)}").`);
         else {
           const m = t.match(/\b(kepada|dengan|untuk|dari|terhadap|bagi)\s*,/i);
-          if(m) warnings.push(`${nama} — ${c.label}: ada kata yang hilang setelah "${m[1]}" ("…${t.slice(Math.max(0, m.index - 30), m.index + m[0].length)}").`);
+          if(m) warnings.push(`${nama} — ${c.label}: word missing after "${m[1]}" ("…${t.slice(Math.max(0, m.index - 30), m.index + m[0].length)}").`);
         }
       });
       items.push({ id: slugify(nama), nama, kategori, indikator, urutan: items.length });
@@ -364,14 +363,14 @@
     const nBaru = items.filter(i => !existingIds.has(i.id)).length;
     box.style.display = 'block';
     box.innerHTML = `
-      <div style="font-weight:700; margin-bottom:6px;">Pratinjau: ${items.length} kompetensi terbaca</div>
+      <div style="font-weight:700; margin-bottom:6px;">Preview: ${items.length} competencies read</div>
       <div class="text-sub">${items.map(i => `${escapeHtml(i.nama)} ${kategoriBadge(i.kategori)}`).join(' &nbsp; ')}</div>
-      <div class="text-meta" style="margin-top:8px;">${nBaru} baru, ${items.length - nBaru} memperbarui yang sudah ada.</div>
-      ${missingCols.length ? `<ul class="warn-list"><li>Kolom level tidak ditemukan: ${missingCols.map(escapeHtml).join(', ')}.</li></ul>` : ''}
+      <div class="text-meta" style="margin-top:8px;">${nBaru} new, ${items.length - nBaru} updates.</div>
+      ${missingCols.length ? `<ul class="warn-list"><li>Level columns not found: ${missingCols.map(escapeHtml).join(', ')}.</li></ul>` : ''}
       ${warnings.length ? `<ul class="warn-list">${warnings.map(w => `<li>${escapeHtml(w)}</li>`).join('')}</ul>` : ''}
       <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
-        <button class="btn btn-outline btn-sm" id="cancelUploadBtn">Batal</button>
-        <button class="btn btn-primary btn-sm" id="confirmUploadBtn" ${items.length ? '' : 'disabled'}>Simpan ke Database</button>
+        <button class="btn btn-outline btn-sm" id="cancelUploadBtn">Cancel</button>
+        <button class="btn btn-primary btn-sm" id="confirmUploadBtn" ${items.length ? '' : 'disabled'}>Save to Database</button>
       </div>`;
     document.getElementById('cancelUploadBtn').addEventListener('click', () => { pendingUpload = null; box.style.display = 'none'; });
     document.getElementById('confirmUploadBtn').addEventListener('click', saveUpload);
@@ -379,7 +378,7 @@
 
   async function saveUpload(){
     const btn = document.getElementById('confirmUploadBtn');
-    btn.disabled = true; btn.textContent = 'Menyimpan...';
+    btn.disabled = true; btn.textContent = 'Saving...';
     try{
       const batch = writeBatch(db);
       pendingUpload.items.forEach(it => {
@@ -389,24 +388,24 @@
         }, { merge: true });
       });
       await batch.commit();
-      showToast(`${pendingUpload.items.length} kompetensi tersimpan.`);
+      showToast(`${pendingUpload.items.length} competencies saved.`);
       pendingUpload = null;
       document.getElementById('previewBox').style.display = 'none';
       await loadAll();
     } catch(err){
       console.error('Gagal simpan kamus:', err.code, err.message);
-      showToast('Gagal simpan: ' + err.message);
-      btn.disabled = false; btn.textContent = 'Simpan ke Database';
+      showToast('Save failed: ' + err.message);
+      btn.disabled = false; btn.textContent = 'Save to Database';
     }
   }
 
   /* ===== Download template (isi data saat ini, atau kosong) ===== */
-  document.getElementById('downloadTemplateBtn').innerHTML = iconSvg('file-text', {size:13}) + ' Download Template / Data Saat Ini';
+  document.getElementById('downloadTemplateBtn').innerHTML = iconSvg('file-text', {size:13}) + ' Download Template / Current Data';
   document.getElementById('downloadTemplateBtn').addEventListener('click', () => {
     const header = ['Kompetensi', ...LEVEL_COLUMNS.map(c => c.label)];
     const body = competencies.length
       ? competencies.map(c => [`${c.nama}\n(${c.kategori})`, ...LEVEL_COLUMNS.map(col => c.indikator?.[col.key] || '')])
-      : [['Contoh Kompetensi\n(Core)', ...LEVEL_COLUMNS.map(() => '')]];
+      : [['Sample Competency\n(Core)', ...LEVEL_COLUMNS.map(() => '')]];
     const ws = XLSX.utils.aoa_to_sheet([header, ...body]);
     ws['!cols'] = [{ wch: 28 }, ...LEVEL_COLUMNS.map(() => ({ wch: 40 }))];
     const wb = XLSX.utils.book_new();
@@ -419,15 +418,15 @@
     const shell = document.getElementById('appShell');
     if(!user){
       gate.style.display = 'block'; shell.style.display = 'none';
-      document.getElementById('gateTitle').textContent = 'Silakan login';
-      document.getElementById('gateSub').innerHTML = `<a href="../index.html">Login dulu di sini</a>.`;
+      document.getElementById('gateTitle').textContent = 'Please sign in';
+      document.getElementById('gateSub').innerHTML = `<a href="../index.html">Sign in here</a>.`;
       return;
     }
     currentProfile = await ensureUserProfile(user);
     if(currentProfile.role !== 'admin'){
       gate.style.display = 'block'; shell.style.display = 'none';
-      document.getElementById('gateTitle').textContent = 'Akses ditolak';
-      document.getElementById('gateSub').textContent = 'Halaman ini cuma buat Admin.';
+      document.getElementById('gateTitle').textContent = 'Access denied';
+      document.getElementById('gateSub').textContent = 'This page is for Admins only.';
       return;
     }
     gate.style.display = 'none'; shell.style.display = 'block';

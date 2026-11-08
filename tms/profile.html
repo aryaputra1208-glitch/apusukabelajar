@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Profil Kompetensi — Anteraja LMS</title>
+<title>Competency Profile — Anteraja LMS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../lms-design-system.css?v=20261105b">
@@ -33,7 +33,7 @@
 <body>
 
 <div id="gate" class="locked-state" style="display:none;">
-  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Memuat...</p>
+  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Loading...</p>
   <p class="text-sub" id="gateSub"></p>
 </div>
 
@@ -41,26 +41,26 @@
   <div class="topbar">
     <div style="display:flex; align-items:center; gap:16px;">
       <a href="index.html" class="sidebar-logo" style="margin:0; text-decoration:none;">anteraja TMS</a>
-      <a href="index.html" class="text-sub" style="text-decoration:none; display:flex; align-items:center; gap:4px;">← Menu TMS</a>
+      <a href="index.html" class="text-sub" style="text-decoration:none; display:flex; align-items:center; gap:4px;">← TMS Menu</a>
     </div>
     <div class="user-chip">
-      <a href="../index.html" class="btn btn-outline btn-sm" style="margin-right:6px;">Ke LMS</a>
+      <a href="../index.html" class="btn btn-outline btn-sm" style="margin-right:6px;">Go to LMS</a>
       <img class="avatar" id="userAvatar" src="">
       <span id="userName"></span>
     </div>
   </div>
 
   <div class="wrap wide">
-    <h1 class="text-h1">Profil Kompetensi</h1>
-    <p class="text-sub" style="margin-bottom:20px;" id="pageSub">Perilaku yang diharapkan di level jabatan, skor aktual dari PA, gap, dan training yang dibutuhkan. Halaman ini bersifat rahasia — hanya admin dan atasan berlevel Department Head ke atas yang bisa melihat skor.</p>
+    <h1 class="text-h1">Competency Profile</h1>
+    <p class="text-sub" style="margin-bottom:20px;" id="pageSub">Confidential: scores are visible to admins and Department Head+ managers only.</p>
 
     <div class="filter-row">
       <select id="periodeSelect" style="max-width:220px;"></select>
-      <input type="text" id="searchBox" placeholder="Cari nama / NIK / jabatan..." style="max-width:280px;">
+      <input type="text" id="searchBox" placeholder="Search name / NIK / position..." style="max-width:280px;">
       <select id="gapFilter" style="max-width:200px;">
-        <option value="">Semua</option>
-        <option value="gap">Punya gap</option>
-        <option value="noGap">Tanpa gap</option>
+        <option value="">All</option>
+        <option value="gap">Has gaps</option>
+        <option value="noGap">No gaps</option>
       </select>
       <span class="text-meta" id="rowCount"></span>
     </div>
@@ -68,7 +68,7 @@
     <div class="panel">
       <div style="overflow-x:auto; max-height:420px; overflow-y:auto;">
       <table class="data-table">
-        <thead><tr><th>Nama</th><th>Jabatan</th><th>Level</th><th>Skor Final</th><th>Gap</th></tr></thead>
+        <thead><tr><th>Name</th><th>Position</th><th>Level</th><th>Final Score</th><th>Gap</th></tr></thead>
         <tbody id="listBody"></tbody>
       </table>
       </div>
@@ -87,7 +87,7 @@
   import {
     KATEGORI_ORDER, DEFAULT_SCALE, escapeHtml, levelLabel, periodeRank, periodeLabel, scoreLabel, round2, gapsFor, recommendModules,
     PASSING_SCORE, isPassed, gapStatuses, IDP_JENIS, IDP_STATUS, idpItemStatus,
-  } from '../competency-shared.js?v=20261023c';
+  } from '../competency-shared.js?v=20261108';
   import { collection, getDocs, doc, getDoc, query, where } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const F = id => document.getElementById(id);
@@ -115,18 +115,18 @@
       grab(aQuery, 'assessments'), grab(collection(db, 'competencies'), 'competencies'), grab(modQuery, 'modules'),
       getDoc(doc(db, 'settings', 'competencyScale')).catch(err => { console.error('settings/competencyScale', err.code, err.message); return null; }),
     ]);
-    if(asses === null){ showToast('Gagal memuat data penilaian — lihat Console.'); }
+    if(asses === null){ showToast('Failed to load assessments. See Console.'); }
     assessments = asses || []; modules = mods || [];
     competencies = (comps || []).sort((a,b) => (KATEGORI_ORDER.indexOf(a.kategori) - KATEGORI_ORDER.indexOf(b.kategori)) || ((a.urutan ?? 999) - (b.urutan ?? 999)));
     if(scaleSnap?.exists()) scale = scaleSnap.data();
 
-    if(!isAdmin) F('pageSub').textContent = 'Profil kompetensi anggota tim Anda: perilaku yang diharapkan di levelnya, skor dari PA, gap, dan training yang dibutuhkan. Data ini rahasia — jangan dibagikan ke yang bersangkutan dalam bentuk skor.';
+    if(!isAdmin) F('pageSub').textContent = 'Confidential: do not share scores with the employees concerned.';
 
     const periodes = [...new Set(assessments.map(a => a.periode))].sort((a,b) => periodeRank(b) - periodeRank(a));
     if(!periodes.includes(selectedPeriode)) selectedPeriode = periodes[0] || '';
     F('periodeSelect').innerHTML = periodes.length
       ? periodes.map(p => `<option value="${escapeHtml(p)}" ${p===selectedPeriode?'selected':''}>${escapeHtml(periodeLabel(p))}</option>`).join('')
-      : '<option value="">Belum ada periode</option>';
+      : '<option value="">No periods yet</option>';
     renderList();
     if(selectedNik) renderDetail();
   }
@@ -139,7 +139,7 @@
     if(gf === 'gap') rows = rows.filter(a => gapsFor(a.kompetensi, standar()).length);
     if(gf === 'noGap') rows = rows.filter(a => !gapsFor(a.kompetensi, standar()).length);
     rows.sort((a,b) => (a.nama||'').localeCompare(b.nama||''));
-    F('rowCount').textContent = `${rows.length} orang`;
+    F('rowCount').textContent = `${rows.length} people`;
     F('listBody').innerHTML = rows.map(a => {
       const n = gapsFor(a.kompetensi, standar()).length;
       return `<tr class="clickable ${a.nik===selectedNik?'selected':''}" data-nik="${escapeHtml(a.nik)}">
@@ -147,7 +147,7 @@
         <td class="text-meta">${escapeHtml(a.jabatan || '-')}</td>
         <td class="text-meta">${escapeHtml(levelLabel(a.levelKey) || a.level || '-')}</td>
         <td class="num"><strong>${fmt(a.skorFinal)}</strong> <span class="text-meta">${escapeHtml(scoreLabel(a.skorFinal, scale) || '')}</span></td>
-        <td>${!Object.keys(a.kompetensi || {}).length ? '<span class="badge badge-gray" title="Skor per kompetensi tidak ada di file import — gap tidak bisa dihitung">Belum ada skor kompetensi</span>' : n ? `<span class="badge badge-amber">${n} kompetensi</span>` : '<span class="badge badge-green">Tidak ada</span>'}</td>
+        <td>${!Object.keys(a.kompetensi || {}).length ? '<span class="badge badge-gray" title="No per-competency scores in the import file, so gaps cannot be calculated">No competency scores</span>' : n ? `<span class="badge badge-amber">${n} ${n === 1 ? 'competency' : 'competencies'}</span>` : '<span class="badge badge-green">None</span>'}</td>
       </tr>`;
     }).join('');
     const empty = F('listEmpty');
@@ -180,7 +180,7 @@
     const a = assessments.find(x => x.nik === selectedNik && x.periode === selectedPeriode);
     if(!a){ box.style.display = 'none'; return; }
     box.style.display = 'block';
-    box.innerHTML = `<p class="text-sub" style="margin-top:24px;">Memuat profil...</p>`;
+    box.innerHTML = `<p class="text-sub" style="margin-top:24px;">Loading profile...</p>`;
 
     const gaps = gapsFor(a.kompetensi, standar());
     const gapIds = new Set(gaps.map(g => g.id));
@@ -208,15 +208,15 @@
       const ind = a.levelKey ? (c.indikator?.[a.levelKey] || '') : '';
       const st = statuses[c.id] || { status: s == null ? 'unrated' : 'ok' };
       let status;
-      if(st.status === 'unrated') status = '<span class="badge badge-gray">Belum dinilai</span>';
-      else if(st.status === 'open') status = `<span class="badge badge-amber">Gap terbuka · ${fmt(st.gap)}</span>`;
-      else if(st.status === 'development') status = `<span class="badge badge-purple">Dalam pengembangan</span><div class="text-meta" style="margin-top:4px;">Selesai: ${st.modules.map(m => escapeHtml(m.judul) + (m.score != null ? ' (' + m.score + ')' : '')).join(', ')} · menunggu PA berikutnya</div>`;
-      else if(st.status === 'closed') status = `<span class="badge badge-green">Gap closed</span><div class="text-meta" style="margin-top:4px;">Tervalidasi PA ${escapeHtml(periodeLabel(a.periode))} (gap di ${escapeHtml(periodeLabel(st.closedFrom))})</div>`;
-      else if(st.status === 'strength') status = '<span class="badge badge-green">Kekuatan</span>';
-      else status = '<span class="badge badge-blue">Sesuai standar</span>';
+      if(st.status === 'unrated') status = '<span class="badge badge-gray">Not rated</span>';
+      else if(st.status === 'open') status = `<span class="badge badge-amber">Open gap · ${fmt(st.gap)}</span>`;
+      else if(st.status === 'development') status = `<span class="badge badge-purple">In development</span><div class="text-meta" style="margin-top:4px;">Completed: ${st.modules.map(m => escapeHtml(m.judul) + (m.score != null ? ' (' + m.score + ')' : '')).join(', ')} · awaiting next PA</div>`;
+      else if(st.status === 'closed') status = `<span class="badge badge-green">Gap closed</span><div class="text-meta" style="margin-top:4px;">Validated by PA ${escapeHtml(periodeLabel(a.periode))} (gap in ${escapeHtml(periodeLabel(st.closedFrom))})</div>`;
+      else if(st.status === 'strength') status = '<span class="badge badge-green">Strength</span>';
+      else status = '<span class="badge badge-blue">Meets standard</span>';
       return `<tr>
         <td style="min-width:170px;"><strong>${escapeHtml(c.nama)}</strong><div class="text-meta">${escapeHtml(c.kategori || '')}</div></td>
-        <td class="indikator">${escapeHtml(ind) || '<span class="text-meta">Level belum terpetakan ke kamus</span>'}</td>
+        <td class="indikator">${escapeHtml(ind) || '<span class="text-meta">Level not mapped to dictionary</span>'}</td>
         <td class="num"><strong>${fmt(s)}</strong><div class="text-meta">${escapeHtml(scoreLabel(s, scale) || '')}</div></td>
         <td>${status}</td>
       </tr>`;
@@ -224,21 +224,21 @@
 
     const recRows = recs.map(r => {
       const t = attempts[r.moduleId];
-      const done = !t ? '<span class="badge badge-amber">Belum ikut</span>'
-        : isPassed(t) ? `<span class="badge badge-green">Lulus${t.score != null ? ' · skor ' + t.score : ''}</span>`
-        : `<span class="badge badge-red">Belum lulus · skor ${t.score} (min ${PASSING_SCORE})</span>`;
+      const done = !t ? '<span class="badge badge-amber">Not taken</span>'
+        : isPassed(t) ? `<span class="badge badge-green">Passed${t.score != null ? ' · score ' + t.score : ''}</span>`
+        : `<span class="badge badge-red">Not passed · score ${t.score} (min ${PASSING_SCORE})</span>`;
       return `<div class="rec-row">
         <div><div style="font-weight:700;">${escapeHtml(r.judul)}</div>
-          <div class="text-meta">${escapeHtml(r.mode === 'offline' ? 'Offline' : 'Online')} · ${escapeHtml(r.kategori)} · membangun ${r.kompetensiIds.map(id => escapeHtml(compById[id]?.nama || id)).join(', ')}</div></div>
+          <div class="text-meta">${escapeHtml(r.mode === 'offline' ? 'Offline' : 'Online')} · ${escapeHtml(r.kategori)} · builds ${r.kompetensiIds.map(id => escapeHtml(compById[id]?.nama || id)).join(', ')}</div></div>
         ${done}
       </div>`;
     }).join('');
 
     const kpiCard = a.skorKPI == null
-      ? `<div class="score-card"><div class="score-label">SKOR KPI</div><div class="score-value" style="color:var(--text-3);">-</div><div class="score-sub">Tidak ada KPI di level ini</div></div>`
-      : `<div class="score-card"><div class="score-label">SKOR KPI</div><div class="score-value num">${fmt(a.skorKPI)}</div><div class="score-sub">${escapeHtml(scoreLabel(a.skorKPI, scale) || '')}</div></div>`;
-    const finalSub = a.skorFinalSumber === 'import' ? 'Dari file import'
-      : a.modelSkor === 'PA + KPI' && a.bobot ? `PA ${a.bobot.pa}% + KPI ${a.bobot.kpi}%` : 'Sama dengan skor PA';
+      ? `<div class="score-card"><div class="score-label">KPI SCORE</div><div class="score-value" style="color:var(--text-3);">-</div><div class="score-sub">No KPI at this level</div></div>`
+      : `<div class="score-card"><div class="score-label">KPI SCORE</div><div class="score-value num">${fmt(a.skorKPI)}</div><div class="score-sub">${escapeHtml(scoreLabel(a.skorKPI, scale) || '')}</div></div>`;
+    const finalSub = a.skorFinalSumber === 'import' ? 'From import file'
+      : a.modelSkor === 'PA + KPI' && a.bobot ? `PA ${a.bobot.pa}% + KPI ${a.bobot.kpi}%` : 'Same as PA score';
 
     box.innerHTML = `
       <div class="profile-head">
@@ -246,39 +246,39 @@
           <h2 class="text-h1" style="margin:0;">${escapeHtml(a.nama || a.nik)}</h2>
           <div class="text-sub">${escapeHtml(a.jabatan || '-')} · NIK ${escapeHtml(a.nik)} · ${escapeHtml(a.divisi || '')}</div>
           <div style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;">
-            <span class="badge badge-blue">${escapeHtml(levelLabel(a.levelKey) || a.level || 'Level belum terpetakan')}</span>
+            <span class="badge badge-blue">${escapeHtml(levelLabel(a.levelKey) || a.level || 'Unmapped level')}</span>
             <span class="badge badge-gray">${escapeHtml(periodeLabel(a.periode))}</span>
-            <span class="badge badge-gray">${escapeHtml(a.modelSkor || '')}</span>
+            <span class="badge badge-gray">${escapeHtml(a.modelSkor === 'PA saja' ? 'PA only' : (a.modelSkor || ''))}</span>
           </div>
         </div>
-        ${history.length > 1 ? `<div class="text-meta" style="text-align:right;">Riwayat skor final<br>${history.map(h => `${escapeHtml(periodeLabel(h.periode))}: <strong>${fmt(h.skorFinal)}</strong>`).join('<br>')}</div>` : ''}
+        ${history.length > 1 ? `<div class="text-meta" style="text-align:right;">Final score history<br>${history.map(h => `${escapeHtml(periodeLabel(h.periode))}: <strong>${fmt(h.skorFinal)}</strong>`).join('<br>')}</div>` : ''}
       </div>
 
       <div class="score-row">
-        <div class="score-card"><div class="score-label">SKOR PA (KOMPETENSI)</div><div class="score-value num">${fmt(a.skorPA)}</div><div class="score-sub">${escapeHtml(scoreLabel(a.skorPA, scale) || '')}</div></div>
+        <div class="score-card"><div class="score-label">PA SCORE (COMPETENCIES)</div><div class="score-value num">${fmt(a.skorPA)}</div><div class="score-sub">${escapeHtml(scoreLabel(a.skorPA, scale) || '')}</div></div>
         ${kpiCard}
-        <div class="score-card" style="border-top:3px solid var(--pink);"><div class="score-label">SKOR FINAL</div><div class="score-value num">${fmt(a.skorFinal)}</div><div class="score-sub">${escapeHtml(scoreLabel(a.skorFinal, scale) || '')} · ${escapeHtml(finalSub)}</div></div>
+        <div class="score-card" style="border-top:3px solid var(--pink);"><div class="score-label">FINAL SCORE</div><div class="score-value num">${fmt(a.skorFinal)}</div><div class="score-sub">${escapeHtml(scoreLabel(a.skorFinal, scale) || '')} · ${escapeHtml(finalSub)}</div></div>
       </div>
 
       <div class="panel">
-        <div class="panel-head"><h3 class="text-h2" style="margin:0;">Kompetensi: Diharapkan vs Aktual</h3><span class="text-meta">${nOpen} gap terbuka · ${nDev} dalam pengembangan · ${nClosed} closed · standar = skor ${standar()}</span></div>
+        <div class="panel-head"><h3 class="text-h2" style="margin:0;">Competencies: Expected vs Actual</h3><span class="text-meta">${nOpen} open · ${nDev} in development · ${nClosed} closed · standard = ${standar()}</span></div>
         <div style="overflow-x:auto;"><table class="data-table comp-table">
-          <thead><tr><th>Kompetensi</th><th>Perilaku yang diharapkan di level ini</th><th>Skor</th><th>Status</th></tr></thead>
+          <thead><tr><th>Competency</th><th>Expected behavior at this level</th><th>Score</th><th>Status</th></tr></thead>
           <tbody>${compRows}</tbody>
         </table></div>
       </div>
 
       <div class="panel section-gap">
-        <div class="panel-head"><h3 class="text-h2" style="margin:0;">IDP</h3>${currentProfile.role === 'admin' ? `<a href="idp.html?nik=${encodeURIComponent(a.nik)}&periode=${encodeURIComponent(a.periode)}" class="btn btn-outline btn-sm">${idpItems.length ? 'Edit IDP' : 'Susun IDP'}</a>` : ''}</div>
-        ${idpItems.length ? idpItems.map(it => { const eff = idpItemStatus(it, attemptList); return `<div class="rec-row"><div><div style="font-weight:700;">${escapeHtml(it.jenis === 'training' ? (it.judul || 'Modul') : (it.deskripsi || ''))}</div><div class="text-meta">${escapeHtml(IDP_JENIS[it.jenis] || it.jenis)} · ${escapeHtml(it.kompetensiNama || it.kompetensiId)}${it.mentorNama ? ' · mentor ' + escapeHtml(it.mentorNama) : ''}${it.targetTanggal ? ' · target ' + escapeHtml(it.targetTanggal) : ''}</div></div><span class="badge ${eff.status === 'selesai' ? 'badge-green' : eff.status === 'berjalan' ? 'badge-purple' : 'badge-gray'}">${escapeHtml(IDP_STATUS[eff.status] || eff.status)}</span></div>`; }).join('') : '<div class="empty-state"><p>Belum ada IDP untuk periode ini.</p></div>'}
+        <div class="panel-head"><h3 class="text-h2" style="margin:0;">IDP</h3>${currentProfile.role === 'admin' ? `<a href="idp.html?nik=${encodeURIComponent(a.nik)}&periode=${encodeURIComponent(a.periode)}" class="btn btn-outline btn-sm">${idpItems.length ? 'Edit IDP' : 'Create IDP'}</a>` : ''}</div>
+        ${idpItems.length ? idpItems.map(it => { const eff = idpItemStatus(it, attemptList); return `<div class="rec-row"><div><div style="font-weight:700;">${escapeHtml(it.jenis === 'training' ? (it.judul || 'Module') : (it.deskripsi || ''))}</div><div class="text-meta">${escapeHtml(IDP_JENIS[it.jenis] || it.jenis)} · ${escapeHtml(it.kompetensiNama || it.kompetensiId)}${it.mentorNama ? ' · mentor ' + escapeHtml(it.mentorNama) : ''}${it.targetTanggal ? ' · target ' + escapeHtml(it.targetTanggal) : ''}</div></div><span class="badge ${eff.status === 'selesai' ? 'badge-green' : eff.status === 'berjalan' ? 'badge-purple' : 'badge-gray'}">${escapeHtml(IDP_STATUS[eff.status] || eff.status)}</span></div>`; }).join('') : '<div class="empty-state"><p>No IDP for this period yet.</p></div>'}
       </div>
 
       <div class="panel section-gap">
-        <div class="panel-head"><h3 class="text-h2" style="margin:0;">Saran Training dari LMS</h3><span class="text-meta">${gaps.length} kompetensi di bawah standar</span></div>
-        ${!Object.keys(a.kompetensi || {}).length ? `<div class="empty-state"><p>Skor per kompetensi belum ada untuk periode ini (hanya Skor PA total yang di-import), jadi gap & training belum bisa dihitung. Import ulang dengan kolom 11 kompetensi terisi.</p></div>`
-          : !gaps.length ? `<div class="empty-state">${iconSvg('check',{size:24})}<p style="margin-top:8px;">Tidak ada gap kompetensi di periode ini.</p></div>`
-          : recRows || `<div class="empty-state"><p>Belum ada modul published yang membangun kompetensi ber-gap untuk level ini.</p></div>`}
-        ${uncovered.length ? `<div style="padding:12px 20px; background:var(--amber-bg); font-size:12px; color:#92400E;">Belum ada modul untuk: <strong>${uncovered.map(g => escapeHtml(compById[g.id]?.nama || g.id)).join(', ')}</strong>. Pertimbangkan penugasan/coaching, atau minta tim training membuat modulnya (lalu tag kompetensinya).</div>` : ''}
+        <div class="panel-head"><h3 class="text-h2" style="margin:0;">Suggested LMS Training</h3><span class="text-meta">${gaps.length} ${gaps.length === 1 ? 'competency' : 'competencies'} below standard</span></div>
+        ${!Object.keys(a.kompetensi || {}).length ? `<div class="empty-state"><p>No per-competency scores for this period (only the total PA score was imported), so gaps and training can't be calculated. Re-import with competency columns filled in.</p></div>`
+          : !gaps.length ? `<div class="empty-state">${iconSvg('check',{size:24})}<p style="margin-top:8px;">No competency gaps this period.</p></div>`
+          : recRows || `<div class="empty-state"><p>No published modules build the gap competencies for this level yet.</p></div>`}
+        ${uncovered.length ? `<div style="padding:12px 20px; background:var(--amber-bg); font-size:12px; color:#92400E;">No modules yet for: <strong>${uncovered.map(g => escapeHtml(compById[g.id]?.nama || g.id)).join(', ')}</strong>. Consider an assignment or coaching, or ask the training team to create a module (and tag its competencies).</div>` : ''}
       </div>`;
   }
 
@@ -286,8 +286,8 @@
     const gate = F('gate'), shell = F('appShell');
     if(!user){
       gate.style.display = 'block'; shell.style.display = 'none';
-      F('gateTitle').textContent = 'Silakan login';
-      F('gateSub').innerHTML = `<a href="../index.html">Login dulu di sini</a>.`;
+      F('gateTitle').textContent = 'Please sign in';
+      F('gateSub').innerHTML = `<a href="../index.html">Sign in here</a>.`;
       return;
     }
     currentUser = user;

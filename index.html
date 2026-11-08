@@ -83,7 +83,7 @@
         <div style="display:flex; align-items:center; gap:14px;">
           <div style="width:52px; height:52px; border-radius:14px; background:rgba(255,255,255,.2); display:flex; align-items:center; justify-content:center;" id="trLevelIcon"></div>
           <div>
-            <div style="color:rgba(255,255,255,.8); font-size:12px; font-weight:600; letter-spacing:.03em;">LEVEL TRAINER ANDA</div>
+            <div style="color:rgba(255,255,255,.8); font-size:12px; font-weight:600; letter-spacing:.03em;">YOUR TRAINER LEVEL</div>
             <div style="color:#fff; font-size:20px; font-weight:700;" id="trLevelName">-</div>
           </div>
         </div>
@@ -93,26 +93,26 @@
     <p class="text-sub" id="trLevelHint" style="display:none; margin-bottom:16px;"></p>
 
     <div class="stat-row" id="trainerStatRow" style="display:none; margin-top:8px;">
-      <div class="stat-card"><div class="stat-num" id="trStatModul">-</div><div class="stat-label">Modul Online Dibuat</div></div>
-      <div class="stat-card"><div class="stat-num" id="trStatPeserta">-</div><div class="stat-label">Total Peserta (semua modul)</div></div>
-      <div class="stat-card"><div class="stat-num" id="trStatAvgSkor">-</div><div class="stat-label">Avg Skor Peserta</div></div>
+      <div class="stat-card"><div class="stat-num" id="trStatModul">-</div><div class="stat-label">Online Modules Created</div></div>
+      <div class="stat-card"><div class="stat-num" id="trStatPeserta">-</div><div class="stat-label">Total Participants (all modules)</div></div>
+      <div class="stat-card"><div class="stat-num" id="trStatAvgSkor">-</div><div class="stat-label">Avg Participant Score</div></div>
     </div>
 
     <div class="menu-grid" id="menuGrid"></div>
 
     <div id="adminHome" style="display:none;">
-      <p class="text-sub" style="margin-top:2px;">Ringkasan Training 30 Hari Terakhir</p>
+      <p class="text-sub" style="margin-top:2px;">Training summary, last 30 days</p>
       <div class="ah-kpi">
-        <div class="stat-card"><div class="stat-label" style="margin:0 0 6px;">Peserta Aktif</div><div class="stat-num" id="ahActive">-</div><div class="ah-delta text-meta" id="ahActiveDelta"></div></div>
-        <div class="stat-card"><div class="stat-label" style="margin:0 0 6px;">Completion Rate</div><div class="stat-num" id="ahCompletion">-</div><div class="ah-delta text-meta" id="ahCompletionSub">Mulai belajar → selesai post-test</div></div>
-        <div class="stat-card"><div class="stat-label" style="margin:0 0 6px;">Modul Published</div><div class="stat-num" id="ahPublished">-</div><div class="ah-delta text-meta" id="ahPublishedSub"></div></div>
-        <div class="stat-card"><div class="stat-label" style="margin:0 0 6px;">Rata-rata Post-Test</div><div class="stat-num" id="ahAvg">-</div><div class="ah-delta text-meta" id="ahAvgSub"></div></div>
+        <div class="stat-card"><div class="stat-label" style="margin:0 0 6px;">Active Learners</div><div class="stat-num" id="ahActive">-</div><div class="ah-delta text-meta" id="ahActiveDelta"></div></div>
+        <div class="stat-card"><div class="stat-label" style="margin:0 0 6px;">Completion Rate</div><div class="stat-num" id="ahCompletion">-</div><div class="ah-delta text-meta" id="ahCompletionSub">Started → finished post-test</div></div>
+        <div class="stat-card"><div class="stat-label" style="margin:0 0 6px;">Published Modules</div><div class="stat-num" id="ahPublished">-</div><div class="ah-delta text-meta" id="ahPublishedSub"></div></div>
+        <div class="stat-card"><div class="stat-label" style="margin:0 0 6px;">Avg Post-Test</div><div class="stat-num" id="ahAvg">-</div><div class="ah-delta text-meta" id="ahAvgSub"></div></div>
       </div>
       <div class="ah-two">
-        <div class="panel"><div class="panel-head"><h3 class="text-h2" style="margin:0;">Perlu Tindakan</h3></div><div id="ahTodo"><div class="ah-ok">Memuat...</div></div></div>
-        <div class="panel"><div class="panel-head"><h3 class="text-h2" style="margin:0;">Training Offline Minggu Ini</h3></div><div id="ahOffline"><div class="ah-ok">Memuat...</div></div></div>
+        <div class="panel"><div class="panel-head"><h3 class="text-h2" style="margin:0;">Needs Action</h3></div><div id="ahTodo"><div class="ah-ok">Loading...</div></div></div>
+        <div class="panel"><div class="panel-head"><h3 class="text-h2" style="margin:0;">Offline Training This Week</h3></div><div id="ahOffline"><div class="ah-ok">Loading...</div></div></div>
       </div>
-      <div class="panel"><div class="panel-head"><h3 class="text-h2" style="margin:0;">Modul Terpopuler</h3><span class="text-meta">30 hari terakhir</span></div><div id="ahTop"><div class="ah-ok">Memuat...</div></div></div>
+      <div class="panel"><div class="panel-head"><h3 class="text-h2" style="margin:0;">Top Modules</h3><span class="text-meta">Last 30 days</span></div><div id="ahTop"><div class="ah-ok">Loading...</div></div></div>
     </div>
   </div>
 
@@ -191,21 +191,21 @@
 
   const MENU_BY_ROLE = {
     admin: [
-      { href: 'admin-approval.html', icon: 'check', title: 'Approval Modul', desc: 'Review & publish modul dari trainer' },
-      { href: 'admin-trainings.html', icon: 'books', title: 'Daftar Training', desc: 'Semua training online & offline, copy link form' },
-      { href: 'admin-users.html', icon: 'users', title: 'Kelola User', desc: 'Assign Divisi & Level tiap user' },
-      { href: 'admin-trainer.html', icon: 'user-check', title: 'Kelola Trainer', desc: 'Assign NIK, Level, & email trainer' },
-      { href: 'tms/index.html', icon: 'layout-grid', title: 'TMS — Talent Management', desc: 'Karyawan, kamus, performa, profil & IDP' },
-      { href: 'trainer-create-module.html', icon: 'plus', title: 'Buat Modul', desc: 'Buat modul training sendiri' },
-      { href: 'trainer-submissions.html', icon: 'file-text', title: 'Nilai Submission', desc: 'Nilai file jawaban trainee' },
-      { href: 'trainer-analytics.html', icon: 'chart-bar', title: 'Analitik Modul', desc: 'Performa post-test peserta' },
-      { href: 'trainee-library.html', icon: 'books', title: 'Library Modul', desc: 'Lihat tampilan trainee, semua modul published' },
-      { href: 'training-dashboard-v2.html', icon: 'chart-bar', title: 'Training Dashboard', desc: 'Analitik mendalam training online & offline' },
+      { href: 'admin-approval.html', icon: 'check', title: 'Module Approval', desc: 'Review & publish trainer modules' },
+      { href: 'admin-trainings.html', icon: 'books', title: 'All Trainings', desc: 'Online & offline trainings, copy form links' },
+      { href: 'admin-users.html', icon: 'users', title: 'Manage Users', desc: 'Assign division & level per user' },
+      { href: 'admin-trainer.html', icon: 'user-check', title: 'Manage Trainers', desc: 'Assign trainer NIK, level & email' },
+      { href: 'tms/index.html', icon: 'layout-grid', title: 'TMS — Talent Management', desc: 'Employees, dictionary, performance, profiles & IDPs' },
+      { href: 'trainer-create-module.html', icon: 'plus', title: 'Create Module', desc: 'Build your own training module' },
+      { href: 'trainer-submissions.html', icon: 'file-text', title: 'Grade Submissions', desc: 'Grade trainee answer files' },
+      { href: 'trainer-analytics.html', icon: 'chart-bar', title: 'Module Analytics', desc: 'Participant post-test performance' },
+      { href: 'trainee-library.html', icon: 'books', title: 'Module Library', desc: 'Trainee view of all published modules' },
+      { href: 'training-dashboard-v2.html', icon: 'chart-bar', title: 'Training Dashboard', desc: 'In-depth online & offline training analytics' },
     ],
     trainer: [
-      { href: 'trainer-create-module.html', icon: 'plus', title: 'Buat Modul', desc: 'Susun materi & post-test baru' },
-      { href: 'trainer-submissions.html', icon: 'file-text', title: 'Nilai Submission', desc: 'Nilai file jawaban trainee' },
-      { href: 'trainer-analytics.html', icon: 'chart-bar', title: 'Analitik Modul', desc: 'Performa post-test peserta' },
+      { href: 'trainer-create-module.html', icon: 'plus', title: 'Create Module', desc: 'Build new material & post-test' },
+      { href: 'trainer-submissions.html', icon: 'file-text', title: 'Grade Submissions', desc: 'Grade trainee answer files' },
+      { href: 'trainer-analytics.html', icon: 'chart-bar', title: 'Module Analytics', desc: 'Participant post-test performance' },
     ],
   };
 
@@ -470,10 +470,11 @@
 
     document.getElementById('traineeWrap').style.display = 'none';
     document.getElementById('menuWrap').style.display = 'block';
-    document.getElementById('welcomeTitle').textContent = `Selamat datang, ${profile.displayName.split(' ')[0]}`;
+    document.getElementById('welcomeTitle').textContent = `Welcome, ${profile.displayName.split(' ')[0]}`;
+    document.getElementById('tmsTopBtn').textContent = 'Go to TMS';
     if(profile.role === 'admin'){
       const h = new Date().getHours();
-      document.getElementById('welcomeTitle').textContent = `Selamat ${h < 11 ? 'Pagi' : h < 15 ? 'Siang' : h < 18 ? 'Sore' : 'Malam'}, ${profile.displayName.split(' ')[0]}`;
+      document.getElementById('welcomeTitle').textContent = `Good ${h < 12 ? 'Morning' : h < 18 ? 'Afternoon' : 'Evening'}, ${profile.displayName.split(' ')[0]}`;
       document.getElementById('menuWrap').classList.add('admin-wide');
       document.getElementById('roleBadge').style.display = 'none';
       document.getElementById('menuGrid').style.display = 'none';
@@ -489,7 +490,7 @@
         <div class="menu-icon">${iconSvg(m.icon, {size:20})}</div>
         <div style="font-weight:700; font-size:14px; margin-bottom:4px;">${m.title}</div>
         <div class="text-sub">${m.desc}</div>
-      </a>`).join('') || `<p class="text-sub">Belum ada menu untuk role Anda.</p>`;
+      </a>`).join('') || `<p class="text-sub">No menu for your role yet.</p>`;
 
     if(profile.role === 'trainer'){
       loadTrainerHome(user);
@@ -500,8 +501,8 @@
           document.getElementById('menuGrid').insertAdjacentHTML('beforeend', `
             <a class="menu-card" href="${isViewer ? 'tms/index.html' : 'tms/my-idp.html'}">
               <div class="menu-icon">${iconSvg(isViewer ? 'user-check' : 'file-text', {size:20})}</div>
-              <div style="font-weight:700; font-size:14px; margin-bottom:4px;">${isViewer ? 'TMS — Tim Anda' : 'IDP Saya'}</div>
-              <div class="text-sub">${isViewer ? 'Profil kompetensi &amp; IDP tim Anda' : 'Rencana pengembangan Anda'}</div>
+              <div style="font-weight:700; font-size:14px; margin-bottom:4px;">${isViewer ? 'TMS: Your Team' : 'My IDP'}</div>
+              <div class="text-sub">${isViewer ? 'Team competency profiles &amp; IDPs' : 'Your development plan'}</div>
             </a>`);
         });
     }
@@ -547,7 +548,7 @@
     const delta = document.getElementById('ahActiveDelta');
     if(activePrev.size){
       const pct = Math.round((active.size - activePrev.size) / activePrev.size * 100);
-      delta.textContent = `${pct >= 0 ? '+' : ''}${pct}% vs 30 hari sebelumnya`;
+      delta.textContent = `${pct >= 0 ? '+' : ''}${pct}% vs previous 30 days`;
       delta.style.color = pct >= 0 ? 'var(--green)' : 'var(--red)';
     } else delta.textContent = 'Online & offline';
     const started = new Set([...prog30.map(p => `${p.uid}|${p.moduleId}`), ...att30.map(a => `${who(a)}|${a.moduleId}`)]);
@@ -556,31 +557,31 @@
     const published = mods.filter(m => m.status === 'published');
     const pending = mods.filter(m => m.status === 'pending_approval');
     document.getElementById('ahPublished').textContent = published.length;
-    document.getElementById('ahPublishedSub').textContent = pending.length ? `${pending.length} menunggu approval` : 'Tidak ada antrean';
+    document.getElementById('ahPublishedSub').textContent = pending.length ? `${pending.length} pending approval` : 'No queue';
     const scores = att30.filter(a => a.score != null).map(a => Number(a.score));
     document.getElementById('ahAvg').textContent = scores.length ? Math.round(scores.reduce((s,v)=>s+v,0) / scores.length) : '-';
-    document.getElementById('ahAvgSub').textContent = `dari ${att30.length} attempt`;
+    document.getElementById('ahAvgSub').textContent = `from ${att30.length} attempts`;
 
     // --- Perlu tindakan ---
     const todo = [];
     if(pending.length){
       const oldest = Math.max(...pending.map(m => now - (tsMs(m.updatedAt) ?? now)));
-      todo.push({ t: `${pending.length} modul menunggu approval`, s: oldest > DAY ? `Terlama: ${Math.floor(oldest / DAY)} hari` : 'Masuk hari ini', href: 'admin-approval.html', btn: 'Review' });
+      todo.push({ t: `${pending.length} module${pending.length === 1 ? '' : 's'} pending approval`, s: oldest > DAY ? `Oldest: ${Math.floor(oldest / DAY)} days` : 'Submitted today', href: 'admin-approval.html', btn: 'Review' });
     }
     if(subs.length){
       const late = subs.filter(x => now - (tsMs(x.submittedAt) ?? now) > 7*DAY).length;
-      todo.push({ t: `${subs.length} submission belum dinilai`, s: late ? `${late} lewat 7 hari` : 'Semua masih di bawah 7 hari', href: 'trainer-submissions.html', btn: 'Nilai' });
+      todo.push({ t: `${subs.length} submission${subs.length === 1 ? '' : 's'} to grade`, s: late ? `${late} older than 7 days` : 'All under 7 days', href: 'trainer-submissions.html', btn: 'Grade' });
     }
     const today = ymd(new Date());
     const sesByTraining = {}; sessions.forEach(s => (sesByTraining[s.trainingId] = sesByTraining[s.trainingId] || []).push(s));
     const needPostTest = published.filter(m => m.mode === 'offline' && !m.postTestOpen && (sesByTraining[m.id] || []).some(s => s.tanggal && s.tanggal < today));
-    if(needPostTest.length) todo.push({ t: `Post-test belum dibuka (${needPostTest.length} training)`, s: needPostTest.slice(0,2).map(m => m.judul).join(', ') + (needPostTest.length > 2 ? ', …' : '') + ' — sesi sudah lewat', href: 'admin-trainings.html', btn: 'Buka' });
+    if(needPostTest.length) todo.push({ t: `Post-test not opened (${needPostTest.length} training${needPostTest.length === 1 ? '' : 's'})`, s: needPostTest.slice(0,2).map(m => m.judul).join(', ') + (needPostTest.length > 2 ? ', …' : '') + ' (sessions past)', href: 'admin-trainings.html', btn: 'Open' });
     const loggedIn = new Set(users.map(u => (u.email || '').toLowerCase()));
     const neverLogin = approved.filter(a => !loggedIn.has(a.id.toLowerCase()) && (now - (tsMs(a.updatedAt) ?? now)) > 14*DAY);
-    if(neverLogin.length) todo.push({ t: `${neverLogin.length} user belum pernah login`, s: 'Terdaftar lebih dari 14 hari', href: 'admin-users.html', btn: 'Lihat' });
+    if(neverLogin.length) todo.push({ t: `${neverLogin.length} user${neverLogin.length === 1 ? '' : 's'} never signed in`, s: 'Registered over 14 days ago', href: 'admin-users.html', btn: 'View' });
     document.getElementById('ahTodo').innerHTML = todo.length
       ? todo.map(x => `<div class="ah-row"><div><div class="t">${esc(x.t)}</div><div class="text-meta">${esc(x.s)}</div></div><a class="btn btn-outline btn-sm" href="${x.href}">${x.btn}</a></div>`).join('')
-      : `<div class="ah-ok">${iconSvg('check',{size:16})} Semua beres — tidak ada yang perlu ditindaklanjuti.</div>`;
+      : `<div class="ah-ok">${iconSvg('check',{size:16})} All clear. Nothing needs action.</div>`;
 
     // --- Training offline minggu ini (Senin–Minggu) ---
     const d = new Date(); const dow = (d.getDay() + 6) % 7;
@@ -594,14 +595,14 @@
     const FORMS_BASE_URL = 'https://aryaputra1208-glitch.github.io/apusukabelajar/training-forms.html';
     document.getElementById('ahOffline').innerHTML = thisWeek.length
       ? thisWeek.map(x => {
-          const tgl = new Date(x.s.tanggal + 'T00:00:00').toLocaleDateString('id-ID', { weekday:'short', day:'numeric', month:'short' });
-          return `<div class="ah-row"><div><div class="t">${esc(x.m.judul)}</div><div class="text-meta">${esc(tgl)}${x.s.jamMulai ? ' · ' + esc(x.s.jamMulai) : ''} · ${rosterCount[x.m.id] || 0} peserta${x.n > 1 ? ` · ${x.n} sesi` : ''}</div></div>
+          const tgl = new Date(x.s.tanggal + 'T00:00:00').toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' });
+          return `<div class="ah-row"><div><div class="t">${esc(x.m.judul)}</div><div class="text-meta">${esc(tgl)}${x.s.jamMulai ? ' · ' + esc(x.s.jamMulai) : ''} · ${rosterCount[x.m.id] || 0} participants${x.n > 1 ? ` · ${x.n} sessions` : ''}</div></div>
             <button class="btn btn-outline btn-sm" data-copy="${esc(FORMS_BASE_URL + '?training=' + x.m.id)}">Copy Link Form</button></div>`;
         }).join('')
-      : `<div class="ah-ok">Tidak ada sesi offline minggu ini.</div>`;
+      : `<div class="ah-ok">No offline sessions this week.</div>`;
     document.querySelectorAll('#ahOffline [data-copy]').forEach(b => b.addEventListener('click', async () => {
-      try{ await navigator.clipboard.writeText(b.dataset.copy); b.textContent = 'Tersalin'; setTimeout(() => b.textContent = 'Copy Link Form', 1500); }
-      catch(e){ prompt('Copy link ini:', b.dataset.copy); }
+      try{ await navigator.clipboard.writeText(b.dataset.copy); b.textContent = 'Copied'; setTimeout(() => b.textContent = 'Copy Link Form', 1500); }
+      catch(e){ prompt('Copy this link:', b.dataset.copy); }
     }));
 
     // --- Modul terpopuler (berdasarkan jumlah peserta 30 hari) ---
@@ -610,8 +611,8 @@
     const top = Object.entries(byMod).filter(([id]) => modById[id]).map(([id, x]) => ({ m: modById[id], n: x.who.size, avg: x.scores.length ? Math.round(x.scores.reduce((s,v)=>s+v,0) / x.scores.length) : null }))
       .sort((a,b) => b.n - a.n).slice(0, 5);
     document.getElementById('ahTop').innerHTML = top.length
-      ? top.map(x => `<div class="ah-row"><div><div class="t">${esc(x.m.judul)}</div><div class="text-meta">${esc(x.m.mode === 'offline' ? 'Offline' : 'Online')} · ${esc(x.m.kategori || '')}</div></div><div class="text-meta" style="text-align:right;">${x.n} peserta${x.avg != null ? ' · skor ' + x.avg : ''}</div></div>`).join('')
-      : `<div class="ah-ok">Belum ada peserta dalam 30 hari terakhir.</div>`;
+      ? top.map(x => `<div class="ah-row"><div><div class="t">${esc(x.m.judul)}</div><div class="text-meta">${esc(x.m.mode === 'offline' ? 'Offline' : 'Online')} · ${esc(x.m.kategori || '')}</div></div><div class="text-meta" style="text-align:right;">${x.n} participants${x.avg != null ? ' · score ' + x.avg : ''}</div></div>`).join('')
+      : `<div class="ah-ok">No participants in the last 30 days.</div>`;
   }
 
   async function loadTrainerHome(user){
@@ -628,11 +629,11 @@
         document.getElementById('trLevelIcon').innerHTML = iconSvg('user-check', { size: 26, color: '#fff' });
         document.getElementById('trLevelName').textContent = trProfile.levelSaatIni || 'New Comer';
         document.getElementById('trLevelSub').textContent = latest
-          ? `Score semester ${latest.semester}: ${latest.totalScore}${latest.levelBaruEligible && latest.levelBaruEligible !== trProfile.levelSaatIni ? ' · Eligible naik ke ' + latest.levelBaruEligible : ''}`
-          : 'Belum ada training offline yang terhitung skornya.';
+          ? `Score semester ${latest.semester}: ${latest.totalScore}${latest.levelBaruEligible && latest.levelBaruEligible !== trProfile.levelSaatIni ? ' · Eligible for ' + latest.levelBaruEligible : ''}`
+          : 'No scored offline trainings yet.';
       } else {
         document.getElementById('trLevelHint').style.display = 'block';
-        document.getElementById('trLevelHint').textContent = `Level Trainer Anda belum terhubung untuk email "${user.email}" — minta admin tautkan email PERSIS ini (bukan email lain) di Training Dashboard → Trainer Pool.`;
+        document.getElementById('trLevelHint').textContent = `Your trainer level isn't linked to "${user.email}" yet. Ask an admin to link this exact email in Manage Trainers.`;
       }
     } catch(e){ console.error('Gagal muat level trainer:', e); }
 
@@ -659,7 +660,7 @@
     } catch(e){ /* diamkan */ }
   }
 </script>
-<script type="module" src="./admin-shell.js?v=20261103"></script>
+<script type="module" src="./admin-shell.js?v=20261108"></script>
 <script src="./lms-motion.js?v=20261108" defer></script>
 </body>
 </html>

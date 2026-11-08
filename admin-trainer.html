@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kelola Trainer — Anteraja LMS</title>
+<title>Manage Trainers — Anteraja LMS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./lms-design-system.css?v=20261105b">
@@ -21,7 +21,7 @@
 <body>
 
 <div id="gate" class="locked-state" style="display:none;">
-  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Memuat...</p>
+  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Loading...</p>
   <p class="text-sub" id="gateSub"></p>
 </div>
 
@@ -29,7 +29,7 @@
   <div class="topbar">
     <div style="display:flex; align-items:center; gap:16px;">
       <a href="index.html" class="sidebar-logo" style="margin:0; text-decoration:none;">anteraja LMS</a>
-      <a href="index.html" class="text-sub" style="text-decoration:none; display:flex; align-items:center; gap:4px;">← Menu Utama</a>
+      <a href="index.html" class="text-sub" style="text-decoration:none; display:flex; align-items:center; gap:4px;">← Main Menu</a>
     </div>
     <div class="user-chip">
       <img class="avatar" id="userAvatar" src="">
@@ -38,40 +38,38 @@
   </div>
 
   <div class="wrap">
-    <h1 class="text-h1">Kelola Trainer</h1>
-    <p class="text-sub" style="margin-bottom:20px;">Assign NIK, Level Saat Ini, dan hubungkan email login trainer. Analitik/skor lengkap ada di <a href="training-dashboard-v2.html" style="color:var(--pink);">Training Dashboard</a>.</p>
+    <h1 class="text-h1">Manage Trainers</h1>
 
     <div class="kpi-row">
-      <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">TOTAL TRAINER</div><div class="kpi-value2" id="kpiTotalTrainer">-</div><div class="kpi-sub">Semua level</div></div>
-      <div class="kpi-card2" style="--accent:var(--green)"><div class="kpi-label2">SIAP NAIK LEVEL</div><div class="kpi-value2" id="kpiPromosi">-</div><div class="kpi-sub">Eligible &gt; level sekarang</div></div>
-      <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">SENIOR + MASTER</div><div class="kpi-value2" id="kpiSeniorMaster">-</div><div class="kpi-sub">Trainer level atas</div></div>
-      <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">EMAIL BELUM DIHUBUNGKAN</div><div class="kpi-value2" id="kpiNoEmail">-</div><div class="kpi-sub">Belum bisa lihat level sendiri</div></div>
+      <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">TOTAL TRAINER</div><div class="kpi-value2" id="kpiTotalTrainer">-</div><div class="kpi-sub">All levels</div></div>
+      <div class="kpi-card2" style="--accent:var(--green)"><div class="kpi-label2">READY TO LEVEL UP</div><div class="kpi-value2" id="kpiPromosi">-</div><div class="kpi-sub">Eligible &gt; current level</div></div>
+      <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">SENIOR + MASTER</div><div class="kpi-value2" id="kpiSeniorMaster">-</div><div class="kpi-sub">Top-level trainers</div></div>
+      <div class="kpi-card2" style="--accent:var(--pink)"><div class="kpi-label2">EMAIL NOT LINKED</div><div class="kpi-value2" id="kpiNoEmail">-</div><div class="kpi-sub">Can't see own level yet</div></div>
     </div>
 
     <div class="card" style="margin-bottom:20px;">
-      <h2 class="text-h2" style="margin-bottom:6px;">Tambah / Assign Trainer</h2>
-      <p class="text-sub" style="margin-bottom:12px;">Set NIK, Nama, Level Saat Ini, dan Email (opsional — supaya trainer bisa lihat level-nya sendiri di beranda LMS).</p>
+      <h2 class="text-h2" style="margin-bottom:6px;">Add / Assign Trainer</h2>
       <div style="display:grid; grid-template-columns:1fr 1.2fr 1.2fr 1fr auto; gap:8px; align-items:end;">
         <div><label>NIK</label><input type="text" id="tpNik"></div>
-        <div><label>Nama</label><input type="text" id="tpNama"></div>
-        <div><label>Email (login LMS)</label><input type="email" id="tpEmail" placeholder="opsional"></div>
+        <div><label>Name</label><input type="text" id="tpNama"></div>
+        <div><label>Email (LMS login)</label><input type="email" id="tpEmail" placeholder="optional"></div>
         <div><label>Level</label>
           <select id="tpLevel">
             <option>New Comer</option><option>Junior Trainer</option><option>Intermediate Trainer</option>
             <option>Senior Trainer</option><option>Master Trainer</option>
           </select>
         </div>
-        <button class="btn btn-primary" id="tpSaveBtn" style="margin-bottom:14px;">Simpan</button>
+        <button class="btn btn-primary" id="tpSaveBtn" style="margin-bottom:14px;">Save</button>
       </div>
     </div>
 
     <div class="panel">
-      <div class="panel-head"><h3>Daftar Trainer</h3></div>
+      <div class="panel-head"><h3>Trainers</h3></div>
       <div style="overflow-x:auto">
       <table class="data-table">
         <thead><tr>
-          <th>Nama</th><th>NIK</th><th>Email</th><th>Level Saat Ini</th>
-          <th>Semester Terakhir</th><th>Total Score</th><th>Eligible</th><th>Aksi</th>
+          <th>Name</th><th>NIK</th><th>Email</th><th>Current Level</th>
+          <th>Last Semester</th><th>Total Score</th><th>Eligible</th><th>Actions</th>
         </tr></thead>
         <tbody id="trainerTableBody"></tbody>
       </table>
@@ -147,7 +145,7 @@
       </tr>`;
     }).join('');
     document.getElementById('trainerEmpty').style.display = trainers.length ? 'none' : 'block';
-    document.getElementById('trainerEmpty').innerHTML = iconSvg('inbox',{size:24}) + '<p style="margin-top:8px;">Belum ada data trainer.</p>';
+    document.getElementById('trainerEmpty').innerHTML = iconSvg('inbox',{size:24}) + '<p style="margin-top:8px;">No trainer data yet.</p>';
 
     document.querySelectorAll('[data-nik]').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -167,15 +165,15 @@
     const nama = document.getElementById('tpNama').value.trim();
     const email = document.getElementById('tpEmail').value.trim().toLowerCase();
     const level = document.getElementById('tpLevel').value;
-    if(!nik || !nama){ showToast('NIK dan Nama wajib diisi.'); return; }
+    if(!nik || !nama){ showToast('NIK and Name are required.'); return; }
     try{
       const payload = { nama, levelSaatIni: level };
       if(email) payload.email = email;
       await setDoc(doc(db, 'trainerProfiles', nik), payload, { merge: true });
       document.getElementById('tpNik').value = ''; document.getElementById('tpNama').value = ''; document.getElementById('tpEmail').value = '';
-      showToast('Trainer tersimpan.');
+      showToast('Trainer saved.');
       await loadAll();
-    } catch(err){ showToast('Gagal simpan: ' + err.message); }
+    } catch(err){ showToast('Save failed: ' + err.message); }
   });
 
   onAuth(async (user) => {
@@ -183,15 +181,15 @@
     const shell = document.getElementById('appShell');
     if(!user){
       gate.style.display = 'block'; shell.style.display = 'none';
-      document.getElementById('gateTitle').textContent = 'Silakan login';
-      document.getElementById('gateSub').innerHTML = `<a href="index.html">Login dulu di sini</a>.`;
+      document.getElementById('gateTitle').textContent = 'Please sign in';
+      document.getElementById('gateSub').innerHTML = `<a href="index.html">Sign in here</a>.`;
       return;
     }
     const profile = await ensureUserProfile(user);
     if(profile.role !== 'admin'){
       gate.style.display = 'block'; shell.style.display = 'none';
-      document.getElementById('gateTitle').textContent = 'Akses ditolak';
-      document.getElementById('gateSub').textContent = 'Halaman ini cuma buat Admin.';
+      document.getElementById('gateTitle').textContent = 'Access denied';
+      document.getElementById('gateSub').textContent = 'This page is for Admins only.';
       return;
     }
     gate.style.display = 'none'; shell.style.display = 'block';
@@ -200,7 +198,7 @@
     loadAll();
   });
 </script>
-<script type="module" src="./admin-shell.js?v=20261103"></script>
+<script type="module" src="./admin-shell.js?v=20261108"></script>
 <script src="./lms-motion.js?v=20261108" defer></script>
 </body>
 </html>

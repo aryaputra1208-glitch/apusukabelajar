@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Data Karyawan — Anteraja LMS</title>
+<title>Employees — Anteraja LMS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../lms-design-system.css?v=20261105b">
@@ -30,7 +30,7 @@
 <body>
 
 <div id="gate" class="locked-state" style="display:none;">
-  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Memuat...</p>
+  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Loading...</p>
   <p class="text-sub" id="gateSub"></p>
 </div>
 
@@ -38,68 +38,67 @@
   <div class="topbar">
     <div style="display:flex; align-items:center; gap:16px;">
       <a href="index.html" class="sidebar-logo" style="margin:0; text-decoration:none;">anteraja TMS</a>
-      <a href="index.html" class="text-sub" style="text-decoration:none; display:flex; align-items:center; gap:4px;">← Menu TMS</a>
+      <a href="index.html" class="text-sub" style="text-decoration:none; display:flex; align-items:center; gap:4px;">← TMS Menu</a>
     </div>
     <div class="user-chip">
-      <a href="../index.html" class="btn btn-outline btn-sm" style="margin-right:6px;">Ke LMS</a>
+      <a href="../index.html" class="btn btn-outline btn-sm" style="margin-right:6px;">Go to LMS</a>
       <img class="avatar" id="userAvatar" src="">
       <span id="userName"></span>
     </div>
   </div>
 
   <div class="wrap wide">
-    <h1 class="text-h1">Data Karyawan</h1>
-    <p class="text-sub" style="margin-bottom:20px;">Master data karyawan dengan <strong>NIK sebagai kunci</strong>. Email menghubungkan akun login LMS dengan data offline (NIK), dan level + status punya bawahan menentukan kolom kamus kompetensi yang berlaku untuk tiap orang.</p>
+    <h1 class="text-h1">Employees</h1>
 
     <div class="kpi-row">
-      <div class="kpi-card2"><div class="kpi-label2">TOTAL KARYAWAN</div><div class="kpi-value2" id="kpiTotal">-</div><div class="kpi-sub">Di master data</div></div>
-      <div class="kpi-card2" style="--accent:var(--amber)"><div class="kpi-label2">EMAIL KOSONG</div><div class="kpi-value2" id="kpiNoEmail">-</div><div class="kpi-sub">Belum terhubung ke login</div></div>
-      <div class="kpi-card2" style="--accent:var(--red)"><div class="kpi-label2">LEVEL BELUM TERPETAKAN</div><div class="kpi-value2" id="kpiUnmapped">-</div><div class="kpi-sub">Tidak ada kolomnya di kamus</div></div>
-      <div class="kpi-card2" style="--accent:var(--blue)"><div class="kpi-label2">PUNYA BAWAHAN</div><div class="kpi-value2" id="kpiManager">-</div><div class="kpi-sub">Manual + otomatis dari Atasan NIK</div></div>
+      <div class="kpi-card2"><div class="kpi-label2">TOTAL EMPLOYEES</div><div class="kpi-value2" id="kpiTotal">-</div><div class="kpi-sub">In master data</div></div>
+      <div class="kpi-card2" style="--accent:var(--amber)"><div class="kpi-label2">NO EMAIL</div><div class="kpi-value2" id="kpiNoEmail">-</div><div class="kpi-sub">Not linked to a login</div></div>
+      <div class="kpi-card2" style="--accent:var(--red)"><div class="kpi-label2">UNMAPPED LEVEL</div><div class="kpi-value2" id="kpiUnmapped">-</div><div class="kpi-sub">No dictionary column</div></div>
+      <div class="kpi-card2" style="--accent:var(--blue)"><div class="kpi-label2">HAS DIRECT REPORTS</div><div class="kpi-value2" id="kpiManager">-</div><div class="kpi-sub">Manual + auto from Manager NIK</div></div>
     </div>
 
     <div class="card" style="margin-bottom:16px;">
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
-        <h2 class="text-h2" style="margin:0;">Upload Karyawan via Excel</h2>
+        <h2 class="text-h2" style="margin:0;">Upload Employees via Excel</h2>
         <span class="link-add" id="downloadTemplateBtn"></span>
       </div>
-      <p class="text-sub" style="margin-bottom:12px;">Kolom: <strong>NIK, Nama, Email, Jabatan, Level, Punya Bawahan, Atasan NIK, Divisi, Departemen, Job Family, Status</strong>. Wajib: NIK dan Nama. <em>Punya Bawahan</em> diisi Ya/Tidak — kalau kosong, dihitung otomatis dari siapa saja yang Atasan NIK-nya mengarah ke orang itu. Upload ulang memperbarui data berdasarkan NIK, data lain tidak terhapus.</p>
+      <p class="text-sub" style="margin-bottom:12px;">Columns: <strong>NIK, Nama, Email, Jabatan, Level, Punya Bawahan, Atasan NIK, Divisi, Departemen, Job Family, Status</strong>. Required: NIK, Nama. <em>Punya Bawahan</em>: Ya/Tidak (blank = auto from Atasan NIK). Re-uploads update by NIK.</p>
       <div class="dropzone" id="excelDropzone"></div>
       <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" style="display:none">
-      <label class="check-label"><input type="checkbox" id="syncApproved" checked> Sekalian daftarkan email ke akses login LMS (Kelola User) — role tidak diubah</label>
+      <label class="check-label"><input type="checkbox" id="syncApproved" checked> Also register emails for LMS login (Manage Users); roles unchanged</label>
       <div id="previewBox" class="preview-box" style="display:none;"></div>
     </div>
 
     <div class="card" style="margin-bottom:20px;">
-      <h2 class="text-h2" style="margin-bottom:12px;" id="formTitle">Tambah / Edit 1 Karyawan</h2>
+      <h2 class="text-h2" style="margin-bottom:12px;" id="formTitle">Add / Edit Employee</h2>
       <div class="form-grid">
         <div><label>NIK</label><input type="text" id="fNik"></div>
-        <div><label>Nama</label><input type="text" id="fNama"></div>
-        <div><label>Email (login LMS)</label><input type="email" id="fEmail" placeholder="opsional"></div>
-        <div><label>Jabatan</label><input type="text" id="fJabatan"></div>
+        <div><label>Name</label><input type="text" id="fNama"></div>
+        <div><label>Email (LMS login)</label><input type="email" id="fEmail" placeholder="optional"></div>
+        <div><label>Position</label><input type="text" id="fJabatan"></div>
         <div><label>Level</label><select id="fLevel"></select></div>
-        <div><label>Punya Bawahan</label>
-          <select id="fBawahan"><option value="">Otomatis (dari Atasan NIK)</option><option value="ya">Ya</option><option value="tidak">Tidak</option></select>
+        <div><label>Has Direct Reports</label>
+          <select id="fBawahan"><option value="">Auto (from Manager NIK)</option><option value="ya">Yes</option><option value="tidak">No</option></select>
         </div>
-        <div><label>Atasan NIK</label><input type="text" id="fAtasan"></div>
-        <div><label>Divisi</label><input type="text" id="fDivisi"></div>
-        <div><label>Departemen</label><input type="text" id="fDept"></div>
-        <div><label>Job Family</label><input type="text" id="fJobFamily" placeholder="mis. Operasional Hub"></div>
-        <div><label>Status</label><select id="fStatus"><option>Aktif</option><option>Nonaktif</option></select></div>
+        <div><label>Manager NIK</label><input type="text" id="fAtasan"></div>
+        <div><label>Division</label><input type="text" id="fDivisi"></div>
+        <div><label>Department</label><input type="text" id="fDept"></div>
+        <div><label>Job Family</label><input type="text" id="fJobFamily" placeholder="e.g. Operasional Hub"></div>
+        <div><label>Status</label><select id="fStatus"><option value="Aktif">Active</option><option value="Nonaktif">Inactive</option></select></div>
         <div style="display:flex; gap:8px; align-items:flex-end;">
-          <button class="btn btn-outline" id="resetFormBtn" style="margin-bottom:14px;">Kosongkan</button>
-          <button class="btn btn-primary" id="saveOneBtn" style="margin-bottom:14px; flex:1;">Simpan</button>
+          <button class="btn btn-outline" id="resetFormBtn" style="margin-bottom:14px;">Clear</button>
+          <button class="btn btn-primary" id="saveOneBtn" style="margin-bottom:14px; flex:1;">Save</button>
         </div>
       </div>
     </div>
 
     <div class="filter-row">
-      <input type="text" id="searchBox" placeholder="Cari NIK, nama, email, jabatan..." style="max-width:320px;">
+      <input type="text" id="searchBox" placeholder="Search NIK, name, email, position..." style="max-width:320px;">
       <select id="filterFlag" style="max-width:240px;">
-        <option value="">Semua karyawan</option>
-        <option value="noEmail">Email kosong</option>
-        <option value="unmapped">Level belum terpetakan</option>
-        <option value="noAtasan">Atasan NIK tidak ditemukan</option>
+        <option value="">All employees</option>
+        <option value="noEmail">No email</option>
+        <option value="unmapped">Unmapped level</option>
+        <option value="noAtasan">Manager NIK not found</option>
       </select>
       <span class="text-meta" id="rowCount"></span>
     </div>
@@ -108,7 +107,7 @@
       <div style="overflow-x:auto">
       <table class="data-table">
         <thead><tr>
-          <th>NIK</th><th>Nama</th><th>Jabatan</th><th>Level</th><th>Kolom Kamus</th><th>Atasan</th><th>Divisi</th><th></th>
+          <th>NIK</th><th>Name</th><th>Position</th><th>Level</th><th>Dictionary Column</th><th>Manager</th><th>Division</th><th></th>
         </tr></thead>
         <tbody id="empTableBody"></tbody>
       </table>
@@ -123,7 +122,7 @@
 <script type="module">
   import { db, onAuth, ensureUserProfile } from '../firebase-shared.js';
   import { iconSvg } from '../lms-icons.js';
-  import { levelKeyFor, levelLabel, escapeHtml } from '../competency-shared.js?v=20261023c';
+  import { levelKeyFor, levelLabel, escapeHtml } from '../competency-shared.js?v=20261108';
   import { collection, getDocs, doc, setDoc, updateDoc, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   // Sama dengan pilihan level di Kelola User & Buat Modul.
@@ -134,7 +133,7 @@
   let pending = null;          // hasil parse upload, menunggu konfirmasi
   let currentProfile = null;
 
-  document.getElementById('fLevel').innerHTML = LEVEL_OPTIONS.map(l => `<option value="${l}">${l || '- Pilih -'}</option>`).join('');
+  document.getElementById('fLevel').innerHTML = LEVEL_OPTIONS.map(l => `<option value="${l}">${l || '- Select -'}</option>`).join('');
 
   function showToast(msg){
     const t = document.getElementById('toast');
@@ -177,7 +176,7 @@
       employees.sort((a,b) => (a.nama || '').localeCompare(b.nama || ''));
     } catch(err){
       console.error('Gagal baca employees:', err.code, err.message);
-      showToast('Gagal memuat data: ' + err.message);
+      showToast('Failed to load data: ' + err.message);
     }
     render();
   }
@@ -197,22 +196,22 @@
     if(flag === 'noAtasan') rows = rows.filter(e => e.atasanNik && !byNik.has(e.atasanNik));
 
     const shown = rows.slice(0, 300);
-    document.getElementById('rowCount').textContent = rows.length > 300 ? `Menampilkan 300 dari ${rows.length} — persempit dengan pencarian.` : `${rows.length} karyawan`;
+    document.getElementById('rowCount').textContent = rows.length > 300 ? `Showing 300 of ${rows.length}. Narrow your search.` : `${rows.length} employees`;
     const nameByNik = {}; employees.forEach(e => nameByNik[e.nik] = e.nama);
 
     document.getElementById('empTableBody').innerHTML = shown.map(e => `<tr>
       <td>${escapeHtml(e.nik)}</td>
-      <td><strong>${escapeHtml(e.nama)}</strong><div class="text-meta">${e.email ? escapeHtml(e.email) : '<span style="color:#92400E;">email kosong</span>'}</div></td>
+      <td><strong>${escapeHtml(e.nama)}</strong><div class="text-meta">${e.email ? escapeHtml(e.email) : '<span style="color:#92400E;">no email</span>'}</div></td>
       <td>${escapeHtml(e.jabatan || '-')}</td>
-      <td>${escapeHtml(e.level || '-')}${e.punyaBawahan ? `<div class="text-meta">${e.jumlahBawahan || ''} bawahan${e.punyaBawahanSumber === 'manual' ? ' (manual)' : ''}</div>` : ''}</td>
-      <td>${e.levelKey ? `<span class="badge badge-blue">${escapeHtml(levelLabel(e.levelKey))}</span>` : '<span class="badge badge-red">Belum terpetakan</span>'}</td>
-      <td class="text-meta">${e.atasanNik ? escapeHtml(nameByNik[e.atasanNik] || (e.atasanNik + ' (tidak ditemukan)')) : '-'}</td>
+      <td>${escapeHtml(e.level || '-')}${e.punyaBawahan ? `<div class="text-meta">${e.jumlahBawahan || ''} reports${e.punyaBawahanSumber === 'manual' ? ' (manual)' : ''}</div>` : ''}</td>
+      <td>${e.levelKey ? `<span class="badge badge-blue">${escapeHtml(levelLabel(e.levelKey))}</span>` : '<span class="badge badge-red">Unmapped</span>'}</td>
+      <td class="text-meta">${e.atasanNik ? escapeHtml(nameByNik[e.atasanNik] || (e.atasanNik + ' (not found)')) : '-'}</td>
       <td class="text-meta">${escapeHtml(e.divisi || '-')}</td>
       <td><button class="icon-btn row-action" data-nik="${escapeHtml(e.nik)}" title="Edit">${iconSvg('settings',{size:14})}</button></td>
     </tr>`).join('');
     const empty = document.getElementById('empEmpty');
     empty.style.display = employees.length ? 'none' : 'block';
-    empty.innerHTML = iconSvg('inbox',{size:24}) + '<p style="margin-top:8px;">Belum ada data karyawan. Upload file Excel di atas.</p>';
+    empty.innerHTML = iconSvg('inbox',{size:24}) + '<p style="margin-top:8px;">No employee data yet. Upload an Excel file above.</p>';
 
     document.querySelectorAll('#empTableBody [data-nik]').forEach(btn => btn.addEventListener('click', () => fillForm(employees.find(x => x.nik === btn.dataset.nik))));
   }
@@ -229,13 +228,13 @@
     F('fBawahan').value = e.punyaBawahanSumber === 'manual' ? (e.punyaBawahan ? 'ya' : 'tidak') : '';
     F('fAtasan').value = e.atasanNik || ''; F('fDivisi').value = e.divisi || ''; F('fDept').value = e.departemen || '';
     F('fJobFamily').value = e.jobFamily || ''; F('fStatus').value = e.status || 'Aktif';
-    F('formTitle').textContent = 'Edit Karyawan — ' + (e.nama || e.nik);
+    F('formTitle').textContent = 'Edit Employee: ' + (e.nama || e.nik);
     window.scrollTo({ top: document.getElementById('formTitle').offsetTop - 80, behavior: 'smooth' });
   }
   function resetForm(){
     ['fNik','fNama','fEmail','fJabatan','fAtasan','fDivisi','fDept','fJobFamily'].forEach(id => F(id).value = '');
     F('fLevel').value = ''; F('fBawahan').value = ''; F('fStatus').value = 'Aktif';
-    F('formTitle').textContent = 'Tambah / Edit 1 Karyawan';
+    F('formTitle').textContent = 'Add / Edit Employee';
   }
   F('resetFormBtn').addEventListener('click', resetForm);
 
@@ -245,14 +244,14 @@
       'Level': F('fLevel').value, 'Punya Bawahan': F('fBawahan').value, 'Atasan NIK': F('fAtasan').value,
       'Divisi': F('fDivisi').value, 'Departemen': F('fDept').value, 'Job Family': F('fJobFamily').value, 'Status': F('fStatus').value,
     });
-    if(!rec.nik || !rec.nama){ showToast('NIK dan Nama wajib diisi.'); return; }
+    if(!rec.nik || !rec.nama){ showToast('NIK and Name are required.'); return; }
     await commitRecords([rec], F('syncApproved').checked);
     resetForm();
   });
 
   /* ===== Upload Excel ===== */
   const dz = F('excelDropzone'), input = F('excelFileInput');
-  dz.innerHTML = iconSvg('upload', {size:20}) + ' <span>Drag &amp; drop file .xlsx di sini, atau klik untuk pilih</span>';
+  dz.innerHTML = iconSvg('upload', {size:20}) + ' <span>Drag &amp; drop an .xlsx file here, or click to browse</span>';
   dz.addEventListener('click', () => input.click());
   input.addEventListener('change', e => { if(e.target.files[0]) handleFile(e.target.files[0]); input.value = ''; });
   dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
@@ -288,11 +287,11 @@
         rows.forEach((row, i) => {
           const r = buildRecord(row);
           const line = i + 2;
-          if(!r.nik || !r.nama){ warnings.push(`Baris ${line}: NIK/Nama kosong — dilewati.`); return; }
-          if(seen.has(r.nik)){ warnings.push(`Baris ${line}: NIK ${r.nik} dobel di file — baris terakhir yang dipakai.`); }
-          if(r.email && seenEmail[r.email] && seenEmail[r.email] !== r.nik) warnings.push(`Baris ${line}: email ${r.email} juga dipakai NIK ${seenEmail[r.email]}.`);
+          if(!r.nik || !r.nama){ warnings.push(`Row ${line}: NIK/Name empty, skipped.`); return; }
+          if(seen.has(r.nik)){ warnings.push(`Row ${line}: NIK ${r.nik} duplicated in file; last row used.`); }
+          if(r.email && seenEmail[r.email] && seenEmail[r.email] !== r.nik) warnings.push(`Row ${line}: email ${r.email} is also used by NIK ${seenEmail[r.email]}.`);
           if(r.email) seenEmail[r.email] = r.nik;
-          if(r.level && !LEVEL_OPTIONS.includes(r.level)) warnings.push(`Baris ${line}: level "${r.level}" tidak dikenal.`);
+          if(r.level && !LEVEL_OPTIONS.includes(r.level)) warnings.push(`Row ${line}: unknown level "${r.level}".`);
           seen.add(r.nik);
           const idx = records.findIndex(x => x.nik === r.nik);
           if(idx >= 0) records[idx] = r; else records.push(r);
@@ -301,7 +300,7 @@
         renderPreview();
       } catch(err){
         console.error('Gagal baca file karyawan:', err);
-        showToast('Gagal baca file: ' + err.message);
+        showToast('Could not read file: ' + err.message);
       }
     };
     reader.readAsBinaryString(file);
@@ -320,21 +319,21 @@
     const atasanMissing = touched.filter(e => e.atasanNik && !allNik.has(e.atasanNik)).length;
     box.style.display = 'block';
     box.innerHTML = `
-      <div style="font-weight:700; margin-bottom:6px;">Pratinjau: ${records.length} karyawan terbaca</div>
-      <div class="text-sub">${nBaru} baru, ${records.length - nBaru} memperbarui data lama. ${records.filter(r => !r.email).length} tanpa email.</div>
-      <div class="text-sub">${unmapped} level belum terpetakan ke kamus, ${atasanMissing} Atasan NIK tidak ditemukan.</div>
-      ${warnings.length ? `<ul class="warn-list">${warnings.slice(0, 50).map(w => `<li>${escapeHtml(w)}</li>`).join('')}${warnings.length > 50 ? `<li>… dan ${warnings.length - 50} lainnya</li>` : ''}</ul>` : ''}
+      <div style="font-weight:700; margin-bottom:6px;">Preview: ${records.length} employees read</div>
+      <div class="text-sub">${nBaru} new, ${records.length - nBaru} updates. ${records.filter(r => !r.email).length} without email.</div>
+      <div class="text-sub">${unmapped} unmapped levels, ${atasanMissing} manager NIKs not found.</div>
+      ${warnings.length ? `<ul class="warn-list">${warnings.slice(0, 50).map(w => `<li>${escapeHtml(w)}</li>`).join('')}${warnings.length > 50 ? `<li>… and ${warnings.length - 50} more</li>` : ''}</ul>` : ''}
       <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
-        <button class="btn btn-outline btn-sm" id="cancelUploadBtn">Batal</button>
-        <button class="btn btn-primary btn-sm" id="confirmUploadBtn" ${records.length ? '' : 'disabled'}>Simpan ke Database</button>
+        <button class="btn btn-outline btn-sm" id="cancelUploadBtn">Cancel</button>
+        <button class="btn btn-primary btn-sm" id="confirmUploadBtn" ${records.length ? '' : 'disabled'}>Save to Database</button>
       </div>`;
     F('cancelUploadBtn').addEventListener('click', () => { pending = null; box.style.display = 'none'; });
     F('confirmUploadBtn').addEventListener('click', async () => {
       const btn = F('confirmUploadBtn');
-      btn.disabled = true; btn.textContent = 'Menyimpan...';
+      btn.disabled = true; btn.textContent = 'Saving...';
       const ok = await commitRecords(pending.records, F('syncApproved').checked);
       if(ok){ pending = null; box.style.display = 'none'; }
-      else { btn.disabled = false; btn.textContent = 'Simpan ke Database'; }
+      else { btn.disabled = false; btn.textContent = 'Save to Database'; }
     });
   }
 
@@ -383,7 +382,7 @@
       }
     } catch(err){
       console.error('Gagal simpan employees/approved_users:', err.code, err.message);
-      showToast('Gagal simpan: ' + err.message);
+      showToast('Save failed: ' + err.message);
       return false;
     }
 
@@ -402,13 +401,13 @@
       } catch(err){ console.error('Gagal baca users untuk sinkron:', err.code, err.message); }
     }
 
-    showToast(`${records.length} karyawan tersimpan.`);
+    showToast(`${records.length} employees saved.`);
     await loadAll();
     return true;
   }
 
   /* ===== Template ===== */
-  F('downloadTemplateBtn').innerHTML = iconSvg('file-text', {size:13}) + ' Download Template Excel';
+  F('downloadTemplateBtn').innerHTML = iconSvg('file-text', {size:13}) + ' Download Excel Template';
   F('downloadTemplateBtn').addEventListener('click', () => {
     const contoh = [
       ['12345', 'Contoh Supervisor', 'contoh.spv@anteraja.id', 'Hub Supervisor', 'Supervisor', '', '11111', 'OPERATION', 'Hub Operation', 'Operasional Hub', 'Aktif'],
@@ -425,15 +424,15 @@
     const gate = F('gate'), shell = F('appShell');
     if(!user){
       gate.style.display = 'block'; shell.style.display = 'none';
-      F('gateTitle').textContent = 'Silakan login';
-      F('gateSub').innerHTML = `<a href="../index.html">Login dulu di sini</a>.`;
+      F('gateTitle').textContent = 'Please sign in';
+      F('gateSub').innerHTML = `<a href="../index.html">Sign in here</a>.`;
       return;
     }
     currentProfile = await ensureUserProfile(user);
     if(currentProfile.role !== 'admin'){
       gate.style.display = 'block'; shell.style.display = 'none';
-      F('gateTitle').textContent = 'Akses ditolak';
-      F('gateSub').textContent = 'Halaman ini cuma buat Admin.';
+      F('gateTitle').textContent = 'Access denied';
+      F('gateSub').textContent = 'This page is for Admins only.';
       return;
     }
     gate.style.display = 'none'; shell.style.display = 'block';

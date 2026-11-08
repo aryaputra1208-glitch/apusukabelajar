@@ -7,25 +7,25 @@ import { iconSvg } from './lms-icons.js';
 import { doc, getDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
 const NAV = [
-  { group: 'Umum', items: [
-    { href: 'index.html', icon: 'home', label: 'Beranda' },
+  { group: 'General', items: [
+    { href: 'index.html', icon: 'home', label: 'Home' },
   ]},
-  { group: 'Konten', items: [
-    { href: 'admin-approval.html', icon: 'check', label: 'Approval Modul', badge: 'approval' },
-    { href: 'admin-trainings.html', icon: 'layout-grid', label: 'Daftar Training' },
-    { href: 'trainer-create-module.html', icon: 'plus', label: 'Buat Modul' },
-    { href: 'trainee-library.html', icon: 'books', label: 'Library Modul' },
+  { group: 'Content', items: [
+    { href: 'admin-approval.html', icon: 'check', label: 'Module Approval', badge: 'approval' },
+    { href: 'admin-trainings.html', icon: 'layout-grid', label: 'All Trainings' },
+    { href: 'trainer-create-module.html', icon: 'plus', label: 'Create Module' },
+    { href: 'trainee-library.html', icon: 'books', label: 'Module Library' },
   ]},
-  { group: 'Orang', items: [
-    { href: 'admin-users.html', icon: 'users', label: 'Kelola User' },
-    { href: 'admin-trainer.html', icon: 'user-check', label: 'Kelola Trainer' },
-    { href: 'trainer-submissions.html', icon: 'file-text', label: 'Nilai Submission', badge: 'submissions' },
+  { group: 'People', items: [
+    { href: 'admin-users.html', icon: 'users', label: 'Manage Users' },
+    { href: 'admin-trainer.html', icon: 'user-check', label: 'Manage Trainers' },
+    { href: 'trainer-submissions.html', icon: 'file-text', label: 'Grade Submissions', badge: 'submissions' },
   ]},
-  { group: 'Laporan', items: [
-    { href: 'trainer-analytics.html', icon: 'chart-bar', label: 'Analitik Modul' },
+  { group: 'Reports', items: [
+    { href: 'trainer-analytics.html', icon: 'chart-bar', label: 'Module Analytics' },
     { href: 'training-dashboard-v2.html', icon: 'chart-bar', label: 'Training Dashboard' },
   ]},
-  { group: 'Aplikasi Lain', items: [
+  { group: 'Other Apps', items: [
     { href: 'tms/index.html', icon: 'arrow-right', label: 'TMS' },
   ]},
 ];
@@ -56,7 +56,7 @@ function render() {
   const here = currentFile();
   const aside = document.createElement('nav');
   aside.className = 'admin-sidebar';
-  aside.setAttribute('aria-label', 'Menu admin');
+  aside.setAttribute('aria-label', 'Admin menu');
   aside.innerHTML = `<a class="as-logo" href="index.html">anteraja LMS</a><div class="as-role">Admin</div>` +
     NAV.map(g => `<div class="as-group">${g.group}</div>` + g.items.map(it =>
       `<a class="as-item ${it.href === here ? 'active' : ''}" href="${it.href}">${iconSvg(it.icon, { size: 16 })}<span>${it.label}</span>${it.badge ? `<span class="as-badge" data-badge="${it.badge}"></span>` : ''}</a>`
