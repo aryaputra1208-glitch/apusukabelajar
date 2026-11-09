@@ -22,7 +22,7 @@
     function place(el, show) {
       if (!el || !el.offsetParent) { L.classList.remove('on'); return; }
       var b = box.getBoundingClientRect(), r = el.getBoundingClientRect();
-      var appear = !L.classList.contains('on'); if (appear) L.style.transition = 'opacity .22s ease';
+      var appear = !L.classList.contains('on'); if (appear) L.style.transition = 'opacity .1s linear';
       L.style.width = r.width + 'px'; L.style.height = r.height + 'px';
       L.style.transform = 'translate(' + (r.left - b.left + box.scrollLeft) + 'px,' + (r.top - b.top + box.scrollTop) + 'px)';
       if (appear) { void L.offsetWidth; L.style.transition = ''; }
@@ -64,7 +64,7 @@
     var L = rowLens(host);
     var b = host.getBoundingClientRect(), r = row.getBoundingClientRect();
     var pad = Math.min(8, Math.max(0, r.left - b.left - 4));
-    var appear = !L.classList.contains('on'); if (appear) L.style.transition = 'opacity .22s ease';
+    var appear = !L.classList.contains('on'); if (appear) L.style.transition = 'opacity .1s linear';
     L.style.width = (r.width + pad * 2) + 'px'; L.style.height = r.height + 'px';
     L.style.transform = 'translate(' + (r.left - b.left - pad + host.scrollLeft) + 'px,' + (r.top - b.top + host.scrollTop) + 'px)';
     if (appear) { void L.offsetWidth; L.style.transition = ''; }
