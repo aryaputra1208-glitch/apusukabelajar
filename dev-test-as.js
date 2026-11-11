@@ -33,7 +33,7 @@ export function mountTestAs({ realEmail }) {
   const roleLbl = { admin: 'Admin', trainer: 'Trainer', trainee: 'Trainee' };
   const btn = document.createElement('button');
   btn.className = 'tas-btn';
-  btn.textContent = active ? `Testing: ${t.role ? roleLbl[t.role] : 'own role'}${t.email ? ' · ' + t.email : ''}` : 'Test as…';
+  btn.textContent = active ? `Testing: ${t.role ? roleLbl[t.role] : 'own role'}${t.email ? ' · ' + (t.nama || t.email) : ''}` : 'Test as…';
   document.body.appendChild(btn);
   if (active) {
     const bn = document.createElement('div'); bn.className = 'tas-banner';
@@ -55,29 +55,37 @@ export function mountTestAs({ realEmail }) {
         <option value="trainer">Trainer</option>
         <option value="trainee">Trainee</option>
       </select>
-      <label>View as employee email (TMS: manager, mentor, employee)</label>
-      <input id="tasEmail" list="tasEmpList" placeholder="Leave empty = my own email">
-      <datalist id="tasEmpList"></datalist>
-      <div class="m" style="margin-top:6px;">Example: pick a manager to see My Team, a mentor for My Mentees, or an employee for IDP Saya.</div>
+      <label>View as employee (TMS: manager, mentor, employee)</label>
+      <input id="tasSearch" placeholder="Search name, NIK or position…" style="margin-bottom:6px;">
+      <select id="tasEmp" size="7" style="height:auto;"><option value="">— Myself —</option></select>
+      <div class="m" style="margin-top:6px;">Pick a manager to see My Team, a mentor for My Mentees, or an employee for IDP Saya. Employees without an email can't be picked.</div>
       <div class="row"><button id="tasReset">Reset</button><button class="p" id="tasApply">Apply</button></div>`;
     document.body.appendChild(panel);
     const cur = getTestAs() || {};
     panel.querySelector('#tasRole').value = cur.role || '';
-    panel.querySelector('#tasEmail').value = cur.email || '';
+    const sel = panel.querySelector('#tasEmp');
+    let emps = [];
+    const draw = () => {
+      const q = panel.querySelector('#tasSearch').value.trim().toLowerCase();
+      const list = emps.filter(e => !q || `${e.nama} ${e.nik} ${e.jabatan}`.toLowerCase().includes(q));
+      sel.innerHTML = `<option value="">— Myself —</option>` + list.slice(0, 200).map(e =>
+        `<option value="${esc(e.email)}" ${e.email ? '' : 'disabled'} ${e.email && e.email === cur.email ? 'selected' : ''}>${esc(e.nama)} · ${esc(e.jabatan || e.level || '')}${e.email ? '' : ' (no email)'}</option>`).join('');
+      if (!cur.email) sel.value = '';
+    };
+    panel.querySelector('#tasSearch').addEventListener('input', draw);
     panel.querySelector('#tasApply').addEventListener('click', () => {
       const role = panel.querySelector('#tasRole').value;
-      const raw = panel.querySelector('#tasEmail').value.trim();
-      const m = raw.match(/[^\s<>()]+@[^\s<>()]+/);
-      const email = m ? m[0].toLowerCase() : '';
-      setTestAs(role || email ? { role, email } : null);
+      const email = (sel.value || '').toLowerCase();
+      const nama = email ? (emps.find(e => e.email === email)?.nama || '') : '';
+      setTestAs(role || email ? { role, email, nama } : null);
       location.reload();
     });
     panel.querySelector('#tasReset').addEventListener('click', () => { setTestAs(null); location.reload(); });
     try {
       const snap = await getDocs(collection(db, 'employees'));
-      const opts = [];
-      snap.forEach(d => { const e = d.data(); if (e.email) opts.push(`<option value="${esc(e.email)}">${esc(e.nama || '')} · ${esc(e.jabatan || e.level || '')}</option>`); });
-      const dl = panel?.querySelector('#tasEmpList'); if (dl) dl.innerHTML = opts.join('');
+      snap.forEach(d => { const e = d.data(); emps.push({ nik: d.id, nama: e.nama || d.id, jabatan: e.jabatan || '', level: e.level || '', email: (e.email || '').toLowerCase() }); });
+      emps.sort((a, b) => a.nama.localeCompare(b.nama));
+      if (panel) draw();
     } catch (err) { console.error('Mode uji: gagal baca employees', err.code, err.message); }
   });
 }
