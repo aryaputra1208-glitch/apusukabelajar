@@ -71,6 +71,7 @@
 <script type="module">
   import { db, onAuth, ensureUserProfile } from '../firebase-shared.js';
   import { iconSvg } from '../lms-icons.js';
+  import { itemProgress, planIdOf } from '../competency-shared.js?v=20261111';
   import { collection, getDocs, query, where, limit } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const F = id => document.getElementById(id);
@@ -133,23 +134,31 @@
   /* ================= Dashboard admin (HR/OD) ================= */
   const cnt = async (q, label) => { try{ return (await getDocs(q)).size; } catch(err){ console.error('Gagal hitung', label, err.code, err.message); return null; } };
   async function adminDashboardHtml(){
-    const [nEmp, plans, assess] = await Promise.all([
+    const [nEmp, plans, assess, updates, attempts] = await Promise.all([
       cnt(collection(db, 'employees'), 'employees'),
       getDocs(collection(db, 'developmentPlans')).then(s => { const o = []; s.forEach(d => o.push(d.data())); return o; }).catch(() => []),
       getDocs(collection(db, 'assessments')).then(s => { const o = []; s.forEach(d => o.push(d.data())); return o; }).catch(() => []),
+      getDocs(collection(db, 'idpUpdates')).then(s => { const o = []; s.forEach(d => o.push(d.data())); return o; }).catch(() => []),
+      getDocs(collection(db, 'attempts')).then(s => { const o = []; s.forEach(d => o.push(d.data())); return o; }).catch(() => []),
     ]);
     const rank = p => { const m = String(p || '').match(/^(\d{4})(?:-S([12]))?$/); return m ? Number(m[1]) * 10 + (m[2] ? Number(m[2]) : 3) : 0; };
     const lastP = assess.map(a => a.periode).sort((a, b) => rank(b) - rank(a))[0];
     const nAssessed = assess.filter(a => a.periode === lastP).length;
     const st = p => p.approval?.status || 'approved';
-    const nApproved = plans.filter(p => st(p) === 'approved').length, nPending = plans.filter(p => st(p) === 'pending').length;
+    const nApproved = plans.filter(p => st(p) === 'approved').length;
+    // IDP berjalan = sudah disetujui dan masih ada aksi yang belum selesai
+    const ongoing = plans.filter(p => st(p) === 'approved' && (p.items || []).some(it => {
+      if(it.status === 'batal') return false;
+      const att = attempts.filter(a => a.nik === p.nik || (p.email && a.email === p.email));
+      return itemProgress(it, att, updates.filter(u => u.planId === planIdOf(p))).status !== 'selesai';
+    })).length;
     const v = n => n == null ? '-' : n;
     return `
       <div class="kpi-row">
         <a class="kpi" href="employees.html"><div class="n">${v(nEmp)}</div><div class="l">Employees</div><div class="s">In master data</div></a>
         <a class="kpi" href="performance.html"><div class="n">${nAssessed}</div><div class="l">Assessed</div><div class="s">${lastP ? 'Latest period ' + lastP : 'No PA imported yet'}</div></a>
         <a class="kpi" href="idp-dashboard.html"><div class="n">${nApproved}/${plans.length}</div><div class="l">IDPs Approved</div><div class="s">All periods</div></a>
-        <a class="kpi" href="idp-dashboard.html"><div class="n">${nPending}</div><div class="l">Pending Approval</div><div class="s">Waiting for managers</div></a>
+        <a class="kpi" href="idp-dashboard.html"><div class="n">${ongoing}</div><div class="l">Ongoing IDPs</div><div class="s">Approved, activities still running</div></a>
       </div>
       <div class="hav-wrap">
         <div class="panel" style="margin:0;">
