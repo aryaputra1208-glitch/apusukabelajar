@@ -284,11 +284,12 @@ export function idpItemStatus(item, attempts) {
    - developmentPlans/{periode_nik}.approval = { status, byEmail, byNama, at, note, submittedAt }
      status: draft → pending (HR/OD submit) → approved | revision (atasan langsung)
    - developmentPlans.ack = { at } — karyawan menyatakan setuju dengan IDP yang sudah disetujui atasan
-   - mentorships/{planId__itemId}  — salinan item mentoring/coaching untuk mentor (mentor TIDAK baca IDP lengkap)
+   - developmentPlans.mentorNik/mentorNama/mentorEmail — SATU mentor per IDP (Department Head ke atas) yang
+     menyetujui IDP dan memperbarui progres seluruh aktivitasnya
    - idpUpdates/{auto}             — update progres oleh mentor/atasan/HR (sekaligus timeline/jejak audit)
    ========================================================= */
 export const APPROVAL_STATUS = { draft: 'Draft', pending: 'Pending Approval', approved: 'Approved', revision: 'Revision Requested' };
-export const APPROVAL_STATUS_ID = { draft: 'Disusun HR/OD', pending: 'Menunggu Persetujuan Atasan', approved: 'Disetujui', revision: 'Sedang Direvisi HR/OD' };
+export const APPROVAL_STATUS_ID = { draft: 'Disusun HR/OD', pending: 'Menunggu Persetujuan Mentor', approved: 'Disetujui', revision: 'Sedang Direvisi HR/OD' };
 export const APPROVAL_BADGE = { draft: 'badge-gray', pending: 'badge-amber', approved: 'badge-green', revision: 'badge-red' };
 /** Status yang bisa dipilih mentor/atasan saat update progres. */
 export const PROGRESS_STATUS = ['rencana', 'berjalan', 'selesai'];
@@ -312,8 +313,24 @@ export function itemProgress(item, attempts, updates) {
   const last = mine[0] || null;
   const base = idpItemStatus(item, attempts);
   if (base.auto || item.status === 'batal') return { ...base, last, updates: mine };
-  if (item.jenis !== 'training' && last && (!item.statusAt || String(last.at) > String(item.statusAt))) return { status: last.status, auto: false, last, updates: mine };
+  if (last && (!item.statusAt || String(last.at) > String(item.statusAt))) return { status: last.status, auto: false, last, updates: mine };
   return { status: item.status || 'rencana', auto: false, last, updates: mine };
+}
+
+/** Calon mentor: karyawan level DH ke atas yang punya email. */
+export function isMentorEligible(emp) { return !!emp?.email && VIEWER_LEVEL_KEYS.includes(emp.levelKey); }
+/** Mentor default: DH+ terdekat di garis atasan karyawan. */
+export function defaultMentorFor(nik, employeesByNik) {
+  const seen = new Set([nik]);
+  let cur = employeesByNik[nik]?.atasanNik;
+  while (cur && !seen.has(cur)) {
+    seen.add(cur);
+    const boss = employeesByNik[cur];
+    if (!boss) break;
+    if (isMentorEligible(boss)) return boss;
+    cur = boss.atasanNik;
+  }
+  return null;
 }
 
 const DAY_MS = 86400000;
@@ -338,7 +355,7 @@ export function reminderReason(target, today = new Date()) {
 /** Siapa yang diingatkan untuk satu aksi: training → karyawan, mentoring/coaching → mentor, lainnya → atasan langsung. */
 export function reminderRecipient(plan, item) {
   if (item.jenis === 'training') return { email: plan.email || '', nama: plan.nama || plan.nik, role: 'Employee' };
-  if (['mentoring', 'coaching'].includes(item.jenis) && item.mentorEmail) return { email: item.mentorEmail, nama: item.mentorNama || item.mentorEmail, role: item.jenis === 'coaching' ? 'Coach' : 'Mentor' };
+  if (plan.mentorEmail) return { email: plan.mentorEmail, nama: plan.mentorNama || plan.mentorEmail, role: 'Mentor' };
   return { email: plan.atasanEmail || '', nama: plan.atasanNama || plan.atasanNik || '', role: 'Manager' };
 }
 
@@ -358,7 +375,7 @@ export function computeReminders({ plans, updatesByPlan = {}, attemptsFor = () =
     const appr = planApproval(plan);
     if (appr.status === 'pending' && appr.submittedAt) {
       const waited = -daysUntil(appr.submittedAt, today);
-      if (waited >= 3 && waited % 3 === 0) box({ email: plan.atasanEmail, nama: plan.atasanNama || plan.atasanNik || '-', role: 'Manager' }).approvals.push({ plan, days: waited });
+      if (waited >= 3 && waited % 3 === 0) box({ email: plan.mentorEmail || plan.atasanEmail, nama: plan.mentorNama || plan.atasanNama || '-', role: 'Mentor' }).approvals.push({ plan, days: waited });
     }
     if (appr.status !== 'approved') return;
     const ups = updatesByPlan[planIdOf(plan)] || [];

@@ -71,7 +71,7 @@
 <script type="module">
   import { db, onAuth, ensureUserProfile } from '../firebase-shared.js';
   import { iconSvg } from '../lms-icons.js';
-  import { itemProgress, planIdOf, havNormalize, havPlace, HAV_ZONES, HAV_PERF_SOURCES, HAV_POT_SOURCES, escapeHtml, periodeLabel } from '../competency-shared.js?v=20261111b';
+  import { itemProgress, planIdOf, havNormalize, havPlace, HAV_ZONES, HAV_PERF_SOURCES, HAV_POT_SOURCES, escapeHtml, periodeLabel } from '../competency-shared.js?v=20261111c';
   import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
   import { collection, getDocs, query, where, limit } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
@@ -94,31 +94,18 @@
     const profile = await ensureUserProfile(user);
     const email = (user.email || '').toLowerCase();
     const isAdmin = profile.role === 'admin';
-    const all = async (q, label) => { try{ const out = []; (await getDocs(q)).forEach(d => out.push(d.data())); return out; } catch(err){ console.error('Gagal cek akses', label, err.code, err.message); return []; } };
-    const [isViewer, hasIdp, teamPlans, ships] = await Promise.all([
-      isAdmin ? false : exists(query(collection(db, 'assessments'), where('viewerEmails', 'array-contains', email), limit(1)), 'assessments'),
-      exists(query(collection(db, 'developmentPlans'), where('email', '==', email), limit(1)), 'developmentPlans'),
-      all(query(collection(db, 'developmentPlans'), where('atasanEmail', '==', email)), 'team'),
-      all(query(collection(db, 'mentorships'), where('mentorEmail', '==', email)), 'mentorships'),
-    ]);
-    const pendingMine = teamPlans.filter(p => p.approval?.status === 'pending').length;
-    const menteeCount = new Set(ships.map(m => m.planId)).size;
-
+    const hasIdpQuick = await exists(query(collection(db, 'developmentPlans'), where('email', '==', email), limit(1)), 'developmentPlans');
+    const isMentor = await exists(query(collection(db, 'developmentPlans'), where('mentorEmail', '==', email), limit(1)), 'mentor');
+    // Non-admin tidak punya beranda: mentor → halaman IDP mentor, karyawan → IDP Saya
+    if(!isAdmin){
+      if(isMentor) return location.replace('mentor-idp.html');
+      if(hasIdpQuick) return location.replace('my-idp.html');
+    }
     let html = '';
     if(isAdmin){
       F('mainWrap').classList.add('wide');
       F('pageTitle').textContent = 'Dashboard';
       html += await adminDashboardHtml();
-    }
-    const teamCards = [];
-    if(teamPlans.length) teamCards.push({ href: 'team.html', icon: 'users', title: 'My Team', desc: pendingMine ? `<strong style="color:var(--pink);">${pendingMine} IDP${pendingMine === 1 ? '' : 's'} awaiting your approval</strong>` : 'Approve IDPs & update team progress' });
-    if(menteeCount) teamCards.push({ href: 'mentees.html', icon: 'user-check', title: 'My Mentees', desc: `${menteeCount} mentee${menteeCount === 1 ? '' : 's'} · update mentoring progress` });
-    if(isViewer) teamCards.push({ href: 'profile.html', icon: 'chart-bar', title: 'Team Competency Profile', desc: 'Scores, gaps & IDPs (DH and above)' });
-    html += section('Your Team', teamCards);
-    if(hasIdp){
-      html += section('For You', [
-        { href: 'my-idp.html', icon: 'file-text', title: 'My IDP', desc: 'Your development plan' },
-      ]);
     }
     if(!html){
       F('gateTitle').textContent = 'Nothing to show yet';
@@ -233,7 +220,7 @@
     document.querySelectorAll('#havGrid [data-k], #havDist [data-k]').forEach(el => el.addEventListener('click', () => { havSel = el.dataset.k; drawHav(); }));
   }
 </script>
-<script type="module" src="./tms-shell.js?v=20261111d"></script>
+<script type="module" src="./tms-shell.js?v=20261111e"></script>
 <script src="../lms-motion.js?v=20261109" defer></script>
 </body>
 </html>

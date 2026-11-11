@@ -67,18 +67,16 @@ onAuth(async (user) => {
     const profile = await ensureUserProfile(user);
     const email = (user.email || '').toLowerCase();
     const isAdmin = profile.role === 'admin';
-    const [nTeam, nPendingMine, nMentee, nViewer, nIdp, nPendingAll] = await Promise.all([
-      count(query(collection(db, 'developmentPlans'), where('atasanEmail', '==', email), limit(1)), 'team'),
-      count(query(collection(db, 'developmentPlans'), where('atasanEmail', '==', email), where('approval.status', '==', 'pending')), 'pending-mine'),
-      count(query(collection(db, 'mentorships'), where('mentorEmail', '==', email), limit(1)), 'mentorships'),
-      isAdmin ? 0 : count(query(collection(db, 'assessments'), where('viewerEmails', 'array-contains', email), limit(1)), 'assessments'),
+    const [nMentor, nPendingMine, nIdp, nPendingAll] = await Promise.all([
+      count(query(collection(db, 'developmentPlans'), where('mentorEmail', '==', email), limit(1)), 'mentor'),
+      count(query(collection(db, 'developmentPlans'), where('mentorEmail', '==', email), where('approval.status', '==', 'pending')), 'pending-mine'),
       count(query(collection(db, 'developmentPlans'), where('email', '==', email), limit(1)), 'my-idp'),
       isAdmin ? count(query(collection(db, 'developmentPlans'), where('approval.status', '==', 'pending')), 'pending-all') : 0,
     ]);
     if (seq !== authSeq) return; // sudah ganti akun selagi menunggu
 
     const nav = [
-      { group: 'General', items: [{ href: 'index.html', icon: 'home', label: 'Home' }] },
+      { group: 'General', items: isAdmin ? [{ href: 'index.html', icon: 'home', label: 'Home' }] : [] },
       { group: 'Employee Development', items: isAdmin ? [
         { href: 'profile.html', icon: 'user-check', label: 'Competency Profile' },
         { href: 'idp.html', icon: 'check', label: 'IDP' },
@@ -90,15 +88,11 @@ onAuth(async (user) => {
         { href: 'performance.html', icon: 'chart-bar', label: 'Performance Data' },
         { href: 'hav-setup.html', icon: 'layout-grid', label: 'HAV Map Setup' },
       ] : [] },
-      { group: 'Your Team', items: [
-        ...(nTeam ? [{ href: 'team.html', icon: 'users', label: 'My Team', badge: nPendingMine || '' }] : []),
-        ...(nMentee ? [{ href: 'mentees.html', icon: 'user-check', label: 'My Mentees' }] : []),
-        ...(nViewer ? [{ href: 'profile.html', icon: 'chart-bar', label: 'Team Competency Profile' }] : []),
-      ] },
+      { group: 'Mentoring', items: nMentor ? [{ href: 'mentor-idp.html', icon: 'users', label: isAdmin ? 'My Mentees' : 'IDP', badge: nPendingMine || '' }] : [] },
       { group: 'For You', items: nIdp ? [{ href: 'my-idp.html', icon: 'file-text', label: 'IDP Saya' }] : [] },
       { group: 'Other Apps', items: [{ href: '../index.html', icon: 'arrow-right', label: 'LMS' }] },
     ];
-    const roleLabel = isAdmin ? 'HR/OD (Admin)' : nTeam ? 'Manager' : nMentee ? 'Mentor' : 'Employee';
+    const roleLabel = isAdmin ? 'HR/OD (Admin)' : nMentor ? 'Department Head · Mentor' : 'Employee';
     render(nav, roleLabel);
   } catch (err) { console.error('Sidebar TMS: gagal memuat', err.code, err.message); }
 });

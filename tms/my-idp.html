@@ -51,15 +51,15 @@
       <div class="stat-card"><div class="stat-num" id="sTraining">-</div><div class="stat-label">Training di LMS Belum Selesai</div></div>
     </div>
     <div id="blocks"></div>
-    <p class="text-meta" style="margin-top:20px;">IDP disusun oleh tim HR/OD dan disetujui atasan Anda. Item training otomatis selesai saat Anda lulus post-test di LMS. Progres aksi lain (mentoring, coaching, penugasan) diperbarui oleh mentor atau atasan Anda.</p>
+    <p class="text-meta" style="margin-top:20px;">IDP disusun oleh tim HR/OD dan disetujui mentor Anda. Item training otomatis selesai saat Anda lulus post-test di LMS. Progres aktivitas lain diperbarui oleh mentor Anda.</p>
   </div>
 </div>
 
 <script type="module">
   import { db, onAuth, ensureUserProfile } from '../firebase-shared.js';
   import { iconSvg } from '../lms-icons.js';
-  import { escapeHtml, periodeRank, periodeLabelId as periodeLabel, IDP_JENIS_ID as IDP_JENIS, IDP_STATUS_ID as IDP_STATUS, planApproval, itemProgress, APPROVAL_STATUS_ID } from '../competency-shared.js?v=20261111b';
-  import { timelineHtml, targetHtml } from './idp-ui.js?v=20261111c';
+  import { escapeHtml, periodeRank, periodeLabelId as periodeLabel, IDP_JENIS_ID as IDP_JENIS, IDP_STATUS_ID as IDP_STATUS, planApproval, itemProgress, APPROVAL_STATUS_ID } from '../competency-shared.js?v=20261111c';
+  import { timelineHtml, targetHtml } from './idp-ui.js?v=20261111d';
   import { collection, getDocs, query, where, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const F = id => document.getElementById(id);
@@ -81,7 +81,7 @@
     if(!plan){
       const st = planApproval(plans[0]).status;
       F('gateTitle').textContent = 'IDP Anda sedang disiapkan';
-      F('gateSub').innerHTML = `Status: <strong>${escapeHtml(APPROVAL_STATUS_ID[st] || st)}</strong>. IDP akan tampil di sini setelah disetujui atasan Anda. <a href="../index.html">Kembali ke LMS</a>.`;
+      F('gateSub').innerHTML = `Status: <strong>${escapeHtml(APPROVAL_STATUS_ID[st] || st)}</strong>. IDP akan tampil di sini setelah disetujui mentor Anda. <a href="../index.html">Kembali ke LMS</a>.`;
       return false;
     }
     const newer = plans[0] !== plan ? planApproval(plans[0]).status : null;
@@ -99,9 +99,9 @@
     const appr = planApproval(plan);
     F('ackBox').style.display = 'block';
     F('ackBox').innerHTML = appr.legacy ? '' : plan.ack?.at
-      ? `<span class="badge badge-green">Disetujui</span> <span class="text-meta">oleh ${escapeHtml(appr.byNama || 'atasan')} · Anda menyetujui ${escapeHtml(fmtDate(plan.ack.at))}</span>${appr.note ? `<div class="text-meta" style="margin-top:6px;">Catatan atasan: “${escapeHtml(appr.note)}”</div>` : ''}`
-      : `<div class="text-h3" style="margin-bottom:4px;">IDP Anda sudah disetujui ${escapeHtml(appr.byNama || 'atasan')}</div>
-         ${appr.note ? `<div class="text-meta">Catatan atasan: “${escapeHtml(appr.note)}”</div>` : ''}
+      ? `<span class="badge badge-green">Disetujui</span> <span class="text-meta">oleh ${escapeHtml(appr.byNama || 'mentor')} · Anda menyetujui ${escapeHtml(fmtDate(plan.ack.at))}</span>${appr.note ? `<div class="text-meta" style="margin-top:6px;">Catatan mentor: “${escapeHtml(appr.note)}”</div>` : ''}`
+      : `<div class="text-h3" style="margin-bottom:4px;">IDP Anda sudah disetujui ${escapeHtml(appr.byNama || 'mentor')}</div>
+         ${appr.note ? `<div class="text-meta">Catatan mentor: “${escapeHtml(appr.note)}”</div>` : ''}
          <div class="text-meta" style="margin-top:4px;">Baca rencana di bawah, lalu nyatakan setuju supaya pengembangan bisa dimulai.</div>
          <button class="btn btn-primary btn-sm" id="ackBtn" style="margin-top:10px;">Saya Setuju dengan IDP Ini</button>`;
     if(!appr.legacy && !plan.ack?.at) F('ackBox').style.borderLeft = '3px solid var(--pink)';
@@ -150,7 +150,7 @@
     if(await load(user)){ F('gate').style.display = 'none'; F('appShell').style.display = 'block'; }
   });
 </script>
-<script type="module" src="./tms-shell.js?v=20261111d"></script>
+<script type="module" src="./tms-shell.js?v=20261111e"></script>
 <script src="../lms-motion.js?v=20261109" defer></script>
 </body>
 </html>

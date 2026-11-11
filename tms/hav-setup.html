@@ -106,7 +106,7 @@
 
 <script type="module">
   import { db, onAuth, ensureUserProfile } from '../firebase-shared.js';
-  import { escapeHtml, periodeRank, periodeLabel, HAV_PERF_SOURCES, HAV_POT_SOURCES, HAV_ZONES, havNormalize, havDefaultConfig, havLevels, havDefaultCells, havAxesOverlap, havPlace } from '../competency-shared.js?v=20261111b';
+  import { escapeHtml, periodeRank, periodeLabel, HAV_PERF_SOURCES, HAV_POT_SOURCES, HAV_ZONES, havNormalize, havDefaultConfig, havLevels, havDefaultCells, havAxesOverlap, havPlace } from '../competency-shared.js?v=20261111c';
   import { collection, getDocs, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const F = id => document.getElementById(id);
@@ -210,7 +210,7 @@
     render();
   });
 </script>
-<script type="module" src="./tms-shell.js?v=20261111d"></script>
+<script type="module" src="./tms-shell.js?v=20261111e"></script>
 <script src="../lms-motion.js?v=20261109" defer></script>
 </body>
 </html>

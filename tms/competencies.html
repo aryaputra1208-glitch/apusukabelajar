@@ -125,7 +125,7 @@
 <script type="module">
   import { db, onAuth, ensureUserProfile } from '../firebase-shared.js';
   import { iconSvg } from '../lms-icons.js';
-  import { LEVEL_COLUMNS, KATEGORI_ORDER, DEFAULT_SCALE, matchLevelHeader, slugify, escapeHtml } from '../competency-shared.js?v=20261111b';
+  import { LEVEL_COLUMNS, KATEGORI_ORDER, DEFAULT_SCALE, matchLevelHeader, slugify, escapeHtml } from '../competency-shared.js?v=20261111c';
   import { collection, getDocs, doc, getDoc, setDoc, updateDoc, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   let competencies = [];
@@ -436,7 +436,7 @@
     loadAll();
   });
 </script>
-<script type="module" src="./tms-shell.js?v=20261111d"></script>
+<script type="module" src="./tms-shell.js?v=20261111e"></script>
 <script src="../lms-motion.js?v=20261109" defer></script>
 </body>
 </html>

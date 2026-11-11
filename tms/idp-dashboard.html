@@ -103,8 +103,8 @@
 <script type="module">
   import { db, onAuth, ensureUserProfile } from '../firebase-shared.js';
   import { iconSvg } from '../lms-icons.js';
-  import { escapeHtml, periodeRank, periodeLabel, IDP_JENIS, APPROVAL_STATUS, APPROVAL_BADGE, planApproval, itemProgress, planIdOf, daysUntil, computeReminders, reminderEmail } from '../competency-shared.js?v=20261111b';
-  import { fmtDate, isOverdue } from './idp-ui.js?v=20261111c';
+  import { escapeHtml, periodeRank, periodeLabel, IDP_JENIS, APPROVAL_STATUS, APPROVAL_BADGE, planApproval, itemProgress, planIdOf, daysUntil, computeReminders, reminderEmail } from '../competency-shared.js?v=20261111c';
+  import { fmtDate, isOverdue } from './idp-ui.js?v=20261111d';
   import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const F = id => document.getElementById(id);
@@ -178,7 +178,7 @@
     F('pendCount').textContent = pendSorted.length ? `${pendSorted.length} IDP${pendSorted.length === 1 ? '' : 's'}` : '';
     F('pendList').innerHTML = pendSorted.map(f => `<div class="rem">
       <div><a href="idp.html?nik=${encodeURIComponent(f.p.nik)}&periode=${encodeURIComponent(f.p.periode)}" style="font-weight:600; color:var(--text);">${escapeHtml(f.p.nama)}</a>
-        <div class="text-meta">Approver: ${escapeHtml(f.p.atasanNama || '-')}${f.p.atasanEmail ? '' : ' · <span style="color:var(--red);">no email</span>'}</div></div>
+        <div class="text-meta">Mentor: ${escapeHtml(f.p.mentorNama || '-')}${f.p.mentorEmail ? '' : ' · <span style="color:var(--red);">no mentor set</span>'}</div></div>
       <span class="badge ${f.days >= 7 ? 'badge-red' : f.days >= 3 ? 'badge-amber' : 'badge-gray'}">${f.days == null ? '-' : f.days === 0 ? 'today' : f.days + 'd'}</span>
     </div>`).join('') || `<div class="empty-state">${iconSvg('check',{size:22})}<p style="margin-top:6px;">Nothing waiting for approval.</p></div>`;
 
@@ -239,7 +239,7 @@
     await load();
   });
 </script>
-<script type="module" src="./tms-shell.js?v=20261111d"></script>
+<script type="module" src="./tms-shell.js?v=20261111e"></script>
 <script src="../lms-motion.js?v=20261109" defer></script>
 </body>
 </html>

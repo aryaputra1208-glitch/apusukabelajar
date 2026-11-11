@@ -408,7 +408,7 @@
     link.href = isViewer ? 'tms/index.html' : 'tms/my-idp.html';
     document.getElementById('tmsLinkIcon').innerHTML = iconSvg(isViewer ? 'user-check' : 'file-text', {size:20});
     document.getElementById('tmsLinkTitle').textContent = isViewer ? 'Buka TMS — Tim Anda' : 'IDP Saya';
-    document.getElementById('tmsLinkDesc').textContent = isViewer ? 'IDP & progres tim atau mentee Anda' + (hasIdp ? ', juga IDP Anda' : '') : 'Rencana pengembangan Anda: training, mentoring, dan lainnya';
+    document.getElementById('tmsLinkDesc').textContent = isViewer ? 'IDP mentee & profil tim Anda' + (hasIdp ? ', juga IDP Anda' : '') : 'Rencana pengembangan Anda: training, mentoring, dan lainnya';
     link.style.display = 'block';
   }
 
@@ -418,8 +418,7 @@
     const any = async (q, label) => { try{ return !(await getDocs(q)).empty; } catch(err){ console.error('Gagal cek akses', label, err.code, err.message); return false; } };
     const res = await Promise.all([
       any(query(collection(db, 'assessments'), where('viewerEmails', 'array-contains', me), limit(1)), 'assessments'),
-      any(query(collection(db, 'developmentPlans'), where('atasanEmail', '==', me), limit(1)), 'developmentPlans'),
-      any(query(collection(db, 'mentorships'), where('mentorEmail', '==', me), limit(1)), 'mentorships'),
+      any(query(collection(db, 'developmentPlans'), where('mentorEmail', '==', me), limit(1)), 'developmentPlans'),
     ]);
     return res.some(Boolean);
   }

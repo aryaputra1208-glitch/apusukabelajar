@@ -95,8 +95,8 @@
   import {
     KATEGORI_ORDER, DEFAULT_SCALE, escapeHtml, levelLabel, periodeRank, periodeLabel, round2, gapsFor, recommendModules,
     viewerEmailsFor, gapStatuses, PASSING_SCORE, IDP_JENIS, IDP_STATUS, idpItemStatus,
-    APPROVAL_STATUS, APPROVAL_BADGE, planApproval, planContentSignature, itemProgress, mentorshipIdOf,
-  } from '../competency-shared.js?v=20261111b';
+    APPROVAL_STATUS, APPROVAL_BADGE, planApproval, planContentSignature, itemProgress, isMentorEligible, defaultMentorFor,
+  } from '../competency-shared.js?v=20261111c';
   import { collection, getDocs, doc, getDoc, setDoc, query, where, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const F = id => document.getElementById(id);
@@ -193,7 +193,8 @@
     const a = assessments.find(x => x.nik === nik && x.periode === selectedPeriode);
     if(!a){ F('editor').style.display = 'none'; return; }
     const existing = plans[`${a.periode}_${a.nik}`];
-    draft = { items: JSON.parse(JSON.stringify(existing?.items || [])), catatan: existing?.catatan || '', dirty: false, updates: [] };
+    draft = { items: JSON.parse(JSON.stringify(existing?.items || [])), catatan: existing?.catatan || '', dirty: false, updates: [],
+      mentorNik: existing?.mentorNik || defaultMentorFor(nik, employeesByNik)?.nik || '' };
     F('editor').style.display = 'block';
     F('editor').innerHTML = '<p class="text-sub" style="margin-top:24px;">Loading...</p>';
     const planId = `${a.periode}_${a.nik}`;
@@ -252,8 +253,7 @@
           ${!it.kompetensiId ? `<div class="lbl">COMPETENCY</div><select data-f="kompetensiId" style="margin-bottom:8px;">${compSelect('')}</select>` : ''}
           ${isTraining
             ? `<div class="lbl">LMS MODULE</div><select data-f="moduleId">${moduleOptions(it.kompetensiId, it.moduleId)}</select>`
-            : `<div class="lbl">ACTIVITY</div><textarea rows="2" data-f="deskripsi" placeholder="e.g. Shadow the manager on weekly planning for 4 weeks">${escapeHtml(it.deskripsi || '')}</textarea>
-               ${['mentoring','coaching'].includes(it.jenis) ? `<div class="lbl" style="margin-top:8px;">${it.jenis === 'mentoring' ? 'MENTOR' : 'COACH'}</div><input type="text" list="employeeList" data-f="mentor" value="${escapeHtml(it.mentorNik ? `${it.mentorNik} — ${it.mentorNama || ''}` : '')}" placeholder="Type name / NIK">${it.mentorNik && !employeesByNik[it.mentorNik]?.email ? '<div class="text-meta" style="color:var(--red,#c0392b); margin-top:4px;">This mentor has no email in Employees, so they cannot see this activity in TMS.</div>' : ''}` : ''}`}
+            : `<div class="lbl">ACTIVITY</div><textarea rows="2" data-f="deskripsi" placeholder="e.g. Shadow the manager on weekly planning for 4 weeks">${escapeHtml(it.deskripsi || '')}</textarea>`}
           ${lastUp}
         </div>
         <div><div class="lbl">TARGET</div><input type="date" data-f="targetTanggal" value="${escapeHtml(it.targetTanggal || '')}"></div>
@@ -287,18 +287,27 @@
     }).join('');
 
     const plan = plans[`${a.periode}_${a.nik}`];
-    const boss = employeesByNik[emp.atasanNik] || null;
+    const mentor = employeesByNik[draft.mentorNik] || null;
+    const mentorOpts = employees.filter(e => isMentorEligible(e) && e.nik !== a.nik && (e.status || 'Aktif') === 'Aktif').sort((x, y) => (x.nama || '').localeCompare(y.nama || ''));
+    const defMentor = defaultMentorFor(a.nik, employeesByNik);
     const appr = plan ? planApproval(plan) : { status: 'draft' };
-    const changed = plan && planContentSignature(draft.items, draft.catatan) !== planContentSignature(plan.items, plan.catatan);
+    const changed = plan && (planContentSignature(draft.items, draft.catatan) !== planContentSignature(plan.items, plan.catatan) || (draft.mentorNik || '') !== (plan.mentorNik || ''));
     const approvalCard = `
       <div class="card" style="margin-bottom:16px; display:flex; gap:16px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap;">
         <div>
           <div class="text-h3" style="margin-bottom:6px;">Approval <span class="badge ${APPROVAL_BADGE[appr.status]}" style="margin-left:6px;">${plan ? APPROVAL_STATUS[appr.status] : 'Not saved yet'}</span></div>
-          <div class="text-meta">Approver (direct manager): ${boss ? `<strong>${escapeHtml(boss.nama || boss.nik)}</strong> · ${escapeHtml(boss.jabatan || '')}${boss.email ? '' : ' · <span style="color:var(--red,#c0392b);">no email</span>'}` : '<span style="color:var(--red,#c0392b);">Manager NIK not set in Employees</span>'}</div>
+          <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin:6px 0 4px;">
+            <span class="text-meta" style="font-weight:600;">Mentor & approver</span>
+            <select id="mentorSel" style="margin:0; min-width:260px; max-width:360px;">
+              <option value="">- Select mentor (Department Head and above) -</option>
+              ${mentorOpts.map(e => `<option value="${escapeHtml(e.nik)}" ${e.nik === draft.mentorNik ? 'selected' : ''}>${escapeHtml(e.nama || e.nik)} · ${escapeHtml(e.jabatan || levelLabel(e.levelKey) || '')}${defMentor?.nik === e.nik ? ' (default)' : ''}</option>`).join('')}
+            </select>
+          </div>
+          ${!mentorOpts.length ? '<div class="text-meta" style="color:var(--red,#c0392b);">No Department Head+ with an email in Employees yet.</div>' : !mentor ? '<div class="text-meta" style="color:var(--red,#c0392b);">Select a mentor before submitting. The mentor approves the IDP and updates its progress.</div>' : ''}
           ${appr.status === 'pending' && appr.submittedAt ? `<div class="text-meta">Submitted ${escapeHtml(fmtDate(appr.submittedAt))}</div>` : ''}
           ${appr.status === 'approved' && appr.at ? `<div class="text-meta">Approved by ${escapeHtml(appr.byNama || appr.byEmail || '-')} · ${escapeHtml(fmtDate(appr.at))}${plan?.ack?.at ? ` · employee agreed ${escapeHtml(fmtDate(plan.ack.at))}` : ' · <span>awaiting employee agreement</span>'}</div>` : ''}
           ${appr.note ? `<div style="margin-top:8px; padding:8px 12px; border-left:3px solid var(--pink); background:rgba(255,255,255,.5);"><span class="text-meta">${appr.status === 'revision' ? 'Revision note' : 'Note'} from ${escapeHtml(appr.byNama || appr.byEmail || '')}:</span><br>${escapeHtml(appr.note)}</div>` : ''}
-          ${changed && ['approved','pending'].includes(appr.status) ? '<div class="text-meta" style="margin-top:6px; color:var(--red,#c0392b);">You changed activities or notes: saving will move this IDP back to Draft and it will need approval again.</div>' : ''}
+          ${changed && ['approved','pending'].includes(appr.status) ? '<div class="text-meta" style="margin-top:6px; color:var(--red,#c0392b);">You changed activities, notes or the mentor: saving moves this IDP back to Draft and the mentor needs to approve it again.</div>' : ''}
         </div>
       </div>`;
     F('editor').innerHTML = `
@@ -335,9 +344,9 @@
       <div class="sticky-save">
         <span class="text-meta" id="dirtyInfo" style="align-self:center;">${draft.dirty ? 'You have unsaved changes.' : ''}</span>
         <button class="btn btn-outline" id="savePlanBtn">Save Draft</button>
-        ${boss?.email
-          ? `<button class="btn btn-primary" id="submitPlanBtn" ${appr.status === 'pending' && !changed && !draft.dirty ? 'disabled' : ''}>${appr.status === 'approved' && !appr.legacy && !changed ? 'Save' : 'Save & Submit for Approval'}</button>`
-          : `<button class="btn btn-primary" id="approveHrBtn" title="Manager has no email in Employees">Save & Approve as HR/OD</button>`}
+        ${mentor
+          ? `<button class="btn btn-primary" id="submitPlanBtn" ${appr.status === 'pending' && !changed && !draft.dirty ? 'disabled' : ''}>${appr.status === 'approved' && !appr.legacy && !changed ? 'Save' : 'Save & Submit to Mentor'}</button>`
+          : `<button class="btn btn-primary" disabled title="Select a mentor first">Save & Submit to Mentor</button>`}
       </div>`;
     bindEditor();
   }
@@ -388,8 +397,9 @@
     });
     F('planCatatan').addEventListener('input', e => { draft.catatan = e.target.value; markDirty(); });
     F('savePlanBtn').addEventListener('click', () => savePlan('save'));
+    F('mentorSel')?.addEventListener('change', e => { draft.mentorNik = e.target.value; draft.dirty = true; renderEditor(); });
     F('submitPlanBtn')?.addEventListener('click', () => savePlan(F('submitPlanBtn').textContent === 'Save' ? 'save' : 'submit'));
-    F('approveHrBtn')?.addEventListener('click', () => savePlan('approveHr'));
+
   }
 
   async function savePlan(mode){
@@ -399,6 +409,8 @@
     if(mode !== 'save' && !draft.items.length){ showToast('Add at least one activity before submitting.'); return; }
     const emp = employeesByNik[a.nik] || {};
     const boss = employeesByNik[emp.atasanNik] || null;
+    const mentor = employeesByNik[draft.mentorNik] || null;
+    if(mode === 'submit' && !mentor){ showToast('Select a mentor first.'); return; }
     const id = `${a.periode}_${a.nik}`;
     const prev = plans[id];
     const prevAppr = prev ? planApproval(prev) : { status: 'draft' };
@@ -408,22 +420,17 @@
         targetTanggal: it.targetTanggal || '', status: it.status || 'rencana', dibuat: it.dibuat || nowIso };
       if(it.statusAt) clean.statusAt = it.statusAt;
       if(it.jenis === 'training'){ const m = modules.find(x => x.id === it.moduleId); clean.moduleId = it.moduleId; clean.judul = m?.judul || ''; clean.mode = m?.mode || 'online'; }
-      else {
-        clean.deskripsi = String(it.deskripsi || '').trim();
-        if(it.mentorNama || it.mentorNik){ clean.mentorNik = it.mentorNik || ''; clean.mentorNama = it.mentorNama || ''; clean.mentorEmail = (employeesByNik[it.mentorNik]?.email || '').toLowerCase(); }
-      }
+      else clean.deskripsi = String(it.deskripsi || '').trim();
       return clean;
     });
     const catatan = draft.catatan.trim();
-    const changed = !prev || planContentSignature(items, catatan) !== planContentSignature(prev.items, prev.catatan);
+    const changed = !prev || planContentSignature(items, catatan) !== planContentSignature(prev.items, prev.catatan) || (draft.mentorNik || '') !== (prev.mentorNik || '');
 
     let approval;
     if(mode === 'submit'){
       approval = { status: 'pending', submittedAt: nowIso, submittedBy: currentProfile.email };
       if(prevAppr.status === 'revision' && prevAppr.note) approval.previousNote = prevAppr.note;
-    } else if(mode === 'approveHr'){
-      if(!confirm(`${a.nama}'s manager has no email in Employees, so they cannot approve in TMS. Approve this IDP as HR/OD?`)) return;
-      approval = { status: 'approved', byEmail: currentProfile.email, byNama: currentProfile.displayName || currentProfile.email, at: nowIso, note: 'Approved by HR/OD (manager has no email in TMS).' };
+
     } else if(!prev){
       approval = { status: 'draft' };
     } else if(changed && ['approved', 'pending'].includes(prevAppr.status)){
@@ -438,6 +445,7 @@
       divisi: emp.divisi || a.divisi || '', departemen: emp.departemen || a.departemen || '',
       periode: a.periode, periodeRank: periodeRank(a.periode), items, catatan,
       atasanNik: boss?.nik || '', atasanNama: boss?.nama || '', atasanEmail: (boss?.email || '').toLowerCase(),
+      mentorNik: mentor?.nik || '', mentorNama: mentor?.nama || '', mentorJabatan: mentor?.jabatan || '', mentorEmail: (mentor?.email || '').toLowerCase(),
       viewerEmails: viewerEmailsFor(a.nik, employeesByNik), approval,
       updatedAt: serverTimestamp(), updatedBy: currentProfile.email,
     };
@@ -446,24 +454,11 @@
     try{
       const batch = writeBatch(db);
       batch.set(doc(db, 'developmentPlans', id), data);
-      // salinan aksi mentoring/coaching untuk mentor
-      const keep = new Set();
-      items.filter(it => ['mentoring', 'coaching'].includes(it.jenis) && it.mentorEmail).forEach(it => {
-        const mid = mentorshipIdOf(id, it.id); keep.add(mid);
-        batch.set(doc(db, 'mentorships', mid), {
-          planId: id, itemId: it.id, periode: a.periode, nik: a.nik, menteeNama: data.nama, menteeJabatan: data.jabatan,
-          kompetensiId: it.kompetensiId, kompetensiNama: it.kompetensiNama, jenis: it.jenis, deskripsi: it.deskripsi, targetTanggal: it.targetTanggal,
-          status: it.status, statusAt: it.statusAt || '', mentorEmail: it.mentorEmail, mentorNik: it.mentorNik, mentorNama: it.mentorNama,
-          atasanEmail: data.atasanEmail, atasanNama: data.atasanNama, menteeEmail: data.email, viewerEmails: data.viewerEmails, planStatus: approval.status, updatedAt: nowIso,
-        });
-      });
-      const old = await getDocs(query(collection(db, 'mentorships'), where('planId', '==', id))).catch(() => null);
-      old?.forEach(d => { if(!keep.has(d.id)) batch.delete(doc(db, 'mentorships', d.id)); });
       await batch.commit();
       plans[id] = data;
       draft.items = JSON.parse(JSON.stringify(items));
       draft.dirty = false;
-      showToast({ submit: 'IDP saved and sent to the manager for approval.', approveHr: 'IDP saved and approved.' }[mode] || (approval.status === 'draft' ? 'IDP saved as draft.' : 'IDP saved.'));
+      showToast({ submit: `IDP saved and sent to ${mentor?.nama || 'the mentor'} for approval.` }[mode] || (approval.status === 'draft' ? 'IDP saved as draft.' : 'IDP saved.'));
       renderList(); renderEditor();
     } catch(err){ console.error('Gagal simpan developmentPlans:', err.code, err.message, data); showToast('Save failed: ' + err.message); }
   }
@@ -492,7 +487,7 @@
     loadAll();
   });
 </script>
-<script type="module" src="./tms-shell.js?v=20261111d"></script>
+<script type="module" src="./tms-shell.js?v=20261111e"></script>
 <script src="../lms-motion.js?v=20261109" defer></script>
 </body>
 </html>

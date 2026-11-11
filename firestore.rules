@@ -149,22 +149,21 @@ service cloud.firestore {
       );
       allow write: if isSignedIn() && myRole() == 'admin';
     }
-    // IDP: disusun admin (HR/OD), disetujui atasan langsung, karyawan menyatakan setuju (ack).
-    // Baca: admin, karyawan ybs (tanpa skor), atasan langsung (atasanEmail), atasan DH+ di garis atasan (viewerEmails).
-    // Mentor TIDAK membaca dokumen ini — mentor hanya melihat salinan aksinya di /mentorships.
+    // IDP: disusun admin (HR/OD), disetujui MENTOR (satu mentor per IDP, level Department Head ke atas).
+    // Baca: admin, karyawan ybs (tanpa skor), mentor IDP (mentorEmail), atasan DH+ di garis atasan (viewerEmails).
     match /developmentPlans/{planId} {
       function approvalStatus(d) { return d.get('approval', {'status': 'approved'}).get('status', 'approved'); }
       allow read: if isSignedIn() && (
         myRole() == 'admin' ||
         (myEmail() != null && resource.data.email != '' && resource.data.email == myEmail()) ||
-        (myEmail() != null && resource.data.get('atasanEmail', '') == myEmail()) ||
+        (myEmail() != null && resource.data.get('mentorEmail', '') == myEmail()) ||
         (myEmail() != null && myEmail() in resource.data.viewerEmails)
       );
       allow create, delete: if isSignedIn() && myRole() == 'admin';
       allow update: if isSignedIn() && (
         myRole() == 'admin' ||
-        // atasan langsung: approve / minta revisi saat status pending — hanya field approval
-        (resource.data.get('atasanEmail', '') == myEmail() && myEmail() != '' &&
+        // mentor: approve / minta revisi saat status pending — hanya field approval
+        (resource.data.get('mentorEmail', '') == myEmail() && myEmail() != '' &&
          approvalStatus(resource.data) == 'pending' &&
          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['approval']) &&
          request.resource.data.approval.status in ['approved', 'revision'] &&
@@ -175,40 +174,29 @@ service cloud.firestore {
          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ack']))
       );
     }
-    // Salinan aksi mentoring/coaching untuk mentor (ditulis admin saat simpan IDP).
-    // Atasan langsung boleh memperbarui planStatus saat approve.
+    // (Lama) salinan aksi untuk mentor per aksi — tidak dipakai lagi sejak satu mentor per IDP.
     match /mentorships/{mentorshipId} {
-      allow read: if isSignedIn() && (myRole() == 'admin' || resource.data.mentorEmail == myEmail() || resource.data.atasanEmail == myEmail());
-      allow create, delete: if isSignedIn() && myRole() == 'admin';
-      allow update: if isSignedIn() && (
-        myRole() == 'admin' ||
-        (resource.data.atasanEmail == myEmail() && myEmail() != '' &&
-         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['planStatus']))
-      );
+      allow read, write: if isSignedIn() && myRole() == 'admin';
     }
-    // Update progres IDP (+ timeline). Dibuat mentor (hanya untuk aksi yang dia bimbing), atasan langsung, atau admin,
-    // dan hanya saat IDP sudah disetujui. Email karyawan & atasan disalin dari IDP dan divalidasi supaya tidak bisa dipalsukan.
+    // Update progres IDP (+ timeline/evidence). Dibuat mentor IDP atau admin, hanya saat IDP sudah disetujui.
+    // Email karyawan & mentor disalin dari IDP dan divalidasi supaya tidak bisa dipalsukan. Tidak bisa diubah/dihapus.
     match /idpUpdates/{updateId} {
       function planDoc() { return get(/databases/$(database)/documents/developmentPlans/$(request.resource.data.planId)).data; }
-      function mshipPath() { return /databases/$(database)/documents/mentorships/$(request.resource.data.planId + '__' + request.resource.data.itemId); }
       allow read: if isSignedIn() && (
         myRole() == 'admin' ||
-        (myEmail() != '' && (resource.data.menteeEmail == myEmail() || resource.data.atasanEmail == myEmail() ||
-                             resource.data.mentorEmail == myEmail() || myEmail() in resource.data.viewerEmails))
+        (myEmail() != '' && (resource.data.menteeEmail == myEmail() || resource.data.mentorEmail == myEmail() ||
+                             myEmail() in resource.data.viewerEmails))
       );
       allow create: if isSignedIn() && myEmail() != '' &&
         request.resource.data.byEmail == myEmail() &&
         request.resource.data.status in ['rencana', 'berjalan', 'selesai'] &&
         request.resource.data.menteeEmail == planDoc().email &&
-        request.resource.data.atasanEmail == planDoc().get('atasanEmail', '') &&
+        request.resource.data.mentorEmail == planDoc().get('mentorEmail', '') &&
         request.resource.data.viewerEmails is list &&
-        (exists(mshipPath()) ? request.resource.data.mentorEmail == get(mshipPath()).data.mentorEmail : request.resource.data.mentorEmail == '') &&
         (
           myRole() == 'admin' ||
-          (planDoc().get('approval', {'status': 'approved'}).get('status', 'approved') == 'approved' && (
-            planDoc().get('atasanEmail', '') == myEmail() ||
-            (exists(mshipPath()) && get(mshipPath()).data.mentorEmail == myEmail())
-          ))
+          (planDoc().get('approval', {'status': 'approved'}).get('status', 'approved') == 'approved' &&
+           planDoc().get('mentorEmail', '') == myEmail())
         );
       allow update, delete: if false; // jejak audit: tidak bisa diubah
     }

@@ -5,7 +5,7 @@
    - dialog catatan (minta revisi)
    ========================================================= */
 import { db, auth } from '../firebase-shared.js';
-import { escapeHtml, IDP_STATUS, IDP_STATUS_ID, PROGRESS_STATUS, daysUntil } from '../competency-shared.js?v=20261111b';
+import { escapeHtml, IDP_STATUS, IDP_STATUS_ID, PROGRESS_STATUS, daysUntil } from '../competency-shared.js?v=20261111c';
 import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
 const CSS = `
@@ -129,17 +129,16 @@ export function askNote({ title, label, placeholder, okText, required = true }) 
 
 /**
  * Simpan update progres ke idpUpdates.
- * src = { planId, nik, periode, menteeEmail, atasanEmail, viewerEmails } ; item = aksi IDP (butuh id, jenis, kompetensiId, mentorEmail)
+ * src = { planId, nik, periode, menteeEmail, mentorEmail, viewerEmails } ; item = aksi IDP (butuh id, kompetensiId)
  */
-export async function postUpdate({ src, item, status, note, evidenceUrl, byRole, profile }) {
-  const hasMentorship = ['mentoring', 'coaching'].includes(item.jenis) && !!item.mentorEmail;
+export async function postUpdate({ src, item, status, note, evidenceUrl, what, evidence, doneDate, byRole, profile }) {
   const data = {
     planId: src.planId, itemId: item.id, nik: src.nik, periode: src.periode, kompetensiId: item.kompetensiId || '',
-    status, note, evidenceUrl: evidenceUrl || '',
+    status, note: note || what || '', evidenceUrl: evidenceUrl || '',
+    what: what || '', evidence: evidence || '', doneDate: doneDate || '',
     at: new Date().toISOString(), createdAt: serverTimestamp(),
     byEmail: (auth.currentUser?.email || profile.email || '').toLowerCase(), byNama: profile.displayName || profile.email, byRole,
-    menteeEmail: src.menteeEmail || '', atasanEmail: src.atasanEmail || '',
-    mentorEmail: hasMentorship ? item.mentorEmail : '', viewerEmails: src.viewerEmails || [],
+    menteeEmail: src.menteeEmail || '', mentorEmail: src.mentorEmail || '', viewerEmails: src.viewerEmails || [],
   };
   await addDoc(collection(db, 'idpUpdates'), data);
   return data;
