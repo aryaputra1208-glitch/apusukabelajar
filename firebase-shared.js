@@ -73,7 +73,7 @@ async function applyTestAs(user) {
   let isRealAdmin = false;
   try { const s = await getDoc(doc(db, 'users', user.uid)); isRealAdmin = s.exists() && s.data().role === 'admin'; } catch {}
   if (!isRealAdmin) { if (getTestAs()) setTestAs(null); return user; }
-  import('./dev-test-as.js?v=20261111b').then(m => m.mountTestAs({ realEmail: user.email })).catch(err => console.error('Mode uji gagal dimuat:', err));
+  import('./dev-test-as.js?v=20261111c').then(m => m.mountTestAs({ realEmail: user.email })).catch(err => console.error('Mode uji gagal dimuat:', err));
   const t = getTestAs();
   if (!t || (!t.role && !t.email)) return user;
   return {

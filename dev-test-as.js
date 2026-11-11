@@ -56,9 +56,9 @@ export function mountTestAs({ realEmail }) {
         <option value="trainee">Trainee</option>
       </select>
       <label>View as employee (TMS: manager, mentor, employee)</label>
-      <input id="tasSearch" placeholder="Search name, NIK or position…" style="margin-bottom:6px;">
-      <select id="tasEmp" size="7" style="height:auto;"><option value="">— Myself —</option></select>
-      <div class="m" style="margin-top:6px;">Pick a manager to see My Team, a mentor for My Mentees, or an employee for IDP Saya. Employees without an email can't be picked.</div>
+      <select id="tasEmp"><option value="">Myself</option></select>
+      <div class="m" style="margin-top:6px;">Pick a manager to see My Team, a mentor for My Mentees, or an employee for IDP Saya.</div>
+      <div class="m" id="tasNoEmail" style="margin-top:6px; color:#a15c00; display:none;"></div>
       <div class="row"><button id="tasReset">Reset</button><button class="p" id="tasApply">Apply</button></div>`;
     document.body.appendChild(panel);
     const cur = getTestAs() || {};
@@ -66,13 +66,15 @@ export function mountTestAs({ realEmail }) {
     const sel = panel.querySelector('#tasEmp');
     let emps = [];
     const draw = () => {
-      const q = panel.querySelector('#tasSearch').value.trim().toLowerCase();
-      const list = emps.filter(e => !q || `${e.nama} ${e.nik} ${e.jabatan}`.toLowerCase().includes(q));
-      sel.innerHTML = `<option value="">— Myself —</option>` + list.slice(0, 200).map(e =>
-        `<option value="${esc(e.email)}" ${e.email ? '' : 'disabled'} ${e.email && e.email === cur.email ? 'selected' : ''}>${esc(e.nama)} · ${esc(e.jabatan || e.level || '')}${e.email ? '' : ' (no email)'}</option>`).join('');
-      if (!cur.email) sel.value = '';
+      const ok = emps.filter(e => e.email), noMail = emps.filter(e => !e.email);
+      sel.innerHTML = `<option value="">Myself</option>` + ok.map(e =>
+        `<option value="${esc(e.email)}" ${e.email === cur.email ? 'selected' : ''}>${esc(e.nama)} · ${esc(e.jabatan || e.level || '')}</option>`).join('');
+      const note = panel.querySelector('#tasNoEmail');
+      if (noMail.length) {
+        note.style.display = 'block';
+        note.textContent = `Not listed (no email in Employees): ${noMail.slice(0, 6).map(e => e.nama).join(', ')}${noMail.length > 6 ? ` +${noMail.length - 6} more` : ''}. TMS links people by email, so add an email (a dummy one is fine for testing) in Employees, then click "Refresh Manager Access" in Performance Data.`;
+      }
     };
-    panel.querySelector('#tasSearch').addEventListener('input', draw);
     panel.querySelector('#tasApply').addEventListener('click', () => {
       const role = panel.querySelector('#tasRole').value;
       const email = (sel.value || '').toLowerCase();
