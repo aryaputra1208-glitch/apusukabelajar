@@ -58,6 +58,20 @@
   .act { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,.55); margin-top: 6px; }
   .act .meta { font-size: 12px; color: var(--text-3); margin-top: 2px; }
   .late-t { color: var(--red); font-weight: 600; }
+  .cgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; padding: 16px 20px 20px; }
+  .ccard { background: rgba(255,255,255,.6); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; }
+  .ccard-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+  .cname { font-weight: 700; font-size: 14.5px; }
+  .crow { display: flex; align-items: flex-start; gap: 10px; padding: 9px 0; }
+  .crow + .crow { border-top: 1px dashed var(--border); }
+  .ctitle { font-size: 13px; font-weight: 600; line-height: 1.35; }
+  .ctitle.done { color: var(--text-3); text-decoration: line-through; }
+  .crow .meta { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+  .data-table td .badge, .data-table td.nw, .data-table td .btn { white-space: nowrap; }
+  .ic { width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0; margin-top: 1px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+  .ic-done { background: var(--green); color: #fff; }
+  .ic-prog { border: 2px solid #8b5cf6; background: linear-gradient(90deg, #8b5cf6 50%, transparent 50%); }
+  .ic-plan { border: 2px solid rgba(120,120,128,.4); }
   .approve { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; border-left: 3px solid var(--amber); border-radius: 0; }
   @media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } .kpi-row { grid-template-columns: repeat(2,1fr); } }
   @media (max-width: 900px) { body { padding-left: 0; } .admin-sidebar { display: none; } }
@@ -144,6 +158,41 @@
     </svg><div class="c"><b>${pct(done, total)}%</b><span class="text-meta">done</span></div></div>`;
   }
 
+
+  let view = 'cards';
+  const ICON = { selesai: '<span class="ic ic-done">✓</span>', berjalan: '<span class="ic ic-prog"></span>', rencana: '<span class="ic ic-plan"></span>' };
+  const btn = (pending, x, key) => pending ? '' : `<button class="btn btn-outline btn-sm" data-up="${key}">${x.s === 'selesai' ? 'Reopen' : x.s === 'berjalan' ? 'Mark Done' : 'Start'}</button>`;
+  function ring(p, size = 54){
+    const R = size / 2 - 5, C = 2 * Math.PI * R;
+    return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><circle cx="${size/2}" cy="${size/2}" r="${R}" fill="none" stroke="rgba(120,120,128,.15)" stroke-width="6"/>
+      <circle cx="${size/2}" cy="${size/2}" r="${R}" fill="none" stroke="#16A34A" stroke-width="6" stroke-linecap="round" stroke-dasharray="${p / 100 * C} ${C}" transform="rotate(-90 ${size/2} ${size/2})"/>
+      <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="700" fill="currentColor">${p}%</text></svg>`;
+  }
+  function cardsView(m, pending){
+    return `<div class="cgrid">${m.comps.map((c, ci) => {
+      const d = c.acts.filter(x => x.s === 'selesai').length, w = Math.round(100 / c.acts.length);
+      return `<div class="ccard">
+        <div class="ccard-head"><div><div class="cname">${c.nama}</div><div class="text-meta">${d} of ${c.acts.length} done · gap ${c.gap.toFixed(1)}</div></div>${ring(pct(d, c.acts.length))}</div>
+        ${c.acts.map((x, ai) => `<div class="crow">
+          ${ICON[x.s]}
+          <div style="flex:1; min-width:0;"><div class="ctitle ${x.s === 'selesai' ? 'done' : ''}">${x.j}</div>
+            <div class="meta">${x.t} · ${w}% · <span class="${late(x) ? 'late-t' : ''}">${fmt(x.target)}${late(x) ? ' · overdue' : ''}</span></div></div>
+          ${btn(pending, x, ci + '-' + ai)}
+        </div>`).join('')}
+      </div>`;
+    }).join('')}</div>`;
+  }
+  function tableView(m, pending){
+    return `<div style="overflow-x:auto;"><table class="data-table"><thead><tr><th>Competency</th><th>Activity</th><th>Type</th><th>Weight</th><th>Target</th><th>Status</th><th></th></tr></thead><tbody>
+      ${m.comps.map((c, ci) => { const d = c.acts.filter(x => x.s === 'selesai').length; return c.acts.map((x, ai) => `<tr>
+        ${ai === 0 ? `<td rowspan="${c.acts.length}" style="vertical-align:top; min-width:170px;"><strong>${c.nama}</strong><div class="text-meta">${d}/${c.acts.length} done</div>
+          <div class="mini" style="margin-top:8px;"><span style="width:${pct(d, c.acts.length)}%"></span></div><div class="text-meta" style="margin-top:4px;">${pct(d, c.acts.length)}%</div></td>` : ''}
+        <td>${x.j}</td><td class="text-meta">${x.t}</td><td class="text-meta">${Math.round(100 / c.acts.length)}%</td>
+        <td class="nw ${late(x) ? 'late-t' : 'text-meta'}">${fmt(x.target)}</td>
+        <td><span class="badge ${BADGE[x.s]}">${ST[x.s]}</span></td><td>${btn(pending, x, ci + '-' + ai)}</td></tr>`).join(''); }).join('')}
+      </tbody></table></div>`;
+  }
+
   function render(){
     const acts = mentees.flatMap(all);
     F('kMentee').textContent = mentees.length;
@@ -177,23 +226,11 @@
         </div>
       </div>
       <div class="panel" style="margin:0;">
-        <div class="panel-head"><h3 class="text-h2" style="margin:0;">Progress by Competency</h3><span class="text-meta">Each block = one activity · click a competency to update</span></div>
-        ${m.comps.map((c, ci) => {
-          const d = c.acts.filter(x => x.s === 'selesai').length, share = Math.round(100 / c.acts.length);
-          return `<div class="comp ${ci === open ? 'open' : ''}" data-ci="${ci}">
-            <div class="comp-head"><div><strong>${c.nama}</strong> <span class="text-meta">· gap ${c.gap.toFixed(1)}</span></div><span class="text-meta"><b style="color:var(--text);">${pct(d, c.acts.length)}%</b> · ${d}/${c.acts.length} done</span></div>
-            <div class="bar">${c.acts.map(x => `<div class="seg s-${x.s} ${late(x) ? 'late' : ''}" title="${x.j} · ${ST[x.s]}"><span>${share}%</span></div>`).join('')}</div>
-            <div class="acts">${c.acts.map((x, ai) => `<div class="act">
-              <div style="min-width:0;"><div style="font-weight:600; font-size:13.5px;">${x.j}</div>
-                <div class="meta">${x.t} · weight ${share}% · <span class="${late(x) ? 'late-t' : ''}">target ${fmt(x.target)}${late(x) ? ' · overdue' : ''}</span></div></div>
-              <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0;">
-                <span class="badge ${BADGE[x.s]}">${ST[x.s]}</span>
-                ${pending ? '' : `<button class="btn btn-outline btn-sm" data-up="${ci}-${ai}">${x.s === 'selesai' ? 'Reopen' : x.s === 'berjalan' ? 'Mark Done' : 'Start'}</button>`}
-              </div></div>`).join('')}</div>
-          </div>`;
-        }).join('')}
+        <div class="panel-head"><h3 class="text-h2" style="margin:0;">Progress by Competency</h3>
+          <div class="tabs" style="margin:0;"><button class="tab-btn ${view === 'cards' ? 'active' : ''}" data-view="cards">Cards</button><button class="tab-btn ${view === 'table' ? 'active' : ''}" data-view="table">Table</button></div></div>
+        ${view === 'cards' ? cardsView(m, pending) : tableView(m, pending)}
       </div>`;
-    document.querySelectorAll('.comp').forEach(el => el.onclick = e => { if(e.target.closest('[data-up]') || e.target.closest('.acts')) return; open = +el.dataset.ci === open ? -1 : +el.dataset.ci; render(); });
+    document.querySelectorAll('[data-view]').forEach(b => b.onclick = () => { view = b.dataset.view; render(); });
     document.querySelectorAll('[data-up]').forEach(b => b.onclick = e => {
       e.stopPropagation(); const [ci, ai] = b.dataset.up.split('-').map(Number); const x = m.comps[ci].acts[ai];
       x.s = x.s === 'rencana' ? 'berjalan' : x.s === 'berjalan' ? 'selesai' : 'berjalan';
