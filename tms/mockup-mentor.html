@@ -129,9 +129,8 @@
 <body>
 <nav class="admin-sidebar" aria-label="TMS menu">
   <a class="as-logo" href="#">anteraja TMS</a><div class="as-role">Department Head · Mentor</div>
-  <div class="as-group">My Team</div>
-  <a class="as-item active" href="#team" data-nav="team">Team</a>
-  <a class="as-item" href="#idp" data-nav="idp">IDP <span class="as-badge">1</span></a>
+  <div class="as-group">Development</div>
+  <a class="as-item active" href="#idp" data-nav="idp">IDP <span class="as-badge">1</span></a>
   <div class="as-group">Other Apps</div>
   <a class="as-item" href="../index.html">LMS</a>
 </nav>
@@ -140,28 +139,7 @@
   <div class="user-chip" style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-2);">Budi Santoso · Department Head</div>
 </div>
 
-<div class="wrap wide" id="vTeam">
-  <h1 class="text-h1" style="margin-bottom:0;">Team</h1>
-  <div class="kpi-row">
-    <div class="kpi"><div class="n" id="tN">-</div><div class="l">Team Members</div></div>
-    <div class="kpi"><div class="n" id="tPerf">-</div><div class="l">Avg Performance (PA)</div></div>
-    <div class="kpi"><div class="n" id="tPot">-</div><div class="l">Avg Competency</div></div>
-    <div class="kpi"><div class="n" id="tGap">-</div><div class="l">Members With Gaps</div></div>
-  </div>
-  <div class="tlayout">
-    <div class="panel" style="margin:0;">
-      <div class="panel-head"><div><h3 class="text-h2" style="margin:0;">HAV Map</h3><div class="text-meta">Performance × Potential · click a box to filter</div></div><div style="display:flex; gap:8px; align-items:center;"><span class="text-meta" id="havFilterNote"></span><select id="lvlFilter" style="margin:0; max-width:150px;"><option value="">All levels</option><option>Supervisor</option><option>Coordinator</option><option>Staff</option></select></div></div>
-      <div style="padding:16px 20px 20px;"><div class="hav-grid" id="havGrid"></div></div>
-    </div>
-    <div class="panel" style="margin:0;">
-      <div class="panel-head"><h3 class="text-h2" style="margin:0;">Team Members</h3><span class="text-meta" id="teamCount"></span></div>
-      <div id="teamList"></div>
-    </div>
-  </div>
-  <div id="memberDetail" style="margin-top:16px;"></div>
-</div>
-
-<div class="wrap wide" id="vIdp" style="display:none;">
+<div class="wrap wide" id="vIdp">
   <h1 class="text-h1" style="margin-bottom:0;">IDP</h1>
   <div class="kpi-row">
     <div class="kpi"><div class="n" id="kMentee">-</div><div class="l">Mentees</div></div>
@@ -340,87 +318,7 @@
     F('revBtn')?.addEventListener('click', () => toast('A note box for HR/OD would open here'));
   }
 
-  /* ===================== TEAM VIEW ===================== */
-  const COMPS = ['Analysis & Decision Making', 'Planning & Controlling', 'Empowerment', 'Collaboration', 'Customer Focus'];
-  const team = [
-    { nama: 'Sari Lestari', level: 'Supervisor', jabatan: 'Supervisor Hub Cakung', grade: 'B', perf: 3.4, hist: [3.1, 3.2, 3.4], c: [1.5, 2.0, 2.5, 3.5, 3.0], idp: 'Sari Lestari' },
-    { nama: 'Andi Pratama', level: 'Coordinator', jabatan: 'Coordinator Linehaul', grade: 'C', perf: 2.7, hist: [2.9, 2.8, 2.7], c: [3.0, 3.0, 3.0, 2.0, 2.5], idp: 'Andi Pratama' },
-    { nama: 'Dewi Kusuma', level: 'Staff', jabatan: 'Staff Admin Operasional', grade: 'BS', perf: 3.9, hist: [3.5, 3.7, 3.9], c: [3.5, 3.5, 3.0, 4.0, 3.5], idp: 'Dewi Kusuma' },
-    { nama: 'Rizky Hidayat', level: 'Supervisor', jabatan: 'Supervisor Hub Bekasi', grade: 'IST', perf: 4.5, hist: [4.0, 4.3, 4.5], c: [4.0, 4.5, 4.0, 4.0, 4.5] },
-    { nama: 'Maya Santoso', level: 'Coordinator', jabatan: 'Coordinator First Mile', grade: 'B', perf: 3.3, hist: [3.0, 3.4, 3.3], c: [4.0, 3.5, 4.0, 4.5, 4.0] },
-    { nama: 'Teguh Wijaya', level: 'Staff', jabatan: 'Staff Dispatcher', grade: 'K', perf: 2.2, hist: [2.8, 2.5, 2.2], c: [2.0, 2.5, 2.0, 3.0, 2.5] },
-  ];
-  team.forEach(t => t.pot = +(t.c.reduce((a, b) => a + b, 0) / t.c.length).toFixed(2));
-  const BOX = [
-    [{ k: 'gem', n: 'Potential Gem', z: 'y' }, { k: 'hipo', n: 'High Potential', z: 'g' }, { k: 'star', n: 'Star', z: 'g' }],
-    [{ k: 'inc', n: 'Inconsistent Player', z: 'r' }, { k: 'core', n: 'Core Player', z: 'y' }, { k: 'hiper', n: 'High Performer', z: 'g' }],
-    [{ k: 'risk', n: 'Risk', z: 'r' }, { k: 'avg', n: 'Average Performer', z: 'r' }, { k: 'solid', n: 'Solid Performer', z: 'y' }],
-  ];
-  const band = v => v < 2.8 ? 0 : v < 3.6 ? 1 : 2;
-  const boxOf = t => BOX[2 - band(t.pot)][band(t.perf)];
-  const initials = n => n.split(' ').map(w => w[0]).join('');
-  let havSel = '', tSel = 0;
-  function renderTeam(){
-    const n = team.length, avg = k => (team.reduce((a, t) => a + t[k], 0) / n).toFixed(2);
-    F('tN').textContent = n; F('tPerf').textContent = avg('perf'); F('tPot').textContent = avg('pot');
-    F('tGap').textContent = team.filter(t => t.c.some(v => v < 3)).length;
-    const lvl = F('lvlFilter').value, pool = team.filter(t => !lvl || t.level === lvl);
-    if(!pool.includes(team[tSel]) && pool.length) tSel = team.indexOf(pool[0]);
-    let g = '<div class="hav-ylab">Potential (competency) →</div>';
-    BOX.forEach((row, r) => row.forEach((b, c) => {
-      const who = pool.filter(t => boxOf(t).k === b.k);
-      g += `<div role="button" tabindex="0" class="hav-cell z-${b.z} ${havSel === b.k ? 'sel' : ''}" data-k="${b.k}" style="grid-row:${r + 1}; grid-column:${c + 2};">
-        <div class="nm">${b.n}</div><div style="display:flex; justify-content:space-between; align-items:flex-end; gap:6px;"><div class="who">${who.map(t => `<span title="${t.nama}" data-pick="${team.indexOf(t)}" class="${team.indexOf(t) === tSel ? 'me' : ''}">${initials(t.nama)}</span>`).join('')}</div><span class="ct">${who.length}</span></div></div>`;
-    }));
-    F('havGrid').innerHTML = g + '<div class="hav-xlab">Performance (PA final score) →</div>';
-    const list = team.map((t, i) => ({ t, i })).filter(({ t }) => pool.includes(t) && (!havSel || boxOf(t).k === havSel));
-    F('havFilterNote').innerHTML = havSel ? `<a href="javascript:void 0" id="clrHav" style="color:var(--pink); font-weight:600;">Clear filter</a>` : '';
-    F('teamCount').textContent = `${list.length} of ${n}`;
-    F('teamList').innerHTML = list.map(({ t, i }) => { const b = boxOf(t); return `<div class="tm ${i === tSel ? 'sel' : ''}" data-t="${i}">
-      <div class="av">${initials(t.nama)}</div>
-      <div style="min-width:0;"><strong style="font-size:13.5px;">${t.nama}</strong><div class="text-meta">${t.jabatan}</div><span class="hbadge z-${b.z}" style="display:inline-block; margin-top:4px;">${b.n}</span></div>
-      <div class="sc">Perf <b>${t.perf.toFixed(2)}</b> (${t.grade})<br>Comp <b>${t.pot.toFixed(2)}</b></div></div>`; }).join('') || '<div class="empty-state"><p>No one in this box.</p></div>';
-    document.querySelectorAll('#havGrid [data-pick]').forEach(el => el.onclick = e => { e.stopPropagation(); tSel = +el.dataset.pick; havSel = boxOf(team[tSel]).k; renderTeam(); });
-    document.querySelectorAll('#havGrid [data-k]').forEach(el => el.onclick = () => {
-      havSel = havSel === el.dataset.k ? '' : el.dataset.k;
-      const first = team.findIndex(t => boxOf(t).k === havSel);
-      if(havSel && first >= 0 && boxOf(team[tSel]).k !== havSel) tSel = first;
-      renderTeam();
-    });
-    F('clrHav')?.addEventListener('click', () => { havSel = ''; renderTeam(); });
-    document.querySelectorAll('#teamList [data-t]').forEach(el => el.onclick = () => { tSel = +el.dataset.t; renderTeam(); F('memberDetail').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
-    renderMember();
-  }
-  function renderMember(){
-    const t = team[tSel], b = boxOf(t);
-    const col = v => v < 3 ? '#e13c3c' : v >= 3.5 ? '#16A34A' : '#8b5cf6';
-    const below = t.c.filter(v => v < 3).length;
-    const trend = t.hist[2] - t.hist[1];
-    F('memberDetail').innerHTML = `
-      <div class="panel" style="margin:0 0 16px;">
-        <div class="panel-head"><div><h3 class="text-h2" style="margin:0;">${t.nama}</h3><div class="text-meta">${t.jabatan} · Semester 1 2026</div></div>
-          ${t.idp ? `<button class="btn btn-outline btn-sm" id="toIdp">Open IDP</button>` : '<span class="text-meta">No IDP yet</span>'}</div>
-        <div class="mtiles">
-          <div class="mtile z-${b.z}"><div class="mt-l">HAV Position</div><div class="mt-v">${b.n}</div><div class="mt-s">${['Low','Moderate','High'][band(t.pot)]} potential · ${['Low','Moderate','High'][band(t.perf)]} performance</div></div>
-          <div class="mtile"><div class="mt-l">Performance (PA)</div><div class="mt-v">${t.perf.toFixed(2)} <span class="mt-g">${t.grade}</span></div>
-            <div class="mt-s">${['S1 25', 'S2 25', 'S1 26'].map((p, i) => `${p} <b>${t.hist[i].toFixed(1)}</b>`).join(' · ')} <span style="color:${trend >= 0 ? '#16A34A' : 'var(--red)'}; font-weight:700;">${trend >= 0 ? '▲' : '▼'} ${Math.abs(trend).toFixed(1)}</span></div></div>
-          <div class="mtile"><div class="mt-l">Potential (Competency)</div><div class="mt-v">${t.pot.toFixed(2)}</div><div class="mt-s">${below ? `<span style="color:var(--red); font-weight:700;">${below}</span> of ${COMPS.length} below standard 3` : `All ${COMPS.length} at or above standard`}</div></div>
-        </div>
-        <div class="text-meta" style="padding:4px 20px 6px; font-weight:600;">COMPETENCY SCORES <span style="font-weight:400;">· line = standard 3</span></div>
-        <div class="cbars">${COMPS.map((c, i) => `<div class="cbar"><span>${c}</span><div class="track"><div class="fill" style="width:${t.c[i] / 5 * 100}%; background:${col(t.c[i])};"></div><div class="std" style="left:60%;"></div></div><b style="text-align:right;">${t.c[i].toFixed(1)}</b></div>`).join('')}</div>
-      </div>`;
-    F('toIdp')?.addEventListener('click', () => { const i = mentees.findIndex(m => m.nama === t.idp); if(i >= 0){ sel = i; } show('idp'); });
-  }
-  F('lvlFilter').addEventListener('change', () => { havSel = ''; renderTeam(); });
-  function show(v){
-    F('vTeam').style.display = v === 'team' ? 'block' : 'none';
-    F('vIdp').style.display = v === 'idp' ? 'block' : 'none';
-    document.querySelectorAll('[data-nav]').forEach(a => a.classList.toggle('active', a.dataset.nav === v));
-    if(v === 'idp') render(); else renderTeam();
-    history.replaceState(null, '', '#' + v); window.scrollTo(0, 0);
-  }
-  document.querySelectorAll('[data-nav]').forEach(a => a.onclick = e => { e.preventDefault(); if(a.dataset.nav === 'home') return toast('Home is not part of this mockup'); show(a.dataset.nav); });
-  show(location.hash === '#idp' ? 'idp' : 'team');
+  render();
 </script>
 <script src="../lms-motion.js?v=20261109" defer></script>
 </body>
