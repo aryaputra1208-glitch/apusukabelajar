@@ -111,6 +111,14 @@
   .hist div { flex: 1; text-align: center; padding: 10px 6px; border-radius: 10px; background: rgba(255,255,255,.6); }
   .hist b { display: block; font-size: 18px; }
   @media (max-width: 1100px) { .tlayout, .dgrid { grid-template-columns: 1fr; } }
+  .facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+  .fact { background: rgba(255,255,255,.6); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; min-width: 0; }
+  .fact .fl { font-size: 11px; font-weight: 700; color: var(--text-3); letter-spacing: .02em; }
+  .fact .fv { font-size: 13px; font-weight: 600; margin-top: 4px; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .fact .fm { font-size: 11.5px; color: var(--text-3); margin-top: 4px; }
+  .fact.bad { border-color: rgba(220,38,38,.35); background: rgba(254,226,226,.55); }
+  .fact.bad .fl { color: var(--red); }
+  @media (max-width: 1100px) { .facts { grid-template-columns: 1fr; } }
   .approve { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; border-left: 3px solid var(--amber); border-radius: 0; }
   @media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } .kpi-row { grid-template-columns: repeat(2,1fr); } }
   @media (max-width: 900px) { body { padding-left: 0; } .admin-sidebar { display: none; } }
@@ -200,6 +208,21 @@
       <circle cx="75" cy="75" r="${R}" fill="none" stroke="#16A34A" stroke-width="16" stroke-dasharray="${d * C} ${C}" transform="rotate(-90 75 75)"/>
     </svg><div class="c"><b>${pct(done, total)}%</b><span class="text-meta">selesai</span></div></div>`;
   }
+  const FL = { loc: 'id-ID', next: 'TARGET TERDEKAT', over: 'LEWAT TARGET', last: 'TERAKHIR SELESAI', since: 'target', none: 'Tidak ada' };
+  function facts(comps, L){
+    const rows = comps.flatMap(c => c.acts.map(x => ({ ...x, comp: c.nama })));
+    const next = rows.filter(x => x.s !== 'selesai' && new Date(x.target) >= TODAY).sort((a, b) => a.target.localeCompare(b.target))[0];
+    const over = rows.filter(late).sort((a, b) => a.target.localeCompare(b.target));
+    const last = rows.filter(x => x.done).sort((a, b) => b.done.date.localeCompare(a.done.date))[0];
+    const d = s => new Date(s).toLocaleDateString(L.loc, { day: 'numeric', month: 'short' });
+    const tile = (label, x, meta, bad) => `<div class="fact ${bad ? 'bad' : ''}"><div class="fl">${label}</div>${x ? `<div class="fv">${x.j}</div><div class="fm">${meta}</div>` : `<div class="fv" style="color:var(--text-3); font-weight:500;">${L.none}</div>`}</div>`;
+    return `<div class="facts">
+      ${tile(L.next, next, next && `${d(next.target)} · ${next.comp}`)}
+      ${tile(over.length > 1 ? `${L.over} (${over.length})` : L.over, over[0], over[0] && `${L.since} ${d(over[0].target)} · ${over[0].comp}`, over.length)}
+      ${tile(L.last, last, last && `${d(last.done.date)} · ${last.comp}`)}
+    </div>`;
+  }
+
   function render(){
     const cur = all(plans[0]);
     F('kAct').textContent = cur.length;
@@ -216,6 +239,7 @@
       <div class="panel-head"><div><h3 class="text-h2" style="margin:0;">IDP ${p.periode}</h3><div class="text-meta">Disetujui mentor</div></div><span class="badge ${p.status === 'Selesai' ? 'badge-green' : 'badge-purple'}">${p.status}</span></div>
       <div class="summary">${donut(done, prog, a.length)}
         <div><div class="legend" style="margin-top:0;"><span><i style="background:#16A34A"></i>Selesai ${done}</span><span><i style="background:#8b5cf6"></i>Berjalan ${prog}</span><span><i style="background:rgba(120,120,128,.25)"></i>Belum mulai ${a.length - done - prog}</span></div>
+          ${facts(p.comps, FL)}
           <div class="mentor"><div class="av">${p.mentor.split(' ').map(w => w[0]).join('')}</div><div><b>${p.mentor}</b><div class="text-meta">Mentor · ${p.mentorJab}</div></div></div>
         </div></div></div>`;
     F('progress').innerHTML = `<div class="panel" style="margin:0;">
