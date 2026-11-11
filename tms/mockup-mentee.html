@@ -159,7 +159,7 @@
     <div class="kpi"><div class="n" id="kAct">-</div><div class="l">Aktivitas IDP Aktif</div></div>
     <div class="kpi"><div class="n" id="kDone">-</div><div class="l">Sudah Selesai</div></div>
     <div class="kpi"><div class="n" id="kTrain">-</div><div class="l">Training Belum Selesai</div></div>
-    <div class="kpi"><div class="n" id="kNext">-</div><div class="l">Target Terdekat</div></div>
+    <div class="kpi"><div class="n" id="kComp">-</div><div class="l">Kompetensi Dikembangkan</div></div>
   </div>
   <div class="layout">
     <div class="panel" style="margin:0;"><div class="panel-head"><h3 class="text-h2" style="margin:0;">Daftar IDP</h3></div><div id="list"></div></div>
@@ -234,8 +234,7 @@
     F('kAct').textContent = cur.length;
     F('kDone').textContent = `${cur.filter(a => a.s === 'selesai').length}/${cur.length}`;
     F('kTrain').textContent = cur.filter(a => a.t === 'Training' && a.s !== 'selesai').length;
-    const next = cur.filter(a => a.s !== 'selesai' && new Date(a.target) >= TODAY).sort((a, b) => a.target.localeCompare(b.target))[0];
-    F('kNext').textContent = next ? new Date(next.target).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : '-';
+    F('kComp').textContent = plans[0].comps.length;
     F('list').innerHTML = plans.map((p, i) => { const a = all(p), d = a.filter(x => x.s === 'selesai').length; return `<div class="plan ${i === sel ? 'sel' : ''}" data-i="${i}">
       <div style="flex:1;"><div style="display:flex; justify-content:space-between;"><strong style="font-size:13.5px;">IDP ${p.periode}</strong><span class="badge ${p.status === 'Selesai' ? 'badge-green' : 'badge-purple'}">${p.status}</span></div>
       <div class="text-meta">${a.length} aktivitas · ${p.comps.length} kompetensi</div><div class="mini"><span style="width:${pct(d, a.length)}%"></span></div></div></div>`; }).join('');
