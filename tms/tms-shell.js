@@ -37,7 +37,7 @@ function render(nav, roleLabel) {
     ).join('')).join('');
   const sig = String(inner.length) + ':' + inner.slice(-200);
   const html = `<nav class="admin-sidebar" aria-label="TMS menu">${inner}</nav>`;
-  try { sessionStorage.setItem('tmsNavCache', JSON.stringify({ html, css: CSS, sig })); } catch {}
+  try { sessionStorage.setItem('tmsNavCache2', JSON.stringify({ html, css: CSS, sig })); } catch {}
   if (!document.getElementById('tms-shell-css')) { const style = document.createElement('style'); style.id = 'tms-shell-css'; style.textContent = CSS; document.head.appendChild(style); }
   let aside = document.querySelector('.admin-sidebar');
   // sidebar dari cache (tms-shell-early.js) dipertahankan; isinya hanya diganti kalau menu berubah — tanpa kedip
@@ -53,7 +53,7 @@ function render(nav, roleLabel) {
 }
 
 function unrender() {
-  try { sessionStorage.removeItem('tmsNavCache'); } catch {}
+  try { sessionStorage.removeItem('tmsNavCache2'); } catch {}
   document.querySelector('.admin-sidebar')?.remove();
   document.getElementById('tms-shell-css')?.remove();
   document.body.classList.remove('has-admin-sidebar');

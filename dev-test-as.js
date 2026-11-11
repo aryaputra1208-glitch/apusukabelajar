@@ -81,10 +81,10 @@ export function mountTestAs({ realEmail }) {
       const email = (sel.value || '').toLowerCase();
       const nama = email ? (emps.find(e => e.email === email)?.nama || '') : '';
       setTestAs(role || email ? { role, email, nama } : null);
-      try { sessionStorage.removeItem('tmsNavCache'); } catch {}
+      try { sessionStorage.removeItem('tmsNavCache2'); } catch {}
       goHome();
     });
-    panel.querySelector('#tasReset').addEventListener('click', () => { setTestAs(null); try { sessionStorage.removeItem('tmsNavCache'); } catch {} goHome(); });
+    panel.querySelector('#tasReset').addEventListener('click', () => { setTestAs(null); try { sessionStorage.removeItem('tmsNavCache2'); } catch {} goHome(); });
     try {
       const snap = await getDocs(collection(db, 'employees'));
       snap.forEach(d => { const e = d.data(); emps.push({ nik: d.id, nama: e.nama || d.id, jabatan: e.jabatan || '', level: e.level || '', email: (e.email || '').toLowerCase() }); });

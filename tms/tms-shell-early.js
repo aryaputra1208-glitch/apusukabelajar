@@ -3,7 +3,7 @@
 // tms-shell.js nanti memverifikasi role & memperbarui isinya setelah login terbaca.
 (function () {
   try {
-    var c = JSON.parse(sessionStorage.getItem('tmsNavCache') || 'null');
+    var c = JSON.parse(sessionStorage.getItem('tmsNavCache2') || 'null');
     if (!c || !c.html) return;
     var st = document.createElement('style'); st.id = 'tms-shell-css'; st.textContent = c.css; document.head.appendChild(st);
     var box = document.createElement('div'); box.innerHTML = c.html;

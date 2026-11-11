@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../lms-design-system.css?v=20261105b">
+<link rel="expect" href="#tms-nav-ready" blocking="render">
 <link rel="stylesheet" href="../lms-glass.css?v=20261111b">
 <style>
   .avatar { width: 28px; height: 28px; border-radius: 50%; }
@@ -34,7 +35,7 @@
 </style>
 </head>
 <body>
-<script>/* sidebar TMS dari cache — inline supaya ikut paint pertama (tanpa kedip) */(function () { try { var c = JSON.parse(sessionStorage.getItem('tmsNavCache') || 'null'); if (!c || !c.html) return; var st = document.createElement('style'); st.id = 'tms-shell-css'; st.textContent = c.css; document.head.appendChild(st); var box = document.createElement('div'); box.innerHTML = c.html; var nav = box.firstElementChild; if (c.sig) nav.setAttribute('data-sig', c.sig); var cur = location.pathname.split('/').pop() || 'index.html'; nav.querySelectorAll('a.as-item').forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === cur); }); document.body.prepend(nav); document.body.classList.add('has-admin-sidebar'); } catch (e) {} })();</script>
+<script>/* sidebar TMS dari cache — inline supaya ikut paint pertama (tanpa kedip) */(function () { try { var c = JSON.parse(sessionStorage.getItem('tmsNavCache2') || 'null'); if (!c || !c.html) return; var st = document.createElement('style'); st.id = 'tms-shell-css'; st.textContent = c.css; document.head.appendChild(st); var box = document.createElement('div'); box.innerHTML = c.html; var nav = box.firstElementChild; if (c.sig) nav.setAttribute('data-sig', c.sig); var cur = location.pathname.split('/').pop() || 'index.html'; nav.querySelectorAll('a.as-item').forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === cur); }); document.body.prepend(nav); document.body.classList.add('has-admin-sidebar'); } catch (e) {} })();</script><i id="tms-nav-ready" hidden></i>
 
 <div id="gate" class="locked-state">
   <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Loading...</p>
