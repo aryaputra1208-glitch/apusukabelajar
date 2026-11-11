@@ -72,6 +72,17 @@
   .ic-done { background: var(--green); color: #fff; }
   .ic-prog { border: 2px solid #8b5cf6; background: linear-gradient(90deg, #8b5cf6 50%, transparent 50%); }
   .ic-plan { border: 2px solid rgba(120,120,128,.4); }
+  .evbox { margin-top: 8px; padding: 10px 12px; border-radius: 10px; background: var(--green-bg); font-size: 12.5px; line-height: 1.5; display: grid; gap: 4px; }
+  .dlg-back { position: fixed; inset: 0; background: rgba(20,20,30,.3); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 16px; }
+  .dlg { width: 100%; max-width: 540px; background: rgba(255,255,255,.95); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,.2); padding: 22px; }
+  .dlg h3 { margin: 0 0 2px; font-size: 17px; }
+  .dlg label { display: block; font-size: 12.5px; font-weight: 600; margin: 14px 0 5px; }
+  .dlg textarea, .dlg input { width: 100%; margin: 0; box-sizing: border-box; }
+  .dlg-act { margin-top: 10px; padding: 10px 12px; background: var(--purple-bg); color: #4c1d95; border-radius: 10px; font-size: 13px; font-weight: 600; }
+  .dlg .req { color: var(--red); }
+  .dlg .err { color: var(--red); font-size: 12.5px; min-height: 16px; margin-top: 10px; }
+  .dlg-btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
+  .cgrid { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)) !important; }
   .approve { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; border-left: 3px solid var(--amber); border-radius: 0; }
   @media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } .kpi-row { grid-template-columns: repeat(2,1fr); } }
   @media (max-width: 900px) { body { padding-left: 0; } .admin-sidebar { display: none; } }
@@ -104,6 +115,7 @@
     <div class="panel" style="margin:0;"><div class="panel-head"><h3 class="text-h2" style="margin:0;">Mentees</h3><span class="text-meta">Semester 1 2026</span></div><div id="list"></div></div>
     <div id="detail"></div>
   </div>
+  <div id="progress" style="margin-top:16px;"></div>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -115,12 +127,12 @@
     { nama: 'Sari Lestari', jabatan: 'Supervisor Hub Cakung', approval: 'approved', catatan: 'Fokus semester ini: perencanaan mingguan tim hub dan keberanian mengambil keputusan di lapangan.',
       comps: [
         { nama: 'Analysis & Decision Making', gap: 1.5, acts: [
-          { j: 'Training: Problem Solving with Data', t: 'Training', target: '2026-10-30', s: 'selesai' },
+          { j: 'Training: Problem Solving with Data', t: 'Training', target: '2026-10-30', s: 'selesai', done: { date: '2026-10-28', what: 'Ikut training 1 hari, lulus post-test (skor 85).', evidence: 'Mulai memakai data keterlambatan harian sebelum memutuskan alokasi kurir; 2 keputusan minggu ini disertai data pendukung.', link: '' } },
           { j: 'Analisis root cause keterlambatan sortir & presentasi ke DH', t: 'Assignment', target: '2026-11-20', s: 'berjalan' } ] },
         { nama: 'Planning & Controlling', gap: 1.0, acts: [
           { j: 'Menyusun rencana mingguan hub selama 4 minggu', t: 'Assignment', target: '2026-11-05', s: 'berjalan' },
           { j: 'Review rencana mingguan bersama mentor', t: 'Mentoring', target: '2026-11-28', s: 'rencana' },
-          { j: 'Training: Operational Planning Basics', t: 'Training', target: '2026-10-15', s: 'selesai' } ] },
+          { j: 'Training: Operational Planning Basics', t: 'Training', target: '2026-10-15', s: 'selesai', done: { date: '2026-10-14', what: 'Menyelesaikan modul online & post-test.', evidence: 'Sudah membuat draft rencana mingguan pertama dengan format dari training.', link: 'https://example.com/rencana-minggu-1' } } ] },
         { nama: 'Empowerment', gap: 0.5, acts: [
           { j: 'Mendelegasikan briefing pagi ke 2 koordinator', t: 'Coaching', target: '2026-12-10', s: 'rencana' } ] },
       ] },
@@ -159,7 +171,6 @@
   }
 
 
-  let view = 'cards';
   const ICON = { selesai: '<span class="ic ic-done">✓</span>', berjalan: '<span class="ic ic-prog"></span>', rencana: '<span class="ic ic-plan"></span>' };
   const btn = (pending, x, key) => pending ? '' : `<button class="btn btn-outline btn-sm" data-up="${key}">${x.s === 'selesai' ? 'Reopen' : x.s === 'berjalan' ? 'Mark Done' : 'Start'}</button>`;
   function ring(p, size = 54){
@@ -176,21 +187,51 @@
         ${c.acts.map((x, ai) => `<div class="crow">
           ${ICON[x.s]}
           <div style="flex:1; min-width:0;"><div class="ctitle ${x.s === 'selesai' ? 'done' : ''}">${x.j}</div>
-            <div class="meta">${x.t} · ${w}% · <span class="${late(x) ? 'late-t' : ''}">${fmt(x.target)}${late(x) ? ' · overdue' : ''}</span></div></div>
+            <div class="meta">${x.t} · ${w}% · <span class="${late(x) ? 'late-t' : ''}">${fmt(x.target)}${late(x) ? ' · overdue' : ''}</span>${x.done ? ` · <a href="javascript:void 0" data-ev="${ci}-${ai}" style="color:var(--pink); font-weight:600;">Evidence</a>` : ''}</div>
+            ${x.done ? `<div class="evbox" id="ev-${ci}-${ai}" style="display:none;">
+              <div><b>Done</b> ${fmt(x.done.date)}</div>
+              <div><b>Activity done:</b> ${x.done.what}</div>
+              <div><b>Competency evidence:</b> ${x.done.evidence}</div>
+              ${x.done.link ? `<div><a href="${x.done.link}" target="_blank" rel="noopener">Open evidence file</a></div>` : ''}
+            </div>` : ''}</div>
           ${btn(pending, x, ci + '-' + ai)}
         </div>`).join('')}
       </div>`;
     }).join('')}</div>`;
   }
-  function tableView(m, pending){
-    return `<div style="overflow-x:auto;"><table class="data-table"><thead><tr><th>Competency</th><th>Activity</th><th>Type</th><th>Weight</th><th>Target</th><th>Status</th><th></th></tr></thead><tbody>
-      ${m.comps.map((c, ci) => { const d = c.acts.filter(x => x.s === 'selesai').length; return c.acts.map((x, ai) => `<tr>
-        ${ai === 0 ? `<td rowspan="${c.acts.length}" style="vertical-align:top; min-width:170px;"><strong>${c.nama}</strong><div class="text-meta">${d}/${c.acts.length} done</div>
-          <div class="mini" style="margin-top:8px;"><span style="width:${pct(d, c.acts.length)}%"></span></div><div class="text-meta" style="margin-top:4px;">${pct(d, c.acts.length)}%</div></td>` : ''}
-        <td>${x.j}</td><td class="text-meta">${x.t}</td><td class="text-meta">${Math.round(100 / c.acts.length)}%</td>
-        <td class="nw ${late(x) ? 'late-t' : 'text-meta'}">${fmt(x.target)}</td>
-        <td><span class="badge ${BADGE[x.s]}">${ST[x.s]}</span></td><td>${btn(pending, x, ci + '-' + ai)}</td></tr>`).join(''); }).join('')}
-      </tbody></table></div>`;
+
+  function doneDialog(m, c, x){
+    const back = document.createElement('div'); back.className = 'dlg-back';
+    const today = TODAY.toISOString().slice(0, 10);
+    back.innerHTML = `<div class="dlg" role="dialog" aria-modal="true">
+      <h3>Mark Activity as Done</h3>
+      <div class="text-meta">${m.nama} · ${c.nama}</div>
+      <div class="dlg-act">${x.j}</div>
+      <label>What did ${m.nama.split(' ')[0]} do? <span class="req">*</span></label>
+      <textarea id="dWhat" rows="3" placeholder="e.g. Led 4 weekly planning meetings and presented the root-cause analysis to the DH on 18 Nov."></textarea>
+      <label>Evidence that the competency is met <span class="req">*</span></label>
+      <textarea id="dEv" rows="3" placeholder="Observable behavior: what is different now? e.g. Uses delay data before deciding courier allocation; decisions are explained with numbers."></textarea>
+      <div style="display:grid; grid-template-columns: 1fr 160px; gap:10px;">
+        <div><label>Evidence link (optional)</label><input id="dLink" type="url" placeholder="https://… (OneDrive / Drive)"></div>
+        <div><label>Completion date</label><input id="dDate" type="date" value="${today}"></div>
+      </div>
+      <div class="err" id="dErr"></div>
+      <div class="dlg-btns"><button class="btn btn-outline" id="dCancel">Cancel</button><button class="btn btn-primary" id="dOk">Mark as Done</button></div>
+    </div>`;
+    document.body.appendChild(back);
+    const close = () => back.remove();
+    back.addEventListener('click', e => { if(e.target === back) close(); });
+    back.querySelector('#dCancel').onclick = close;
+    back.querySelector('#dOk').onclick = () => {
+      const what = back.querySelector('#dWhat').value.trim(), ev = back.querySelector('#dEv').value.trim(), link = back.querySelector('#dLink').value.trim();
+      const err = back.querySelector('#dErr');
+      if(!what || !ev){ err.textContent = 'Fill in what was done and the competency evidence.'; return; }
+      if(link && !/^https?:\/\//i.test(link)){ err.textContent = 'Evidence link must start with https://'; return; }
+      x.s = 'selesai'; x.done = { what, evidence: ev, link, date: back.querySelector('#dDate').value || today };
+      close(); toast('Activity marked as done'); render();
+    };
+    back.querySelectorAll('textarea, input').forEach(i => i.addEventListener('input', () => back.querySelector('#dErr').textContent = ''));
+    setTimeout(() => back.querySelector('#dWhat').focus(), 30);
   }
 
   function render(){
@@ -225,16 +266,17 @@
           </div>
         </div>
       </div>
-      <div class="panel" style="margin:0;">
-        <div class="panel-head"><h3 class="text-h2" style="margin:0;">Progress by Competency</h3>
-          <div class="tabs" style="margin:0;"><button class="tab-btn ${view === 'cards' ? 'active' : ''}" data-view="cards">Cards</button><button class="tab-btn ${view === 'table' ? 'active' : ''}" data-view="table">Table</button></div></div>
-        ${view === 'cards' ? cardsView(m, pending) : tableView(m, pending)}
+      `;
+    F('progress').innerHTML = `<div class="panel" style="margin:0;">
+        <div class="panel-head"><h3 class="text-h2" style="margin:0;">Progress by Competency</h3><span class="text-meta">${m.nama} · ${m.comps.length} competencies</span></div>
+        ${cardsView(m, pending)}
       </div>`;
-    document.querySelectorAll('[data-view]').forEach(b => b.onclick = () => { view = b.dataset.view; render(); });
+    document.querySelectorAll('[data-ev]').forEach(b => b.onclick = () => { const box = document.getElementById('ev-' + b.dataset.ev); box.style.display = box.style.display === 'none' ? 'block' : 'none'; });
     document.querySelectorAll('[data-up]').forEach(b => b.onclick = e => {
-      e.stopPropagation(); const [ci, ai] = b.dataset.up.split('-').map(Number); const x = m.comps[ci].acts[ai];
-      x.s = x.s === 'rencana' ? 'berjalan' : x.s === 'berjalan' ? 'selesai' : 'berjalan';
-      toast(`Updated: ${ST[x.s]}`); render();
+      e.stopPropagation(); const [ci, ai] = b.dataset.up.split('-').map(Number); const c = m.comps[ci], x = c.acts[ai];
+      if(x.s === 'rencana'){ x.s = 'berjalan'; toast('Activity started'); render(); }
+      else if(x.s === 'berjalan') doneDialog(m, c, x);
+      else if(confirm('Reopen this activity? Its completion record will be kept in history.')){ x.s = 'berjalan'; x.done = null; render(); }
     });
     F('apprBtn')?.addEventListener('click', () => { m.approval = 'approved'; toast('IDP approved (mockup)'); render(); });
     F('revBtn')?.addEventListener('click', () => toast('A note box for HR/OD would open here'));
