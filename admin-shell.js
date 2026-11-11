@@ -99,10 +99,11 @@ onAuth(async (user) => {
   try {
     const [prof, wl] = await Promise.all([
       getDoc(doc(db, 'users', user.uid)),
-      getDoc(doc(db, 'admins', user.email)),
+      getDoc(doc(db, 'admins', user.realEmail || user.email)),
     ]);
     if (seq !== authSeq) return; // sudah ganti akun selagi menunggu
-    const isAdmin = prof.exists() && prof.data().role === 'admin' && wl.exists();
+    const role = user.__testAs?.role || (prof.exists() && prof.data().role); // mode uji (sementara)
+    const isAdmin = role === 'admin' && wl.exists();
     if (!isAdmin) return;
     render();
     loadBadges();

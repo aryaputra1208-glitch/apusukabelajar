@@ -4,7 +4,7 @@
    - dialog update progres (mentor / atasan)
    - dialog catatan (minta revisi)
    ========================================================= */
-import { db } from '../firebase-shared.js';
+import { db, auth } from '../firebase-shared.js';
 import { escapeHtml, IDP_STATUS, IDP_STATUS_ID, PROGRESS_STATUS, daysUntil } from '../competency-shared.js?v=20261111';
 import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
@@ -137,7 +137,7 @@ export async function postUpdate({ src, item, status, note, evidenceUrl, byRole,
     planId: src.planId, itemId: item.id, nik: src.nik, periode: src.periode, kompetensiId: item.kompetensiId || '',
     status, note, evidenceUrl: evidenceUrl || '',
     at: new Date().toISOString(), createdAt: serverTimestamp(),
-    byEmail: (profile.email || '').toLowerCase(), byNama: profile.displayName || profile.email, byRole,
+    byEmail: (auth.currentUser?.email || profile.email || '').toLowerCase(), byNama: profile.displayName || profile.email, byRole,
     menteeEmail: src.menteeEmail || '', atasanEmail: src.atasanEmail || '',
     mentorEmail: hasMentorship ? item.mentorEmail : '', viewerEmails: src.viewerEmails || [],
   };

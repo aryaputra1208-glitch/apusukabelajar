@@ -6,7 +6,7 @@ import {
   getAuth, GoogleAuthProvider, OAuthProvider, signInWithPopup, signInAnonymously, signOut, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
 import {
-  getFirestore, doc, getDoc, setDoc, serverTimestamp
+  getFirestore, doc, getDoc, setDoc, serverTimestamp, collection, query, where, getDocs, limit
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -53,13 +53,33 @@ export function logout() {
  * waktu coba cari profil buat akun tanpa email.
  */
 export function onAuth(callback) {
-  return onAuthStateChanged(auth, (user) => {
+  return onAuthStateChanged(auth, async (user) => {
     if (user && user.isAnonymous) {
       signOut(auth).finally(() => callback(null));
       return;
     }
+    if (user) user = await applyTestAs(user); // SEMENTARA: mode uji role (lihat dev-test-as.js)
     callback(user);
   });
+}
+
+/* ===== SEMENTARA — mode uji role untuk admin. Hapus blok ini + dev-test-as.js kalau sudah tidak dipakai. =====
+   Admin bisa melihat LMS/TMS sebagai role lain (admin/trainer/trainee) dan/atau sebagai email karyawan lain
+   (untuk TMS: atasan, mentor, karyawan). Hak akses Firestore tetap hak akses admin asli. */
+const TEST_AS_KEY = 'lmsTestAs';
+export function getTestAs() { try { return JSON.parse(localStorage.getItem(TEST_AS_KEY) || 'null'); } catch { return null; } }
+export function setTestAs(v) { try { v ? localStorage.setItem(TEST_AS_KEY, JSON.stringify(v)) : localStorage.removeItem(TEST_AS_KEY); } catch {} }
+async function applyTestAs(user) {
+  let isRealAdmin = false;
+  try { const s = await getDoc(doc(db, 'users', user.uid)); isRealAdmin = s.exists() && s.data().role === 'admin'; } catch {}
+  if (!isRealAdmin) { if (getTestAs()) setTestAs(null); return user; }
+  import('./dev-test-as.js').then(m => m.mountTestAs({ realEmail: user.email })).catch(err => console.error('Mode uji gagal dimuat:', err));
+  const t = getTestAs();
+  if (!t || (!t.role && !t.email)) return user;
+  return {
+    uid: user.uid, displayName: user.displayName, photoURL: user.photoURL, isAnonymous: false,
+    email: (t.email || user.email || '').toLowerCase(), realEmail: user.email, __testAs: t,
+  };
 }
 
 /**
@@ -71,6 +91,12 @@ export function onAuth(callback) {
 export async function ensureUserProfile(user) {
   const ref = doc(db, 'users', user.uid);
   const snap = await getDoc(ref);
+  if (snap.exists() && user.__testAs) {
+    const real = snap.data(), t = user.__testAs;
+    let nama = '';
+    if (t.email) { try { const q = await getDocs(query(collection(db, 'employees'), where('email', '==', t.email), limit(1))); q.forEach(d => nama = d.data().nama || ''); } catch {} }
+    return { ...real, role: t.role || real.role, email: user.email, displayName: `${nama || (t.email ? t.email : real.displayName)} (test)` };
+  }
   if (snap.exists()) {
     return snap.data();
   }
