@@ -282,14 +282,14 @@ export function idpItemStatus(item, attempts) {
 /* =========================================================
    IDP: approval, progres & reminder (TMS sisi user)
    - developmentPlans/{periode_nik}.approval = { status, byEmail, byNama, at, note, submittedAt }
-     status: draft → pending (HR/OD submit) → approved | revision (atasan langsung)
+     status: draft (disusun mentor) → pending (dikirim ke HR/OD) → approved (divalidasi HR/OD) | revision (dikembalikan ke mentor)
    - developmentPlans.ack = { at } — karyawan menyatakan setuju dengan IDP yang sudah disetujui atasan
    - developmentPlans.mentorNik/mentorNama/mentorEmail — SATU mentor per IDP (Department Head ke atas) yang
      menyetujui IDP dan memperbarui progres seluruh aktivitasnya
    - idpUpdates/{auto}             — update progres oleh mentor/atasan/HR (sekaligus timeline/jejak audit)
    ========================================================= */
-export const APPROVAL_STATUS = { draft: 'Draft', pending: 'Pending Approval', approved: 'Approved', revision: 'Revision Requested' };
-export const APPROVAL_STATUS_ID = { draft: 'Disusun HR/OD', pending: 'Menunggu Persetujuan Mentor', approved: 'Disetujui', revision: 'Sedang Direvisi HR/OD' };
+export const APPROVAL_STATUS = { draft: 'Draft (Mentor)', pending: 'Waiting HR/OD Validation', approved: 'Approved', revision: 'Returned to Mentor' };
+export const APPROVAL_STATUS_ID = { draft: 'Sedang Disusun Mentor', pending: 'Sedang Divalidasi HR/OD', approved: 'Disetujui', revision: 'Sedang Diperbaiki Mentor' };
 export const APPROVAL_BADGE = { draft: 'badge-gray', pending: 'badge-amber', approved: 'badge-green', revision: 'badge-red' };
 /** Status yang bisa dipilih mentor/atasan saat update progres. */
 export const PROGRESS_STATUS = ['rencana', 'berjalan', 'selesai'];
@@ -373,9 +373,10 @@ export function computeReminders({ plans, updatesByPlan = {}, attemptsFor = () =
   };
   (plans || []).forEach(plan => {
     const appr = planApproval(plan);
-    if (appr.status === 'pending' && appr.submittedAt) {
-      const waited = -daysUntil(appr.submittedAt, today);
-      if (waited >= 3 && waited % 3 === 0) box({ email: plan.mentorEmail || plan.atasanEmail, nama: plan.mentorNama || plan.atasanNama || '-', role: 'Mentor' }).approvals.push({ plan, days: waited });
+    // IDP yang dikembalikan HR/OD ke mentor: ingatkan mentor tiap 3 hari (validasi HR/OD dipantau di dashboard)
+    if (appr.status === 'revision' && appr.at && plan.mentorEmail) {
+      const waited = -daysUntil(appr.at, today);
+      if (waited >= 3 && waited % 3 === 0) box({ email: plan.mentorEmail, nama: plan.mentorNama || plan.mentorEmail, role: 'Mentor' }).approvals.push({ plan, days: waited });
     }
     if (appr.status !== 'approved') return;
     const ups = updatesByPlan[planIdOf(plan)] || [];
@@ -394,8 +395,8 @@ export function computeReminders({ plans, updatesByPlan = {}, attemptsFor = () =
 export function reminderEmail(r, tmsUrl) {
   const lines = [`Halo ${r.nama},`, '', 'Berikut pengingat IDP (Individual Development Plan) yang perlu Anda tindak lanjuti:', ''];
   if (r.approvals.length) {
-    lines.push('IDP menunggu persetujuan Anda:');
-    r.approvals.forEach(a => lines.push(`- ${a.plan.nama} (${periodeLabelId(a.plan.periode)}) — menunggu ${a.days} hari`));
+    lines.push('IDP yang dikembalikan HR/OD untuk diperbaiki:');
+    r.approvals.forEach(a => lines.push(`- ${a.plan.nama} (${periodeLabelId(a.plan.periode)}) — sejak ${a.days} hari lalu`));
     lines.push('');
   }
   if (r.items.length) {
@@ -409,7 +410,7 @@ export function reminderEmail(r, tmsUrl) {
     lines.push('');
   }
   lines.push(r.role === 'Employee' ? `Lanjutkan belajar di LMS: ${tmsUrl.replace(/tms\/?$/, '')}` : `Update progres di TMS: ${tmsUrl}`, '', 'Terima kasih,', 'Tim HR/OD');
-  return { subject: `[Reminder IDP] ${r.approvals.length ? r.approvals.length + ' persetujuan, ' : ''}${r.items.length} aksi perlu ditindaklanjuti`, body: lines.join('\n') };
+  return { subject: `[Reminder IDP] ${r.approvals.length ? r.approvals.length + ' IDP perlu diperbaiki, ' : ''}${r.items.length} aksi perlu ditindaklanjuti`, body: lines.join('\n') };
 }
 
 /* =========================================================

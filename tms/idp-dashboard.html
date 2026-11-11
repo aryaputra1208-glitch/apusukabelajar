@@ -76,7 +76,7 @@
 
     <div class="two">
       <div class="panel">
-        <div class="panel-head"><h3 class="text-h2" style="margin:0;">Pending Approval</h3><span class="text-meta" id="pendCount"></span></div>
+        <div class="panel-head"><h3 class="text-h2" style="margin:0;">Waiting HR/OD Validation</h3><span class="text-meta" id="pendCount"></span></div>
         <div id="pendList"></div>
       </div>
       <div class="panel">
@@ -88,7 +88,7 @@
     <div class="panel" style="margin-top:16px;">
       <div class="panel-head">
         <div><h3 class="text-h2" style="margin:0;">Reminders</h3>
-          <div class="text-meta">H-3, due date, then every 3 days while overdue · pending approvals every 3 days · one message per person</div></div>
+          <div class="text-meta">H-3, due date, then every 3 days while overdue · IDPs returned to mentors every 3 days · one message per person</div></div>
         <div style="display:flex; gap:8px; align-items:center;">
           <input type="date" id="remDate" style="margin:0; max-width:170px;">
           <button class="btn btn-outline btn-sm" id="copyAllBtn">Copy All</button>
@@ -103,8 +103,8 @@
 <script type="module">
   import { db, onAuth, ensureUserProfile } from '../firebase-shared.js';
   import { iconSvg } from '../lms-icons.js';
-  import { escapeHtml, periodeRank, periodeLabel, IDP_JENIS, APPROVAL_STATUS, APPROVAL_BADGE, planApproval, itemProgress, planIdOf, daysUntil, computeReminders, reminderEmail } from '../competency-shared.js?v=20261111c';
-  import { fmtDate, isOverdue } from './idp-ui.js?v=20261111d';
+  import { escapeHtml, periodeRank, periodeLabel, IDP_JENIS, APPROVAL_STATUS, APPROVAL_BADGE, planApproval, itemProgress, planIdOf, daysUntil, computeReminders, reminderEmail } from '../competency-shared.js?v=20261111d';
+  import { fmtDate, isOverdue } from './idp-ui.js?v=20261111e';
   import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const F = id => document.getElementById(id);
@@ -180,7 +180,7 @@
       <div><a href="idp.html?nik=${encodeURIComponent(f.p.nik)}&periode=${encodeURIComponent(f.p.periode)}" style="font-weight:600; color:var(--text);">${escapeHtml(f.p.nama)}</a>
         <div class="text-meta">Mentor: ${escapeHtml(f.p.mentorNama || '-')}${f.p.mentorEmail ? '' : ' · <span style="color:var(--red);">no mentor set</span>'}</div></div>
       <span class="badge ${f.days >= 7 ? 'badge-red' : f.days >= 3 ? 'badge-amber' : 'badge-gray'}">${f.days == null ? '-' : f.days === 0 ? 'today' : f.days + 'd'}</span>
-    </div>`).join('') || `<div class="empty-state">${iconSvg('check',{size:22})}<p style="margin-top:6px;">Nothing waiting for approval.</p></div>`;
+    </div>`).join('') || `<div class="empty-state">${iconSvg('check',{size:22})}<p style="margin-top:6px;">Nothing waiting for validation.</p></div>`;
 
     // overdue
     const lateSorted = late.sort((a, b) => String(a.it.targetTanggal).localeCompare(String(b.it.targetTanggal)));
@@ -203,7 +203,7 @@
       <div style="min-width:0;">
         <strong>${escapeHtml(r.nama)}</strong> <span class="text-meta">· ${escapeHtml(r.role)} · ${r.email ? escapeHtml(r.email) : '<span style="color:var(--red);">no email</span>'}</span>
         <ul>
-          ${r.approvals.map(a => `<li>Approve IDP of ${escapeHtml(a.plan.nama)} (waiting ${a.days} days)</li>`).join('')}
+          ${r.approvals.map(a => `<li>Fix the IDP of ${escapeHtml(a.plan.nama)} returned by HR/OD (${a.days} days ago)</li>`).join('')}
           ${r.items.map(({ plan, item, reason }) => `<li>${r.role === 'Employee' ? '' : escapeHtml(plan.nama) + ': '}${escapeHtml(item.jenis === 'training' ? (item.judul || 'Training') : (item.deskripsi || ''))} · <span class="${reason.kind === 'overdue' ? 'overdue' : ''}">${escapeHtml(reason.label)}</span></li>`).join('')}
         </ul>
       </div>
@@ -239,7 +239,7 @@
     await load();
   });
 </script>
-<script type="module" src="./tms-shell.js?v=20261111e"></script>
+<script type="module" src="./tms-shell.js?v=20261111f"></script>
 <script src="../lms-motion.js?v=20261109" defer></script>
 </body>
 </html>

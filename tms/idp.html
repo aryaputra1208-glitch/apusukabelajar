@@ -59,7 +59,7 @@
 
   <div class="wrap wide">
     <h1 class="text-h1">IDP (Individual Development Plan)</h1>
-    <p class="text-sub" style="margin-bottom:20px;">Training items complete automatically when the employee passes the post-test (≥ <span id="passScore"></span>). Employees see their own IDP without scores.</p>
+    <p class="text-sub" style="margin-bottom:20px;" id="pageSub">Mentors prepare the IDP, HR/OD validates it, then the employee can see it. Training items complete automatically when the employee passes the post-test (≥ <span id="passScore"></span>).</p>
 
     <div class="filter-row">
       <select id="periodeSelect" style="max-width:220px;"></select>
@@ -68,6 +68,8 @@
         <option value="">All</option>
         <option value="needIdp">Has gaps, no IDP</option>
         <option value="hasIdp">Has IDP</option>
+        <option value="pending">Waiting HR/OD validation</option>
+        <option value="revision">Returned to mentor</option>
       </select>
       <span class="text-meta" id="rowCount"></span>
     </div>
@@ -96,12 +98,12 @@
     KATEGORI_ORDER, DEFAULT_SCALE, escapeHtml, levelLabel, periodeRank, periodeLabel, round2, gapsFor, recommendModules,
     viewerEmailsFor, gapStatuses, PASSING_SCORE, IDP_JENIS, IDP_STATUS, idpItemStatus,
     APPROVAL_STATUS, APPROVAL_BADGE, planApproval, planContentSignature, itemProgress, isMentorEligible, defaultMentorFor,
-  } from '../competency-shared.js?v=20261111c';
+  } from '../competency-shared.js?v=20261111d';
   import { collection, getDocs, doc, getDoc, setDoc, query, where, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const F = id => document.getElementById(id);
   const params = new URLSearchParams(location.search);
-  let currentProfile = null;
+  let currentProfile = null, mode = 'admin', me = ''; // mode: 'admin' (HR/OD) | 'mentor' (Department Head ke atas)
   let assessments = [], plans = {}, competencies = [], modules = [], employees = [], employeesByNik = {}, scale = DEFAULT_SCALE;
   let selectedPeriode = params.get('periode') || '', selectedNik = params.get('nik') || '';
   let draft = null; // { items: [...], catatan } yang sedang diedit
@@ -120,15 +122,27 @@
     catch(err){ console.error(`Gagal baca ${col}:`, err.code, err.message); showToast(`Gagal memuat ${col}: ${err.message}`); return []; }
   }
 
+  async function grabQ(q, label){
+    try{ const s = await getDocs(q); const out = []; s.forEach(d => out.push({ id: d.id, ...d.data() })); return out; }
+    catch(err){ console.error(`Gagal baca ${label}:`, err.code, err.message); return []; }
+  }
   async function loadAll(){
-    const [asses, pl, comps, mods, emps, scaleSnap] = await Promise.all([
-      grab('assessments'), grab('developmentPlans'), grab('competencies'), grab('modules'), grab('employees'),
+    const isAdm = mode === 'admin';
+    const [asses, pl, pl2, comps, mods, emps, scaleSnap] = await Promise.all([
+      isAdm ? grab('assessments') : grabQ(query(collection(db, 'assessments'), where('viewerEmails', 'array-contains', me)), 'assessments'),
+      isAdm ? grab('developmentPlans') : grabQ(query(collection(db, 'developmentPlans'), where('mentorEmail', '==', me)), 'developmentPlans'),
+      isAdm ? [] : grabQ(query(collection(db, 'developmentPlans'), where('viewerEmails', 'array-contains', me)), 'developmentPlans/line'),
+      grab('competencies'),
+      isAdm ? grab('modules') : grabQ(query(collection(db, 'modules'), where('status', '==', 'published')), 'modules'),
+      isAdm ? grab('employees') : [],
       getDoc(doc(db, 'settings', 'competencyScale')).catch(() => null),
     ]);
     assessments = asses; modules = mods;
-    plans = {}; pl.forEach(p => plans[p.id] = p);
+    plans = {}; [...pl2, ...pl].forEach(p => plans[p.id] = p);
+    // mentor tidak bisa membaca Data Karyawan: data dasar diambil dari hasil PA
+    const fromAssess = asses.map(a => ({ id: a.nik, nik: a.nik, nama: a.nama, email: a.email, jabatan: a.jabatan, level: a.level, levelKey: a.levelKey, divisi: a.divisi, departemen: a.departemen }));
     competencies = comps.sort((a,b) => (KATEGORI_ORDER.indexOf(a.kategori) - KATEGORI_ORDER.indexOf(b.kategori)) || ((a.urutan ?? 999) - (b.urutan ?? 999)));
-    employees = emps.map(e => ({ ...e, nik: e.id })); employeesByNik = {}; employees.forEach(e => employeesByNik[e.nik] = e);
+    employees = isAdm ? emps.map(e => ({ ...e, nik: e.id })) : fromAssess; employeesByNik = {}; employees.forEach(e => employeesByNik[e.nik] = e);
     if(scaleSnap?.exists()) scale = scaleSnap.data();
     F('employeeList').innerHTML = employees.filter(e => (e.status || 'Aktif') === 'Aktif')
       .map(e => `<option value="${escapeHtml(e.nik)} — ${escapeHtml(e.nama || '')}"></option>`).join('');
@@ -150,7 +164,9 @@
     const planOf = a => plans[`${a.periode}_${a.nik}`];
     if(flt === 'needIdp') rows = rows.filter(a => gapsFor(a.kompetensi, standar()).length && !(planOf(a)?.items || []).length);
     if(flt === 'hasIdp') rows = rows.filter(a => (planOf(a)?.items || []).length);
-    rows.sort((a,b) => (a.nama||'').localeCompare(b.nama||''));
+    if(['pending', 'revision'].includes(flt)) rows = rows.filter(a => planOf(a) && planApproval(planOf(a)).status === flt);
+    const prio = a => planOf(a) && planApproval(planOf(a)).status === 'pending' ? 0 : 1;
+    rows.sort((a,b) => (prio(a) - prio(b)) || (a.nama||'').localeCompare(b.nama||''));
     F('rowCount').textContent = `${rows.length} people`;
     F('listBody').innerHTML = rows.map(a => {
       const n = gapsFor(a.kompetensi, standar()).length;
@@ -194,14 +210,14 @@
     if(!a){ F('editor').style.display = 'none'; return; }
     const existing = plans[`${a.periode}_${a.nik}`];
     draft = { items: JSON.parse(JSON.stringify(existing?.items || [])), catatan: existing?.catatan || '', dirty: false, updates: [],
-      mentorNik: existing?.mentorNik || defaultMentorFor(nik, employeesByNik)?.nik || '' };
+      mentorNik: existing?.mentorNik || (mode === 'admin' ? defaultMentorFor(nik, employeesByNik)?.nik || '' : '') };
     F('editor').style.display = 'block';
     F('editor').innerHTML = '<p class="text-sub" style="margin-top:24px;">Loading...</p>';
     const planId = `${a.periode}_${a.nik}`;
     const [att, ups] = await Promise.all([
       loadAttempts(a),
-      getDocs(query(collection(db, 'idpUpdates'), where('planId', '==', planId)))
-        .then(snap => { const out = []; snap.forEach(d => out.push(d.data())); return out; })
+      getDocs(mode === 'admin' ? query(collection(db, 'idpUpdates'), where('planId', '==', planId)) : query(collection(db, 'idpUpdates'), where('mentorEmail', '==', me)))
+        .then(snap => { const out = []; snap.forEach(d => { const u = d.data(); if(u.planId === planId) out.push(u); }); return out; })
         .catch(err => { console.error('Gagal baca idpUpdates:', err.code, err.message); return []; }),
     ]);
     attemptList = att; draft.updates = ups;
@@ -292,24 +308,37 @@
     const defMentor = defaultMentorFor(a.nik, employeesByNik);
     const appr = plan ? planApproval(plan) : { status: 'draft' };
     const changed = plan && (planContentSignature(draft.items, draft.catatan) !== planContentSignature(plan.items, plan.catatan) || (draft.mentorNik || '') !== (plan.mentorNik || ''));
-    const approvalCard = `
-      <div class="card" style="margin-bottom:16px; display:flex; gap:16px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap;">
-        <div>
-          <div class="text-h3" style="margin-bottom:6px;">Approval <span class="badge ${APPROVAL_BADGE[appr.status]}" style="margin-left:6px;">${plan ? APPROVAL_STATUS[appr.status] : 'Not saved yet'}</span></div>
+    const isAdm = mode === 'admin';
+    const otherMentor = !isAdm && plan && plan.mentorEmail && plan.mentorEmail !== me;
+    const locked = !isAdm && (otherMentor || (plan && !['draft', 'revision'].includes(appr.status)));
+    const mentorLine = isAdm ? `
           <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin:6px 0 4px;">
-            <span class="text-meta" style="font-weight:600;">Mentor & approver</span>
+            <span class="text-meta" style="font-weight:600;">Mentor</span>
             <select id="mentorSel" style="margin:0; min-width:260px; max-width:360px;">
               <option value="">- Select mentor (Department Head and above) -</option>
               ${mentorOpts.map(e => `<option value="${escapeHtml(e.nik)}" ${e.nik === draft.mentorNik ? 'selected' : ''}>${escapeHtml(e.nama || e.nik)} · ${escapeHtml(e.jabatan || levelLabel(e.levelKey) || '')}${defMentor?.nik === e.nik ? ' (default)' : ''}</option>`).join('')}
             </select>
           </div>
-          ${!mentorOpts.length ? '<div class="text-meta" style="color:var(--red,#c0392b);">No Department Head+ with an email in Employees yet.</div>' : !mentor ? '<div class="text-meta" style="color:var(--red,#c0392b);">Select a mentor before submitting. The mentor approves the IDP and updates its progress.</div>' : ''}
-          ${appr.status === 'pending' && appr.submittedAt ? `<div class="text-meta">Submitted ${escapeHtml(fmtDate(appr.submittedAt))}</div>` : ''}
-          ${appr.status === 'approved' && appr.at ? `<div class="text-meta">Approved by ${escapeHtml(appr.byNama || appr.byEmail || '-')} · ${escapeHtml(fmtDate(appr.at))}${plan?.ack?.at ? ` · employee agreed ${escapeHtml(fmtDate(plan.ack.at))}` : ' · <span>awaiting employee agreement</span>'}</div>` : ''}
-          ${appr.note ? `<div style="margin-top:8px; padding:8px 12px; border-left:3px solid var(--pink); background:rgba(255,255,255,.5);"><span class="text-meta">${appr.status === 'revision' ? 'Revision note' : 'Note'} from ${escapeHtml(appr.byNama || appr.byEmail || '')}:</span><br>${escapeHtml(appr.note)}</div>` : ''}
-          ${changed && ['approved','pending'].includes(appr.status) ? '<div class="text-meta" style="margin-top:6px; color:var(--red,#c0392b);">You changed activities, notes or the mentor: saving moves this IDP back to Draft and the mentor needs to approve it again.</div>' : ''}
-        </div>
+          ${!mentor ? '<div class="text-meta" style="color:var(--red,#c0392b);">No mentor yet. The mentor (Department Head and above) prepares the IDP and updates its progress.</div>' : ''}`
+      : `<div class="text-meta" style="margin:4px 0;">Mentor: <strong>${otherMentor ? escapeHtml(plan.mentorNama || plan.mentorEmail) : 'You'}</strong></div>`;
+    const whoBy = x => escapeHtml(x.byNama || x.byEmail || '');
+    const approvalCard = `
+      <div class="card" style="margin-bottom:16px;">
+          <div class="text-h3" style="margin-bottom:6px;">Status <span class="badge ${APPROVAL_BADGE[appr.status]}" style="margin-left:6px;">${plan ? APPROVAL_STATUS[appr.status] : 'Not created yet'}</span></div>
+          ${mentorLine}
+          ${appr.status === 'pending' && appr.submittedAt ? `<div class="text-meta">Sent to HR/OD ${escapeHtml(fmtDate(appr.submittedAt))}${appr.submittedNama ? ' by ' + escapeHtml(appr.submittedNama) : ''}</div>` : ''}
+          ${appr.status === 'approved' && appr.at ? `<div class="text-meta">Validated by ${whoBy(appr)} · ${escapeHtml(fmtDate(appr.at))}${plan?.ack?.at ? ` · employee agreed ${escapeHtml(fmtDate(plan.ack.at))}` : ''}</div>` : ''}
+          ${appr.note ? `<div style="margin-top:8px; padding:8px 12px; border-left:3px solid var(--pink); background:rgba(255,255,255,.5);"><span class="text-meta">${appr.status === 'revision' ? 'HR/OD revision note' : 'Note'} from ${whoBy(appr)}:</span><br>${escapeHtml(appr.note)}</div>` : ''}
+          ${otherMentor ? '<div class="text-meta" style="margin-top:6px;">This IDP belongs to another mentor, so it is read-only for you.</div>'
+            : locked ? `<div class="text-meta" style="margin-top:6px;">${appr.status === 'pending' ? 'Waiting for HR/OD validation, so it is read-only for now. HR/OD may edit it or return it to you.' : 'Approved by HR/OD. Update progress from the IDP page.'}</div>` : ''}
       </div>`;
+    const buttons = isAdm ? `
+        <button class="btn btn-outline" id="savePlanBtn">Save</button>
+        ${appr.status === 'pending' ? '<button class="btn btn-outline" id="returnBtn">Return to Mentor</button>' : ''}
+        ${appr.status !== 'approved' || changed || draft.dirty ? `<button class="btn btn-primary" id="approvePlanBtn">${appr.status === 'approved' ? 'Save & Keep Approved' : 'Validate & Publish'}</button>` : ''}`
+      : locked ? '' : `
+        <button class="btn btn-outline" id="savePlanBtn">Save Draft</button>
+        <button class="btn btn-primary" id="submitPlanBtn">Send to HR/OD</button>`;
     F('editor').innerHTML = `
       <div class="profile-head">
         <div>
@@ -343,11 +372,9 @@
 
       <div class="sticky-save">
         <span class="text-meta" id="dirtyInfo" style="align-self:center;">${draft.dirty ? 'You have unsaved changes.' : ''}</span>
-        <button class="btn btn-outline" id="savePlanBtn">Save Draft</button>
-        ${mentor
-          ? `<button class="btn btn-primary" id="submitPlanBtn" ${appr.status === 'pending' && !changed && !draft.dirty ? 'disabled' : ''}>${appr.status === 'approved' && !appr.legacy && !changed ? 'Save' : 'Save & Submit to Mentor'}</button>`
-          : `<button class="btn btn-primary" disabled title="Select a mentor first">Save & Submit to Mentor</button>`}
+        ${buttons}
       </div>`;
+    if(locked) F('editor').querySelectorAll('.panel, .section-gap.card').forEach(el => { el.style.pointerEvents = 'none'; el.style.opacity = '.85'; });
     bindEditor();
   }
 
@@ -396,21 +423,24 @@
       });
     });
     F('planCatatan').addEventListener('input', e => { draft.catatan = e.target.value; markDirty(); });
-    F('savePlanBtn').addEventListener('click', () => savePlan('save'));
+    F('savePlanBtn')?.addEventListener('click', () => savePlan('save'));
+    F('approvePlanBtn')?.addEventListener('click', () => savePlan('approve'));
+    F('returnBtn')?.addEventListener('click', () => savePlan('return'));
     F('mentorSel')?.addEventListener('change', e => { draft.mentorNik = e.target.value; draft.dirty = true; renderEditor(); });
-    F('submitPlanBtn')?.addEventListener('click', () => savePlan(F('submitPlanBtn').textContent === 'Save' ? 'save' : 'submit'));
+    F('submitPlanBtn')?.addEventListener('click', () => savePlan('submit'));
 
   }
 
-  async function savePlan(mode){
+  async function savePlan(action){
     const a = assessments.find(x => x.nik === selectedNik && x.periode === selectedPeriode);
     const bad = draft.items.findIndex(it => !it.kompetensiId || (it.jenis === 'training' ? !it.moduleId : !String(it.deskripsi || '').trim()));
     if(bad !== -1){ showToast(`An activity under "${draft.items[bad].kompetensiId ? compName(draft.items[bad].kompetensiId) : 'Competency not selected'}" is incomplete: select a competency and ${draft.items[bad].jenis === 'training' ? 'a module' : 'add a description'}.`); return; }
-    if(mode !== 'save' && !draft.items.length){ showToast('Add at least one activity before submitting.'); return; }
+    if(['submit', 'approve'].includes(action) && !draft.items.length){ showToast('Add at least one activity first.'); return; }
     const emp = employeesByNik[a.nik] || {};
     const boss = employeesByNik[emp.atasanNik] || null;
-    const mentor = employeesByNik[draft.mentorNik] || null;
-    if(mode === 'submit' && !mentor){ showToast('Select a mentor first.'); return; }
+    // mentor = pemilik IDP. Mode mentor: selalu dirinya sendiri.
+    const mentor = mode === 'admin' ? (employeesByNik[draft.mentorNik] || null) : { nik: '', nama: currentProfile.displayName || me, jabatan: '', email: me };
+    if(action === 'approve' && !mentor){ showToast('Select a mentor first. The mentor updates the progress.'); return; }
     const id = `${a.periode}_${a.nik}`;
     const prev = plans[id];
     const prevAppr = prev ? planApproval(prev) : { status: 'draft' };
@@ -426,27 +456,30 @@
     const catatan = draft.catatan.trim();
     const changed = !prev || planContentSignature(items, catatan) !== planContentSignature(prev.items, prev.catatan) || (draft.mentorNik || '') !== (prev.mentorNik || '');
 
+    const who = { byEmail: currentProfile.email, byNama: currentProfile.displayName || currentProfile.email };
     let approval;
-    if(mode === 'submit'){
-      approval = { status: 'pending', submittedAt: nowIso, submittedBy: currentProfile.email };
+    if(action === 'submit'){
+      approval = { status: 'pending', submittedAt: nowIso, submittedBy: currentProfile.email, submittedNama: who.byNama };
       if(prevAppr.status === 'revision' && prevAppr.note) approval.previousNote = prevAppr.note;
-
+    } else if(action === 'approve'){
+      approval = { ...(prevAppr.legacy ? {} : prevAppr), status: 'approved', ...who, at: nowIso, note: prevAppr.status === 'approved' ? (prevAppr.note || '') : '' };
+    } else if(action === 'return'){
+      const note = prompt('What should the mentor fix? (visible to the mentor)');
+      if(note === null) return;
+      if(!note.trim()){ showToast('Write a note for the mentor.'); return; }
+      approval = { ...prevAppr, status: 'revision', ...who, at: nowIso, note: note.trim() };
     } else if(!prev){
       approval = { status: 'draft' };
-    } else if(changed && ['approved', 'pending'].includes(prevAppr.status)){
-      if(!confirm(`This IDP is "${APPROVAL_STATUS[prevAppr.status]}". Your changes will move it back to Draft and it will need approval again. Continue?`)) return;
-      approval = { status: 'draft', previousNote: `Edited by HR/OD after ${prevAppr.status === 'approved' ? 'approval' : 'submission'}` };
     } else {
-      approval = prevAppr.legacy ? { status: 'approved', legacy: true } : prevAppr;
+      approval = prevAppr.legacy ? { status: 'approved', legacy: true } : prevAppr; // simpan tanpa mengubah status
     }
-
     const data = {
       nik: a.nik, email: (emp.email || a.email || '').toLowerCase(), nama: a.nama || emp.nama || '', jabatan: a.jabatan || '', level: a.level || '',
       divisi: emp.divisi || a.divisi || '', departemen: emp.departemen || a.departemen || '',
       periode: a.periode, periodeRank: periodeRank(a.periode), items, catatan,
-      atasanNik: boss?.nik || '', atasanNama: boss?.nama || '', atasanEmail: (boss?.email || '').toLowerCase(),
+      atasanNik: boss?.nik || prev?.atasanNik || '', atasanNama: boss?.nama || prev?.atasanNama || '', atasanEmail: (boss?.email || prev?.atasanEmail || '').toLowerCase(),
       mentorNik: mentor?.nik || '', mentorNama: mentor?.nama || '', mentorJabatan: mentor?.jabatan || '', mentorEmail: (mentor?.email || '').toLowerCase(),
-      viewerEmails: viewerEmailsFor(a.nik, employeesByNik), approval,
+      viewerEmails: mode === 'admin' ? viewerEmailsFor(a.nik, employeesByNik) : (a.viewerEmails || []), approval,
       updatedAt: serverTimestamp(), updatedBy: currentProfile.email,
     };
     if(approval.status === 'approved' && prev?.ack && !changed) data.ack = prev.ack;
@@ -458,7 +491,7 @@
       plans[id] = data;
       draft.items = JSON.parse(JSON.stringify(items));
       draft.dirty = false;
-      showToast({ submit: `IDP saved and sent to ${mentor?.nama || 'the mentor'} for approval.` }[mode] || (approval.status === 'draft' ? 'IDP saved as draft.' : 'IDP saved.'));
+      showToast({ submit: 'IDP sent to HR/OD for validation.', approve: 'IDP validated. The employee can now see it.', return: 'IDP returned to the mentor.' }[action] || (approval.status === 'draft' ? 'IDP saved as draft.' : 'IDP saved.'));
       renderList(); renderEditor();
     } catch(err){ console.error('Gagal simpan developmentPlans:', err.code, err.message, data); showToast('Save failed: ' + err.message); }
   }
@@ -475,11 +508,19 @@
       return;
     }
     currentProfile = await ensureUserProfile(user);
-    if(currentProfile.role !== 'admin'){
-      gate.style.display = 'block'; shell.style.display = 'none';
-      F('gateTitle').textContent = 'Access denied';
-      F('gateSub').textContent = 'This page is for Admins (HR/OD) only.';
-      return;
+    me = (user.email || '').toLowerCase();
+    mode = currentProfile.role === 'admin' ? 'admin' : 'mentor';
+    if(mode === 'mentor'){
+      // mentor = Department Head ke atas yang boleh melihat hasil PA timnya
+      let ok = false;
+      try{ ok = !(await getDocs(query(collection(db, 'assessments'), where('viewerEmails', 'array-contains', me)))).empty; } catch(err){ console.error('Gagal cek akses mentor:', err.code, err.message); }
+      if(!ok){
+        gate.style.display = 'block'; shell.style.display = 'none';
+        F('gateTitle').textContent = 'Access denied';
+        F('gateSub').textContent = 'This page is for HR/OD and Department Heads (mentors).';
+        return;
+      }
+      F('pageSub').textContent = 'Prepare the IDP for your team, then send it to HR/OD for validation. The employee sees it after HR/OD approves.';
     }
     gate.style.display = 'none'; shell.style.display = 'block';
     F('userAvatar').src = currentProfile.photoURL;
@@ -487,7 +528,7 @@
     loadAll();
   });
 </script>
-<script type="module" src="./tms-shell.js?v=20261111e"></script>
+<script type="module" src="./tms-shell.js?v=20261111f"></script>
 <script src="../lms-motion.js?v=20261109" defer></script>
 </body>
 </html>

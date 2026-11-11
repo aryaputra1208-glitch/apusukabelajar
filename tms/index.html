@@ -71,7 +71,7 @@
 <script type="module">
   import { db, onAuth, ensureUserProfile } from '../firebase-shared.js';
   import { iconSvg } from '../lms-icons.js';
-  import { itemProgress, planIdOf, havNormalize, havPlace, HAV_ZONES, HAV_PERF_SOURCES, HAV_POT_SOURCES, escapeHtml, periodeLabel } from '../competency-shared.js?v=20261111c';
+  import { itemProgress, planIdOf, havNormalize, havPlace, HAV_ZONES, HAV_PERF_SOURCES, HAV_POT_SOURCES, escapeHtml, periodeLabel } from '../competency-shared.js?v=20261111d';
   import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
   import { collection, getDocs, query, where, limit } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
@@ -95,7 +95,7 @@
     const email = (user.email || '').toLowerCase();
     const isAdmin = profile.role === 'admin';
     const hasIdpQuick = await exists(query(collection(db, 'developmentPlans'), where('email', '==', email), limit(1)), 'developmentPlans');
-    const isMentor = await exists(query(collection(db, 'developmentPlans'), where('mentorEmail', '==', email), limit(1)), 'mentor');
+    const isMentor = !isAdmin && await exists(query(collection(db, 'assessments'), where('viewerEmails', 'array-contains', email), limit(1)), 'mentor');
     // Non-admin tidak punya beranda: mentor → halaman IDP mentor, karyawan → IDP Saya
     if(!isAdmin){
       if(isMentor) return location.replace('mentor-idp.html');
@@ -220,7 +220,7 @@
     document.querySelectorAll('#havGrid [data-k], #havDist [data-k]').forEach(el => el.addEventListener('click', () => { havSel = el.dataset.k; drawHav(); }));
   }
 </script>
-<script type="module" src="./tms-shell.js?v=20261111e"></script>
+<script type="module" src="./tms-shell.js?v=20261111f"></script>
 <script src="../lms-motion.js?v=20261109" defer></script>
 </body>
 </html>

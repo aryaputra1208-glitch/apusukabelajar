@@ -5,7 +5,7 @@
    - dialog catatan (minta revisi)
    ========================================================= */
 import { db, auth } from '../firebase-shared.js';
-import { escapeHtml, IDP_STATUS, IDP_STATUS_ID, PROGRESS_STATUS, daysUntil } from '../competency-shared.js?v=20261111c';
+import { escapeHtml, IDP_STATUS, IDP_STATUS_ID, PROGRESS_STATUS, daysUntil } from '../competency-shared.js?v=20261111d';
 import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
 const CSS = `

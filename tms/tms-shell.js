@@ -68,8 +68,10 @@ onAuth(async (user) => {
     const email = (user.email || '').toLowerCase();
     const isAdmin = profile.role === 'admin';
     const [nMentor, nPendingMine, nIdp, nPendingAll] = await Promise.all([
-      count(query(collection(db, 'developmentPlans'), where('mentorEmail', '==', email), limit(1)), 'mentor'),
-      count(query(collection(db, 'developmentPlans'), where('mentorEmail', '==', email), where('approval.status', '==', 'pending')), 'pending-mine'),
+      // mentor = Department Head ke atas yang boleh melihat hasil PA timnya (garis atasan)
+      isAdmin ? count(query(collection(db, 'developmentPlans'), where('mentorEmail', '==', email), limit(1)), 'mentor')
+              : count(query(collection(db, 'assessments'), where('viewerEmails', 'array-contains', email), limit(1)), 'mentor'),
+      count(query(collection(db, 'developmentPlans'), where('mentorEmail', '==', email), where('approval.status', '==', 'revision')), 'returned'),
       count(query(collection(db, 'developmentPlans'), where('email', '==', email), limit(1)), 'my-idp'),
       isAdmin ? count(query(collection(db, 'developmentPlans'), where('approval.status', '==', 'pending')), 'pending-all') : 0,
     ]);

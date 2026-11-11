@@ -161,13 +161,13 @@
       <select id="periodeSel" style="margin:0; max-width:220px;"></select>
     </div>
     <div class="kpi-row">
-      <div class="kpi"><div class="n" id="kMentee">-</div><div class="l">Mentees</div></div>
-      <div class="kpi"><div class="n" id="kAppr">-</div><div class="l">IDPs to Approve</div></div>
+      <div class="kpi"><div class="n" id="kMentee">-</div><div class="l">Team Members</div></div>
+      <div class="kpi"><div class="n" id="kAppr">-</div><div class="l">Need Your Action</div></div>
       <div class="kpi"><div class="n" id="kDone">-</div><div class="l">Activities Done</div></div>
       <div class="kpi"><div class="n" id="kLate">-</div><div class="l">Overdue Activities</div></div>
     </div>
     <div class="layout">
-      <div class="panel" style="margin:0;"><div class="panel-head"><h3 class="text-h2" style="margin:0;">IDP List</h3><span class="text-meta" id="listCount"></span></div><div id="list"></div></div>
+      <div class="panel" style="margin:0;"><div class="panel-head"><h3 class="text-h2" style="margin:0;">Team</h3><span class="text-meta" id="listCount"></span></div><div id="list"></div></div>
       <div id="detail"></div>
     </div>
     <div id="progress" style="margin-top:16px;"></div>
@@ -177,15 +177,15 @@
 
 <script type="module">
   import { db, onAuth, ensureUserProfile } from '../firebase-shared.js';
-  import { escapeHtml, periodeRank, periodeLabel, IDP_JENIS, planApproval, itemProgress, planIdOf, daysUntil } from '../competency-shared.js?v=20261111c';
-  import { postUpdate, askNote } from './idp-ui.js?v=20261111d';
-  import { collection, getDocs, query, where, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+  import { escapeHtml, periodeRank, periodeLabel, IDP_JENIS, planApproval, itemProgress, planIdOf, daysUntil } from '../competency-shared.js?v=20261111d';
+  import { postUpdate } from './idp-ui.js?v=20261111e';
+  import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const F = id => document.getElementById(id);
   const ST = { rencana: 'Planned', berjalan: 'In Progress', selesai: 'Done' };
   const BADGE = { rencana: 'badge-gray', berjalan: 'badge-purple', selesai: 'badge-green' };
   const ICON = { selesai: '<span class="ic ic-done">✓</span>', berjalan: '<span class="ic ic-prog"></span>', rencana: '<span class="ic ic-plan"></span>' };
-  let me = '', profile = null, plans = [], updates = [], attemptsBy = {}, periode = '', selId = '';
+  let me = '', profile = null, plans = [], team = [], updates = [], attemptsBy = {}, periode = '', selId = '';
   const showToast = msg => { const t = F('toast'); t.textContent = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); };
   const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
   const fmt = (d, o = { day: 'numeric', month: 'short' }) => { const x = new Date(d); return isNaN(x) ? '' : x.toLocaleDateString('en-GB', o); };
@@ -206,16 +206,17 @@
   async function grab(q, label){ try{ const o = []; (await getDocs(q)).forEach(d => o.push({ _id: d.id, ...d.data() })); return o; } catch(err){ console.error('Gagal baca', label, err.code, err.message); return []; } }
 
   async function load(){
-    [plans, updates] = await Promise.all([
+    [plans, updates, team] = await Promise.all([
       grab(query(collection(db, 'developmentPlans'), where('mentorEmail', '==', me)), 'developmentPlans'),
       grab(query(collection(db, 'idpUpdates'), where('mentorEmail', '==', me)), 'idpUpdates'),
+      grab(query(collection(db, 'assessments'), where('viewerEmails', 'array-contains', me)), 'assessments'),
     ]);
     await Promise.all(plans.map(async p => {
       const qs = [grab(query(collection(db, 'attempts'), where('nik', '==', p.nik)), 'attempts')];
       if(p.email) qs.push(grab(query(collection(db, 'attempts'), where('email', '==', p.email)), 'attempts'));
       attemptsBy[p._id] = (await Promise.all(qs)).flat();
     }));
-    const periodes = [...new Set(plans.map(p => p.periode))].sort((a, b) => periodeRank(b) - periodeRank(a));
+    const periodes = [...new Set([...plans, ...team].map(p => p.periode))].sort((a, b) => periodeRank(b) - periodeRank(a));
     periode = periode && periodes.includes(periode) ? periode : periodes[0] || '';
     F('periodeSel').innerHTML = periodes.map(p => `<option value="${escapeHtml(p)}" ${p === periode ? 'selected' : ''}>${escapeHtml(periodeLabel(p))}</option>`).join('');
   }
@@ -245,40 +246,68 @@
     </div>`;
   }
 
+  // satu baris per anggota tim di periode ini: dari hasil PA (garis atasan) + IDP yang mentornya saya
+  function rowsFor(per){
+    const byId = new Map();
+    team.filter(a => a.periode === per).forEach(a => byId.set(a._id, { _id: a._id, nik: a.nik, nama: a.nama, jabatan: a.jabatan, periode: a.periode, plan: null }));
+    plans.filter(p => p.periode === per).forEach(p => byId.set(p._id, { ...(byId.get(p._id) || { _id: p._id, nik: p.nik, nama: p.nama, jabatan: p.jabatan, periode: p.periode }), plan: p }));
+    // IDP milik mentor lain tidak ditampilkan
+    return [...byId.values()];
+  }
+  const stOf = r => r.plan ? planApproval(r.plan).status : 'none';
+  const ACTION = { none: 'No IDP yet', draft: 'Draft', revision: 'Returned by HR/OD', pending: 'Waiting HR/OD', approved: '' };
   function render(){
-    const rows = plans.filter(p => p.periode === periode).sort((a, b) => {
-      const pa = planApproval(a).status === 'pending', pb = planApproval(b).status === 'pending';
-      return (pb - pa) || (a.nama || '').localeCompare(b.nama || '');
-    });
-    if(!rows.find(p => p._id === selId)) selId = rows[0]?._id || '';
-    const all = rows.filter(p => planApproval(p).status === 'approved').flatMap(acts);
+    const order = { revision: 0, none: 1, draft: 2, pending: 3, approved: 4 };
+    const rows = rowsFor(periode).sort((a, b) => (order[stOf(a)] - order[stOf(b)]) || (a.nama || '').localeCompare(b.nama || ''));
+    if(!rows.find(r => r._id === selId)) selId = rows[0]?._id || '';
+    const all = rows.filter(r => stOf(r) === 'approved').flatMap(r => acts(r.plan));
     F('kMentee').textContent = rows.length;
-    F('kAppr').textContent = rows.filter(p => planApproval(p).status === 'pending').length;
+    F('kAppr').textContent = rows.filter(r => ['none', 'draft', 'revision'].includes(stOf(r))).length;
     F('kDone').textContent = all.length ? `${all.filter(x => x.s === 'selesai').length}/${all.length}` : '-';
     F('kLate').textContent = all.filter(x => x.late).length;
     F('listCount').textContent = periodeLabel(periode);
-    F('list').innerHTML = rows.map(p => {
-      const st = planApproval(p).status, a = acts(p), d = a.filter(x => x.s === 'selesai').length;
-      const tag = st === 'pending' ? '<span class="badge badge-amber">To approve</span>' : st === 'approved' ? `<span class="text-meta">${pct(d, a.length)}%</span>` : `<span class="badge badge-gray">${st === 'revision' ? 'In revision' : 'Draft'}</span>`;
-      return `<div class="mentee ${p._id === selId ? 'sel' : ''}" data-id="${escapeHtml(p._id)}"><div class="av">${escapeHtml(initials(p.nama))}</div>
-        <div style="flex:1; min-width:0;"><div style="display:flex; justify-content:space-between; gap:8px;"><strong style="font-size:13.5px;">${escapeHtml(p.nama || p.nik)}</strong>${tag}</div>
-        <div class="text-meta">${escapeHtml(p.jabatan || '')}</div>${st === 'approved' ? `<div class="mini"><span style="width:${pct(d, a.length)}%"></span></div>` : ''}</div></div>`;
-    }).join('') || '<div class="empty-state"><p>No IDPs for this period.</p></div>';
+    F('list').innerHTML = rows.map(r => {
+      const st = stOf(r);
+      let tag;
+      if(st === 'approved'){ const a = acts(r.plan), d = a.filter(x => x.s === 'selesai').length; tag = `<span class="text-meta">${pct(d, a.length)}%</span>`; r._pct = pct(d, a.length); }
+      else tag = `<span class="badge ${st === 'revision' ? 'badge-red' : st === 'none' ? 'badge-amber' : st === 'pending' ? 'badge-purple' : 'badge-gray'}">${ACTION[st]}</span>`;
+      return `<div class="mentee ${r._id === selId ? 'sel' : ''}" data-id="${escapeHtml(r._id)}"><div class="av">${escapeHtml(initials(r.nama))}</div>
+        <div style="flex:1; min-width:0;"><div style="display:flex; justify-content:space-between; gap:8px;"><strong style="font-size:13.5px;">${escapeHtml(r.nama || r.nik)}</strong>${tag}</div>
+        <div class="text-meta">${escapeHtml(r.jabatan || '')}</div>${st === 'approved' ? `<div class="mini"><span style="width:${r._pct}%"></span></div>` : ''}</div></div>`;
+    }).join('') || '<div class="empty-state"><p>No team members for this period.</p></div>';
     document.querySelectorAll('.mentee[data-id]').forEach(el => el.onclick = () => { selId = el.dataset.id; render(); });
-    renderDetail();
+    renderDetail(rows.find(r => r._id === selId));
   }
 
-  function renderDetail(){
-    const p = plans.find(x => x._id === selId);
-    if(!p){ F('detail').innerHTML = ''; F('progress').innerHTML = ''; return; }
-    const st = planApproval(p).status, pending = st === 'pending', approved = st === 'approved';
+  function renderDetail(row){
+    if(!row){ F('detail').innerHTML = ''; F('progress').innerHTML = ''; return; }
+    const p = row.plan, st = stOf(row);
+    const editUrl = `idp.html?nik=${encodeURIComponent(row.nik)}&periode=${encodeURIComponent(row.periode)}`;
+    if(st !== 'approved'){
+      const msg = {
+        none: ['No IDP yet', 'Prepare the IDP from the competency gaps, then send it to HR/OD for validation.', 'Create IDP'],
+        draft: ['Draft', 'You have a draft. Finish it and send it to HR/OD.', 'Continue Editing'],
+        revision: ['Returned by HR/OD', 'HR/OD asked for changes. Fix the IDP and send it again.', 'Fix IDP'],
+        pending: ['Waiting HR/OD validation', 'HR/OD is reviewing this IDP. They may edit it before approving. The employee sees it after approval.', 'View IDP'],
+      }[st];
+      F('detail').innerHTML = `<div class="panel" style="margin:0;">
+        <div class="panel-head"><div><h3 class="text-h2" style="margin:0;">${escapeHtml(row.nama || row.nik)}</h3><div class="text-meta">${escapeHtml(row.jabatan || '')} · IDP ${escapeHtml(periodeLabel(row.periode))}</div></div>
+          <span class="badge ${st === 'revision' ? 'badge-red' : st === 'none' ? 'badge-amber' : st === 'pending' ? 'badge-purple' : 'badge-gray'}">${msg[0]}</span></div>
+        <div style="padding:22px 20px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
+          <div><div class="text-sub" style="margin:0;">${msg[1]}</div>
+            ${st === 'revision' && p.approval?.note ? `<div style="margin-top:10px; padding:10px 12px; border-left:3px solid var(--red); background:var(--red-bg); font-size:13px;"><b>HR/OD note:</b> ${escapeHtml(p.approval.note)}</div>` : ''}
+            ${p ? `<div class="text-meta" style="margin-top:8px;">${(p.items || []).length} activities planned</div>` : ''}</div>
+          <a class="btn ${st === 'pending' ? 'btn-outline' : 'btn-primary'}" href="${editUrl}">${msg[2]}</a>
+        </div></div>`;
+      F('progress').innerHTML = '';
+      return;
+    }
+    const pending = false, approved = true;
     const a = acts(p), done = a.filter(x => x.s === 'selesai').length, prog = a.filter(x => x.s === 'berjalan').length;
     F('detail').innerHTML = `
-      ${pending ? `<div class="card approve" style="margin-bottom:16px;"><div><div class="text-h3" style="margin-bottom:4px;">IDP ${escapeHtml(p.nama)} needs your approval</div><div class="text-meta">Prepared by HR/OD · review the plan below, then approve or ask for changes.</div></div>
-        <div style="display:flex; gap:8px;"><button class="btn btn-outline" id="revBtn">Request Revision</button><button class="btn btn-primary" id="apprBtn">Approve IDP</button></div></div>` : ''}
       <div class="panel" style="margin:0;">
         <div class="panel-head"><div><h3 class="text-h2" style="margin:0;">${escapeHtml(p.nama || p.nik)}</h3><div class="text-meta">${escapeHtml(p.jabatan || '')} · IDP ${escapeHtml(periodeLabel(p.periode))}</div></div>
-          <span class="badge ${approved ? 'badge-green' : pending ? 'badge-amber' : 'badge-gray'}">${approved ? 'Approved' : pending ? 'Pending approval' : st === 'revision' ? 'In revision (HR/OD)' : 'Draft (HR/OD)'}</span></div>
+          <span class="badge badge-green">Approved by HR/OD</span></div>
         <div class="summary">
           ${donut(done, prog, a.length)}
           <div>
@@ -316,8 +345,6 @@
       if(!confirm('Reopen this activity? The completion record stays in its history.')) return;
       save(p, x, { status: 'berjalan', note: 'Reopened' }, 'Activity reopened');
     });
-    F('apprBtn')?.addEventListener('click', () => decide(p, 'approved'));
-    F('revBtn')?.addEventListener('click', () => decide(p, 'revision'));
   }
 
   async function save(p, x, fields, msg){
@@ -364,21 +391,6 @@
     setTimeout(() => back.querySelector('#dWhat').focus(), 30);
   }
 
-  async function decide(p, status){
-    const note = status === 'revision'
-      ? await askNote({ title: 'Request Revision', label: 'What should HR/OD change?', placeholder: 'e.g. Add a stretch assignment for Planning & Controlling; the mentoring target is too short.', okText: 'Send to HR/OD' })
-      : await askNote({ title: 'Approve IDP', label: 'Note for the employee (optional)', placeholder: 'e.g. Good plan. Let\'s review progress together every month.', okText: 'Approve', required: false });
-    if(note === null) return;
-    const approval = { ...planApproval(p), status, byEmail: me, byNama: profile.displayName || me, at: new Date().toISOString(), note };
-    delete approval.legacy;
-    try{
-      await updateDoc(doc(db, 'developmentPlans', p._id), { approval });
-      p.approval = approval;
-      showToast(status === 'approved' ? 'IDP approved. The employee can now see it.' : 'Revision request sent to HR/OD.');
-      render();
-    } catch(err){ console.error('Gagal simpan approval:', err.code, err.message); showToast('Failed: ' + err.message); }
-  }
-
   F('periodeSel').addEventListener('change', e => { periode = e.target.value; selId = ''; render(); });
 
   onAuth(async (user) => {
@@ -386,19 +398,19 @@
     profile = await ensureUserProfile(user);
     me = (user.email || '').toLowerCase();
     await load();
-    if(!plans.length){
-      F('gateTitle').textContent = 'No IDPs yet';
-      F('gateSub').innerHTML = `IDPs where you are the mentor will appear here once HR/OD prepares them. <a href="../index.html">Back to LMS</a>.`;
+    if(!plans.length && !team.length){
+      F('gateTitle').textContent = 'No team data yet';
+      F('gateSub').innerHTML = `Your team appears here once HR/OD imports their performance results. <a href="../index.html">Back to LMS</a>.`;
       return;
     }
     selId = new URLSearchParams(location.search).get('plan') || '';
-    const pre = plans.find(p => p._id === selId); if(pre) periode = pre.periode;
+    const pre = [...plans, ...team].find(p => p._id === selId); if(pre) periode = pre.periode;
     F('userAvatar').src = profile.photoURL || ''; F('userName').textContent = profile.displayName;
     F('gate').style.display = 'none'; F('appShell').style.display = 'block';
     render();
   });
 </script>
-<script type="module" src="./tms-shell.js?v=20261111e"></script>
+<script type="module" src="./tms-shell.js?v=20261111f"></script>
 <script src="../lms-motion.js?v=20261109" defer></script>
 </body>
 </html>

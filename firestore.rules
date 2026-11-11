@@ -149,25 +149,33 @@ service cloud.firestore {
       );
       allow write: if isSignedIn() && myRole() == 'admin';
     }
-    // IDP: disusun admin (HR/OD), disetujui MENTOR (satu mentor per IDP, level Department Head ke atas).
-    // Baca: admin, karyawan ybs (tanpa skor), mentor IDP (mentorEmail), atasan DH+ di garis atasan (viewerEmails).
+    // IDP: DISUSUN mentor (atasan level Department Head ke atas), DIVALIDASI & bisa diedit HR/OD (admin),
+    // baru tampil ke karyawan setelah disetujui HR/OD. Satu mentor per IDP.
+    // Status approval: draft (mentor) → pending (dikirim ke HR/OD) → approved | revision (dikembalikan ke mentor).
+    // Baca: admin, karyawan ybs (tanpa skor), mentor IDP, atasan DH+ di garis atasan (viewerEmails).
     match /developmentPlans/{planId} {
       function approvalStatus(d) { return d.get('approval', {'status': 'approved'}).get('status', 'approved'); }
+      // mentor hanya boleh menyusun IDP untuk orang yang hasil PA-nya boleh ia lihat (garis atasan DH+)
+      function inMyLine() { return myEmail() in get(/databases/$(database)/documents/assessments/$(planId)).data.viewerEmails; }
       allow read: if isSignedIn() && (
         myRole() == 'admin' ||
         (myEmail() != null && resource.data.email != '' && resource.data.email == myEmail()) ||
         (myEmail() != null && resource.data.get('mentorEmail', '') == myEmail()) ||
         (myEmail() != null && myEmail() in resource.data.viewerEmails)
       );
-      allow create, delete: if isSignedIn() && myRole() == 'admin';
+      allow delete: if isSignedIn() && myRole() == 'admin';
+      allow create: if isSignedIn() && (
+        myRole() == 'admin' ||
+        (myEmail() != '' && request.resource.data.mentorEmail == myEmail() && inMyLine() &&
+         request.resource.data.approval.status in ['draft', 'pending'])
+      );
       allow update: if isSignedIn() && (
         myRole() == 'admin' ||
-        // mentor: approve / minta revisi saat status pending — hanya field approval
-        (resource.data.get('mentorEmail', '') == myEmail() && myEmail() != '' &&
-         approvalStatus(resource.data) == 'pending' &&
-         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['approval']) &&
-         request.resource.data.approval.status in ['approved', 'revision'] &&
-         request.resource.data.approval.byEmail == myEmail()) ||
+        // mentor: menyusun / memperbaiki IDP selama masih draft atau dikembalikan HR/OD, lalu mengirim ke HR/OD
+        (myEmail() != '' && resource.data.get('mentorEmail', '') == myEmail() &&
+         approvalStatus(resource.data) in ['draft', 'revision'] &&
+         request.resource.data.mentorEmail == myEmail() &&
+         request.resource.data.approval.status in ['draft', 'pending'] && inMyLine()) ||
         // karyawan: menyatakan setuju dengan IDP yang sudah disetujui — hanya field ack
         (resource.data.email == myEmail() && myEmail() != '' &&
          approvalStatus(resource.data) == 'approved' &&
