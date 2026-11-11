@@ -75,15 +75,16 @@ export function mountTestAs({ realEmail }) {
         note.textContent = `Not listed (no email in Employees): ${noMail.slice(0, 6).map(e => e.nama).join(', ')}${noMail.length > 6 ? ` +${noMail.length - 6} more` : ''}. TMS links people by email, so add an email (a dummy one is fine for testing) in Employees, then click "Refresh Manager Access" in Performance Data.`;
       }
     };
+    const goHome = () => { if (/\/tms\//.test(location.pathname)) location.href = 'index.html'; else location.reload(); };
     panel.querySelector('#tasApply').addEventListener('click', () => {
       const role = panel.querySelector('#tasRole').value;
       const email = (sel.value || '').toLowerCase();
       const nama = email ? (emps.find(e => e.email === email)?.nama || '') : '';
       setTestAs(role || email ? { role, email, nama } : null);
       try { sessionStorage.removeItem('tmsNavCache'); } catch {}
-      location.reload();
+      goHome();
     });
-    panel.querySelector('#tasReset').addEventListener('click', () => { setTestAs(null); try { sessionStorage.removeItem('tmsNavCache'); } catch {} location.reload(); });
+    panel.querySelector('#tasReset').addEventListener('click', () => { setTestAs(null); try { sessionStorage.removeItem('tmsNavCache'); } catch {} goHome(); });
     try {
       const snap = await getDocs(collection(db, 'employees'));
       snap.forEach(d => { const e = d.data(); emps.push({ nik: d.id, nama: e.nama || d.id, jabatan: e.jabatan || '', level: e.level || '', email: (e.email || '').toLowerCase() }); });

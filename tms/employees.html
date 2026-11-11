@@ -28,7 +28,7 @@
 </style>
 </head>
 <body>
-<script src="./tms-shell-early.js?v=20261111c"></script>
+<script>/* sidebar TMS dari cache — inline supaya ikut paint pertama (tanpa kedip) */(function () { try { var c = JSON.parse(sessionStorage.getItem('tmsNavCache') || 'null'); if (!c || !c.html) return; var st = document.createElement('style'); st.id = 'tms-shell-css'; st.textContent = c.css; document.head.appendChild(st); var box = document.createElement('div'); box.innerHTML = c.html; var nav = box.firstElementChild; if (c.sig) nav.setAttribute('data-sig', c.sig); var cur = location.pathname.split('/').pop() || 'index.html'; nav.querySelectorAll('a.as-item').forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === cur); }); document.body.prepend(nav); document.body.classList.add('has-admin-sidebar'); } catch (e) {} })();</script>
 
 <div id="gate" class="locked-state" style="display:none;">
   <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Loading...</p>
@@ -431,10 +431,7 @@
     }
     currentProfile = await ensureUserProfile(user);
     if(currentProfile.role !== 'admin'){
-      gate.style.display = 'block'; shell.style.display = 'none';
-      F('gateTitle').textContent = 'Access denied';
-      F('gateSub').textContent = 'This page is for Admins only.';
-      return;
+      return location.replace('index.html'); // bukan halamannya → ke beranda TMS (mengarahkan sesuai role)
     }
     gate.style.display = 'none'; shell.style.display = 'block';
     F('userAvatar').src = currentProfile.photoURL;
