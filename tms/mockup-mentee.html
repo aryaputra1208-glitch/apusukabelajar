@@ -126,8 +126,6 @@
 <body>
 <nav class="admin-sidebar" aria-label="Menu TMS">
   <a class="as-logo" href="#">anteraja TMS</a><div class="as-role">Karyawan</div>
-  <div class="as-group">Umum</div>
-  <a class="as-item" href="#" data-nav="home">Beranda</a>
   <div class="as-group">Untuk Anda</div>
   <a class="as-item active" href="#">IDP Saya</a>
   <div class="as-group">Aplikasi Lain</div>
@@ -235,7 +233,6 @@
     document.querySelectorAll('[data-ev]').forEach(b => b.onclick = () => { const box = document.getElementById('ev-' + b.dataset.ev); box.style.display = box.style.display === 'none' ? 'block' : 'none'; });
     document.querySelectorAll('[data-lms]').forEach(b => b.onclick = () => toast('Di versi asli: membuka modul ini di LMS'));
   }
-  document.querySelector('[data-nav="home"]').onclick = e => { e.preventDefault(); toast('Beranda tidak termasuk mockup ini'); };
   render();
 </script>
 <script src="../lms-motion.js?v=20261109" defer></script>

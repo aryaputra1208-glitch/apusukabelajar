@@ -111,6 +111,16 @@
   .hist div { flex: 1; text-align: center; padding: 10px 6px; border-radius: 10px; background: rgba(255,255,255,.6); }
   .hist b { display: block; font-size: 18px; }
   @media (max-width: 1100px) { .tlayout, .dgrid { grid-template-columns: 1fr; } }
+  .hav-cell .who span { cursor: pointer; }
+  .hav-cell .who span.me { background: var(--pink) !important; color: #fff; box-shadow: 0 0 0 2px #fff; }
+  .mtiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 16px 20px 12px; }
+  .mtile { border-radius: 12px; padding: 14px 16px; background: rgba(255,255,255,.6); border: 1px solid var(--border); }
+  .mtile .mt-l { font-size: 11.5px; font-weight: 600; opacity: .75; }
+  .mtile .mt-v { font-size: 22px; font-weight: 700; margin-top: 4px; line-height: 1.15; }
+  .mtile .mt-g { font-size: 12px; font-weight: 700; background: rgba(0,0,0,.06); border-radius: 999px; padding: 2px 8px; vertical-align: middle; }
+  .mtile .mt-s { font-size: 12px; margin-top: 6px; opacity: .85; }
+  .cbars { display: grid; grid-template-columns: 1fr 1fr; column-gap: 8px; padding-bottom: 14px; }
+  @media (max-width: 1100px) { .mtiles, .cbars { grid-template-columns: 1fr; } }
   .approve { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; border-left: 3px solid var(--amber); border-radius: 0; }
   @media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } .kpi-row { grid-template-columns: repeat(2,1fr); } }
   @media (max-width: 900px) { body { padding-left: 0; } .admin-sidebar { display: none; } }
@@ -119,8 +129,6 @@
 <body>
 <nav class="admin-sidebar" aria-label="TMS menu">
   <a class="as-logo" href="#">anteraja TMS</a><div class="as-role">Department Head · Mentor</div>
-  <div class="as-group">General</div>
-  <a class="as-item" href="#" data-nav="home">Home</a>
   <div class="as-group">My Team</div>
   <a class="as-item active" href="#team" data-nav="team">Team</a>
   <a class="as-item" href="#idp" data-nav="idp">IDP <span class="as-badge">1</span></a>
@@ -359,8 +367,8 @@
     let g = '<div class="hav-ylab">Potential (competency) →</div>';
     BOX.forEach((row, r) => row.forEach((b, c) => {
       const who = team.filter(t => boxOf(t).k === b.k);
-      g += `<button type="button" class="hav-cell z-${b.z} ${havSel === b.k ? 'sel' : ''}" data-k="${b.k}" style="grid-row:${r + 1}; grid-column:${c + 2};">
-        <div class="nm">${b.n}</div><div style="display:flex; justify-content:space-between; align-items:flex-end; gap:6px;"><div class="who">${who.map(t => `<span title="${t.nama}">${initials(t.nama)}</span>`).join('')}</div><span class="ct">${who.length}</span></div></button>`;
+      g += `<div role="button" tabindex="0" class="hav-cell z-${b.z} ${havSel === b.k ? 'sel' : ''}" data-k="${b.k}" style="grid-row:${r + 1}; grid-column:${c + 2};">
+        <div class="nm">${b.n}</div><div style="display:flex; justify-content:space-between; align-items:flex-end; gap:6px;"><div class="who">${who.map(t => `<span title="${t.nama}" data-pick="${team.indexOf(t)}" class="${team.indexOf(t) === tSel ? 'me' : ''}">${initials(t.nama)}</span>`).join('')}</div><span class="ct">${who.length}</span></div></div>`;
     }));
     F('havGrid').innerHTML = g + '<div class="hav-xlab">Performance (PA final score) →</div>';
     const list = team.map((t, i) => ({ t, i })).filter(({ t }) => !havSel || boxOf(t).k === havSel);
@@ -370,36 +378,34 @@
       <div class="av">${initials(t.nama)}</div>
       <div style="min-width:0;"><strong style="font-size:13.5px;">${t.nama}</strong><div class="text-meta">${t.jabatan}</div><span class="hbadge z-${b.z}" style="display:inline-block; margin-top:4px;">${b.n}</span></div>
       <div class="sc">Perf <b>${t.perf.toFixed(2)}</b> (${t.grade})<br>Comp <b>${t.pot.toFixed(2)}</b></div></div>`; }).join('') || '<div class="empty-state"><p>No one in this box.</p></div>';
-    document.querySelectorAll('#havGrid [data-k]').forEach(el => el.onclick = () => { havSel = havSel === el.dataset.k ? '' : el.dataset.k; renderTeam(); });
+    document.querySelectorAll('#havGrid [data-pick]').forEach(el => el.onclick = e => { e.stopPropagation(); tSel = +el.dataset.pick; havSel = boxOf(team[tSel]).k; renderTeam(); });
+    document.querySelectorAll('#havGrid [data-k]').forEach(el => el.onclick = () => {
+      havSel = havSel === el.dataset.k ? '' : el.dataset.k;
+      const first = team.findIndex(t => boxOf(t).k === havSel);
+      if(havSel && first >= 0 && boxOf(team[tSel]).k !== havSel) tSel = first;
+      renderTeam();
+    });
     F('clrHav')?.addEventListener('click', () => { havSel = ''; renderTeam(); });
     document.querySelectorAll('#teamList [data-t]').forEach(el => el.onclick = () => { tSel = +el.dataset.t; renderTeam(); F('memberDetail').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
     renderMember();
   }
   function renderMember(){
     const t = team[tSel], b = boxOf(t);
-    const strengths = COMPS.filter((c, i) => t.c[i] >= 3.5), gaps = COMPS.map((c, i) => ({ c, v: t.c[i] })).filter(x => x.v < 3).sort((a, b) => a.v - b.v);
     const col = v => v < 3 ? '#e13c3c' : v >= 3.5 ? '#16A34A' : '#8b5cf6';
+    const below = t.c.filter(v => v < 3).length;
+    const trend = t.hist[2] - t.hist[1];
     F('memberDetail').innerHTML = `
       <div class="panel" style="margin:0 0 16px;">
         <div class="panel-head"><div><h3 class="text-h2" style="margin:0;">${t.nama}</h3><div class="text-meta">${t.jabatan} · Semester 1 2026</div></div>
-          <div style="display:flex; gap:8px; align-items:center;"><span class="hbadge z-${b.z}" style="font-size:12px; padding:4px 12px;">${b.n}</span>
-          ${t.idp ? `<button class="btn btn-outline btn-sm" id="toIdp">Open IDP</button>` : '<span class="text-meta">No IDP yet</span>'}</div></div>
-        <div class="dgrid" style="padding:4px 0 6px;">
-          <div>
-            <div class="text-meta" style="padding:12px 20px 0; font-weight:600;">PERFORMANCE (PA FINAL SCORE)</div>
-            <div class="hist">${['S1 2025', 'S2 2025', 'S1 2026'].map((p, i) => `<div><span class="text-meta">${p}</span><b style="color:${i === 2 ? 'var(--pink)' : 'var(--text)'}">${t.hist[i].toFixed(1)}</b></div>`).join('')}
-              <div><span class="text-meta">Grade</span><b>${t.grade}</b></div></div>
-            <div style="padding:0 20px 16px; font-size:13px; line-height:1.6;">
-              <div><b style="color:#16A34A;">Strengths:</b> ${strengths.join(', ') || '-'}</div>
-              <div><b style="color:var(--red);">Development areas:</b> ${gaps.map(x => `${x.c} (gap ${(3 - x.v).toFixed(1)})`).join(', ') || '-'}</div>
-            </div>
-          </div>
-          <div>
-            <div class="text-meta" style="padding:12px 20px 4px; font-weight:600;">POTENTIAL · COMPETENCY SCORES <span style="font-weight:400;">(line = standard 3)</span></div>
-            ${COMPS.map((c, i) => `<div class="cbar"><span>${c}</span><div class="track"><div class="fill" style="width:${t.c[i] / 5 * 100}%; background:${col(t.c[i])};"></div><div class="std" style="left:60%;"></div></div><b style="text-align:right;">${t.c[i].toFixed(1)}</b></div>`).join('')}
-            <div style="height:12px;"></div>
-          </div>
+          ${t.idp ? `<button class="btn btn-outline btn-sm" id="toIdp">Open IDP</button>` : '<span class="text-meta">No IDP yet</span>'}</div>
+        <div class="mtiles">
+          <div class="mtile z-${b.z}"><div class="mt-l">HAV Position</div><div class="mt-v">${b.n}</div><div class="mt-s">${['Low','Moderate','High'][band(t.pot)]} potential · ${['Low','Moderate','High'][band(t.perf)]} performance</div></div>
+          <div class="mtile"><div class="mt-l">Performance (PA)</div><div class="mt-v">${t.perf.toFixed(2)} <span class="mt-g">${t.grade}</span></div>
+            <div class="mt-s">${['S1 25', 'S2 25', 'S1 26'].map((p, i) => `${p} <b>${t.hist[i].toFixed(1)}</b>`).join(' · ')} <span style="color:${trend >= 0 ? '#16A34A' : 'var(--red)'}; font-weight:700;">${trend >= 0 ? '▲' : '▼'} ${Math.abs(trend).toFixed(1)}</span></div></div>
+          <div class="mtile"><div class="mt-l">Potential (Competency)</div><div class="mt-v">${t.pot.toFixed(2)}</div><div class="mt-s">${below ? `<span style="color:var(--red); font-weight:700;">${below}</span> of ${COMPS.length} below standard 3` : `All ${COMPS.length} at or above standard`}</div></div>
         </div>
+        <div class="text-meta" style="padding:4px 20px 6px; font-weight:600;">COMPETENCY SCORES <span style="font-weight:400;">· line = standard 3</span></div>
+        <div class="cbars">${COMPS.map((c, i) => `<div class="cbar"><span>${c}</span><div class="track"><div class="fill" style="width:${t.c[i] / 5 * 100}%; background:${col(t.c[i])};"></div><div class="std" style="left:60%;"></div></div><b style="text-align:right;">${t.c[i].toFixed(1)}</b></div>`).join('')}</div>
       </div>`;
     F('toIdp')?.addEventListener('click', () => { const i = mentees.findIndex(m => m.nama === t.idp); if(i >= 0){ sel = i; } show('idp'); });
   }
