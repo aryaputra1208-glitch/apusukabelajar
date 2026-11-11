@@ -74,7 +74,7 @@
     <div class="panel">
       <div style="overflow-x:auto; max-height:380px; overflow-y:auto;">
       <table class="data-table">
-        <thead><tr><th>Name</th><th>Position</th><th>Gap</th><th>IDP</th></tr></thead>
+        <thead><tr><th>Name</th><th>Position</th><th>Gap</th><th>IDP</th><th>Approval</th></tr></thead>
         <tbody id="listBody"></tbody>
       </table>
       </div>
@@ -94,8 +94,9 @@
   import {
     KATEGORI_ORDER, DEFAULT_SCALE, escapeHtml, levelLabel, periodeRank, periodeLabel, round2, gapsFor, recommendModules,
     viewerEmailsFor, gapStatuses, PASSING_SCORE, IDP_JENIS, IDP_STATUS, idpItemStatus,
-  } from '../competency-shared.js?v=20261108';
-  import { collection, getDocs, doc, getDoc, setDoc, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+    APPROVAL_STATUS, APPROVAL_BADGE, planApproval, planContentSignature, itemProgress, mentorshipIdOf,
+  } from '../competency-shared.js?v=20261111';
+  import { collection, getDocs, doc, getDoc, setDoc, query, where, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const F = id => document.getElementById(id);
   const params = new URLSearchParams(location.search);
@@ -111,6 +112,7 @@
   const standar = () => scale.standar || 3;
   const compName = id => competencies.find(c => c.id === id)?.nama || id;
   const newId = () => Math.random().toString(36).slice(2, 10);
+  const fmtDate = d => { if(!d) return ''; const x = new Date(d); return isNaN(x) ? String(d) : x.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }); };
 
   async function grab(col){
     try{ const s = await getDocs(collection(db, col)); const out = []; s.forEach(d => out.push({ id: d.id, ...d.data() })); return out; }
@@ -159,11 +161,12 @@
         <td class="text-meta">${escapeHtml(a.jabatan || '-')}</td>
         <td>${noScore ? '<span class="badge badge-gray">No competency scores</span>' : n ? `<span class="badge badge-amber">${n} ${n === 1 ? 'competency' : 'competencies'}</span>` : '<span class="badge badge-green">None</span>'}</td>
         <td>${items.length ? `<span class="badge badge-blue">${items.length} action${items.length === 1 ? '' : 's'}</span> <span class="text-meta">${done} done</span>` : (n ? '<span class="badge badge-red">No IDP</span>' : '<span class="text-meta">-</span>')}</td>
+        <td>${planOf(a) ? (() => { const st = planApproval(planOf(a)).status; return `<span class="badge ${APPROVAL_BADGE[st]}">${APPROVAL_STATUS[st]}</span>`; })() : '<span class="text-meta">-</span>'}</td>
       </tr>`;
     }).join('');
     const empty = F('listEmpty');
     empty.style.display = rows.length ? 'none' : 'block';
-    empty.innerHTML = iconSvg('inbox',{size:24}) + `<p style="margin-top:8px;">${assessments.length ? 'Tidak ada yang cocok dengan filter.' : 'Belum ada data performa. Import dulu di Data Performa.'}</p>`;
+    empty.innerHTML = iconSvg('inbox',{size:24}) + `<p style="margin-top:8px;">${assessments.length ? 'No matches for this filter.' : 'No performance data yet. Import it in Performance Data first.'}</p>`;
     F('listBody').querySelectorAll('tr[data-nik]').forEach(tr => tr.addEventListener('click', () => {
       if(draft?.dirty && !confirm('Unsaved IDP changes will be lost. Continue?')) return;
       openEditor(tr.dataset.nik);
@@ -189,10 +192,17 @@
     const a = assessments.find(x => x.nik === nik && x.periode === selectedPeriode);
     if(!a){ F('editor').style.display = 'none'; return; }
     const existing = plans[`${a.periode}_${a.nik}`];
-    draft = { items: JSON.parse(JSON.stringify(existing?.items || [])), catatan: existing?.catatan || '', dirty: false };
+    draft = { items: JSON.parse(JSON.stringify(existing?.items || [])), catatan: existing?.catatan || '', dirty: false, updates: [] };
     F('editor').style.display = 'block';
     F('editor').innerHTML = '<p class="text-sub" style="margin-top:24px;">Loading...</p>';
-    attemptList = await loadAttempts(a);
+    const planId = `${a.periode}_${a.nik}`;
+    const [att, ups] = await Promise.all([
+      loadAttempts(a),
+      getDocs(query(collection(db, 'idpUpdates'), where('planId', '==', planId)))
+        .then(snap => { const out = []; snap.forEach(d => out.push(d.data())); return out; })
+        .catch(err => { console.error('Gagal baca idpUpdates:', err.code, err.message); return []; }),
+    ]);
+    attemptList = att; draft.updates = ups;
     if(selectedNik !== nik) return;
     renderEditor();
   }
@@ -231,7 +241,8 @@
 
     const compSelect = sel => `<option value="">- Competency -</option>` + competencies.map(c => `<option value="${escapeHtml(c.id)}" ${c.id===sel?'selected':''}>${escapeHtml(c.nama)}</option>`).join('');
     const itemRow = (it, i, no) => {
-      const eff = idpItemStatus(it, attemptList);
+      const eff = itemProgress(it, attemptList, draft.updates);
+      const lastUp = eff.last ? `<div class="text-meta" style="margin-top:6px;">Last update: ${escapeHtml(eff.last.byNama || eff.last.byEmail)} (${escapeHtml(eff.last.byRole || '')}) · ${escapeHtml(fmtDate(eff.last.at))}${eff.last.note ? ' · “' + escapeHtml(eff.last.note) + '”' : ''}${eff.last.evidenceUrl ? ` · <a href="${escapeHtml(eff.last.evidenceUrl)}" target="_blank" rel="noopener">evidence</a>` : ''}</div>` : '';
       const isTraining = it.jenis === 'training';
       return `<div class="item" data-i="${i}">
         <div class="item-no">${no}.</div>
@@ -241,13 +252,14 @@
           ${isTraining
             ? `<div class="lbl">LMS MODULE</div><select data-f="moduleId">${moduleOptions(it.kompetensiId, it.moduleId)}</select>`
             : `<div class="lbl">ACTIVITY</div><textarea rows="2" data-f="deskripsi" placeholder="e.g. Shadow the manager on weekly planning for 4 weeks">${escapeHtml(it.deskripsi || '')}</textarea>
-               ${['mentoring','coaching'].includes(it.jenis) ? `<div class="lbl" style="margin-top:8px;">${it.jenis === 'mentoring' ? 'MENTOR' : 'COACH'}</div><input type="text" list="employeeList" data-f="mentor" value="${escapeHtml(it.mentorNik ? `${it.mentorNik} — ${it.mentorNama || ''}` : '')}" placeholder="Type name / NIK">` : ''}`}
+               ${['mentoring','coaching'].includes(it.jenis) ? `<div class="lbl" style="margin-top:8px;">${it.jenis === 'mentoring' ? 'MENTOR' : 'COACH'}</div><input type="text" list="employeeList" data-f="mentor" value="${escapeHtml(it.mentorNik ? `${it.mentorNik} — ${it.mentorNama || ''}` : '')}" placeholder="Type name / NIK">${it.mentorNik && !employeesByNik[it.mentorNik]?.email ? '<div class="text-meta" style="color:var(--red,#c0392b); margin-top:4px;">This mentor has no email in Employees, so they cannot see this activity in TMS.</div>' : ''}` : ''}`}
+          ${lastUp}
         </div>
         <div><div class="lbl">TARGET</div><input type="date" data-f="targetTanggal" value="${escapeHtml(it.targetTanggal || '')}"></div>
         <div><div class="lbl">STATUS</div>
           ${eff.auto
             ? `<span class="badge ${eff.status==='selesai'?'badge-green':'badge-purple'}">${IDP_STATUS[eff.status]}</span><div class="text-meta" style="margin-top:4px;">Auto from post-test${eff.score != null ? ' (' + eff.score + ')' : ''}</div>`
-            : `<select data-f="status">${Object.entries(IDP_STATUS).map(([k,v]) => `<option value="${k}" ${k===(it.status||'rencana')?'selected':''}>${v}</option>`).join('')}</select>`}
+            : `<select data-f="status">${Object.entries(IDP_STATUS).map(([k,v]) => `<option value="${k}" ${k===eff.status?'selected':''}>${v}</option>`).join('')}</select>`}
         </div>
         <div style="padding-top:18px;"><button class="icon-btn tone-red" data-del="${i}" title="Remove activity">${iconSvg('trash',{size:14})}</button></div>
       </div>`;
@@ -259,7 +271,7 @@
     if(groups.has('')){ const u = groups.get(''); groups.delete(''); groups.set('', u); }
     const itemRows = [...groups.entries()].map(([cid, idxs]) => {
       const g = gaps.find(x => x.id === cid);
-      const done = idxs.filter(i => idpItemStatus(draft.items[i], attemptList).status === 'selesai').length;
+      const done = idxs.filter(i => itemProgress(draft.items[i], attemptList, draft.updates).status === 'selesai').length;
       return `<div class="comp-group">
         <div class="cg-head">
           <div class="cg-title">
@@ -274,6 +286,20 @@
     }).join('');
 
     const plan = plans[`${a.periode}_${a.nik}`];
+    const boss = employeesByNik[emp.atasanNik] || null;
+    const appr = plan ? planApproval(plan) : { status: 'draft' };
+    const changed = plan && planContentSignature(draft.items, draft.catatan) !== planContentSignature(plan.items, plan.catatan);
+    const approvalCard = `
+      <div class="card" style="margin-bottom:16px; display:flex; gap:16px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap;">
+        <div>
+          <div class="text-h3" style="margin-bottom:6px;">Approval <span class="badge ${APPROVAL_BADGE[appr.status]}" style="margin-left:6px;">${plan ? APPROVAL_STATUS[appr.status] : 'Not saved yet'}</span></div>
+          <div class="text-meta">Approver (direct manager): ${boss ? `<strong>${escapeHtml(boss.nama || boss.nik)}</strong> · ${escapeHtml(boss.jabatan || '')}${boss.email ? '' : ' · <span style="color:var(--red,#c0392b);">no email</span>'}` : '<span style="color:var(--red,#c0392b);">Manager NIK not set in Employees</span>'}</div>
+          ${appr.status === 'pending' && appr.submittedAt ? `<div class="text-meta">Submitted ${escapeHtml(fmtDate(appr.submittedAt))}</div>` : ''}
+          ${appr.status === 'approved' && appr.at ? `<div class="text-meta">Approved by ${escapeHtml(appr.byNama || appr.byEmail || '-')} · ${escapeHtml(fmtDate(appr.at))}${plan?.ack?.at ? ` · employee agreed ${escapeHtml(fmtDate(plan.ack.at))}` : ' · <span>awaiting employee agreement</span>'}</div>` : ''}
+          ${appr.note ? `<div style="margin-top:8px; padding:8px 12px; border-left:3px solid var(--pink); background:rgba(255,255,255,.5);"><span class="text-meta">${appr.status === 'revision' ? 'Revision note' : 'Note'} from ${escapeHtml(appr.byNama || appr.byEmail || '')}:</span><br>${escapeHtml(appr.note)}</div>` : ''}
+          ${changed && ['approved','pending'].includes(appr.status) ? '<div class="text-meta" style="margin-top:6px; color:var(--red,#c0392b);">You changed activities or notes: saving will move this IDP back to Draft and it will need approval again.</div>' : ''}
+        </div>
+      </div>`;
     F('editor').innerHTML = `
       <div class="profile-head">
         <div>
@@ -288,6 +314,7 @@
         <a href="profile.html?nik=${encodeURIComponent(a.nik)}&periode=${encodeURIComponent(a.periode)}" class="btn btn-outline btn-sm">View Competency Profile</a>
       </div>
 
+      ${approvalCard}
       <div class="panel">
         <div class="panel-head"><h3 class="text-h2" style="margin:0;">Competency Gaps</h3><span class="text-meta">Click a suggested module to add it</span></div>
         ${!Object.keys(a.kompetensi || {}).length ? '<div class="empty-state"><p>No per-competency scores for this period, so gaps cannot be calculated. You can still add actions below.</p></div>'
@@ -306,7 +333,10 @@
 
       <div class="sticky-save">
         <span class="text-meta" id="dirtyInfo" style="align-self:center;">${draft.dirty ? 'You have unsaved changes.' : ''}</span>
-        <button class="btn btn-primary" id="savePlanBtn">Save IDP</button>
+        <button class="btn btn-outline" id="savePlanBtn">Save Draft</button>
+        ${boss?.email
+          ? `<button class="btn btn-primary" id="submitPlanBtn" ${appr.status === 'pending' && !changed && !draft.dirty ? 'disabled' : ''}>${appr.status === 'approved' && !appr.legacy && !changed ? 'Save' : 'Save & Submit for Approval'}</button>`
+          : `<button class="btn btn-primary" id="approveHrBtn" title="Manager has no email in Employees">Save & Approve as HR/OD</button>`}
       </div>`;
     bindEditor();
   }
@@ -347,6 +377,7 @@
             const emp = m && employeesByNik[m[1]];
             it.mentorNik = emp ? emp.nik : ''; it.mentorNama = emp ? (emp.nama || '') : inp.value.trim();
           } else it[f] = inp.value;
+          if(f === 'status') it.statusAt = new Date().toISOString();
           if(f === 'jenis' && inp.value === 'training'){ delete it.deskripsi; delete it.mentorNik; delete it.mentorNama; }
           if(f === 'jenis' && inp.value !== 'training'){ delete it.moduleId; }
           markDirty();
@@ -355,34 +386,87 @@
       });
     });
     F('planCatatan').addEventListener('input', e => { draft.catatan = e.target.value; markDirty(); });
-    F('savePlanBtn').addEventListener('click', savePlan);
+    F('savePlanBtn').addEventListener('click', () => savePlan('save'));
+    F('submitPlanBtn')?.addEventListener('click', () => savePlan(F('submitPlanBtn').textContent === 'Save' ? 'save' : 'submit'));
+    F('approveHrBtn')?.addEventListener('click', () => savePlan('approveHr'));
   }
 
-  async function savePlan(){
+  async function savePlan(mode){
     const a = assessments.find(x => x.nik === selectedNik && x.periode === selectedPeriode);
     const bad = draft.items.findIndex(it => !it.kompetensiId || (it.jenis === 'training' ? !it.moduleId : !String(it.deskripsi || '').trim()));
     if(bad !== -1){ showToast(`An activity under "${draft.items[bad].kompetensiId ? compName(draft.items[bad].kompetensiId) : 'Competency not selected'}" is incomplete: select a competency and ${draft.items[bad].jenis === 'training' ? 'a module' : 'add a description'}.`); return; }
+    if(mode !== 'save' && !draft.items.length){ showToast('Add at least one activity before submitting.'); return; }
     const emp = employeesByNik[a.nik] || {};
+    const boss = employeesByNik[emp.atasanNik] || null;
+    const id = `${a.periode}_${a.nik}`;
+    const prev = plans[id];
+    const prevAppr = prev ? planApproval(prev) : { status: 'draft' };
+    const nowIso = new Date().toISOString();
     const items = draft.items.map(it => {
       const clean = { id: it.id, kompetensiId: it.kompetensiId, kompetensiNama: compName(it.kompetensiId), jenis: it.jenis,
-        targetTanggal: it.targetTanggal || '', status: it.status || 'rencana', dibuat: it.dibuat || new Date().toISOString() };
+        targetTanggal: it.targetTanggal || '', status: it.status || 'rencana', dibuat: it.dibuat || nowIso };
+      if(it.statusAt) clean.statusAt = it.statusAt;
       if(it.jenis === 'training'){ const m = modules.find(x => x.id === it.moduleId); clean.moduleId = it.moduleId; clean.judul = m?.judul || ''; clean.mode = m?.mode || 'online'; }
-      else { clean.deskripsi = String(it.deskripsi || '').trim(); if(it.mentorNama || it.mentorNik){ clean.mentorNik = it.mentorNik || ''; clean.mentorNama = it.mentorNama || ''; } }
+      else {
+        clean.deskripsi = String(it.deskripsi || '').trim();
+        if(it.mentorNama || it.mentorNik){ clean.mentorNik = it.mentorNik || ''; clean.mentorNama = it.mentorNama || ''; clean.mentorEmail = (employeesByNik[it.mentorNik]?.email || '').toLowerCase(); }
+      }
       return clean;
     });
+    const catatan = draft.catatan.trim();
+    const changed = !prev || planContentSignature(items, catatan) !== planContentSignature(prev.items, prev.catatan);
+
+    let approval;
+    if(mode === 'submit'){
+      approval = { status: 'pending', submittedAt: nowIso, submittedBy: currentProfile.email };
+      if(prevAppr.status === 'revision' && prevAppr.note) approval.previousNote = prevAppr.note;
+    } else if(mode === 'approveHr'){
+      if(!confirm(`${a.nama}'s manager has no email in Employees, so they cannot approve in TMS. Approve this IDP as HR/OD?`)) return;
+      approval = { status: 'approved', byEmail: currentProfile.email, byNama: currentProfile.displayName || currentProfile.email, at: nowIso, note: 'Approved by HR/OD (manager has no email in TMS).' };
+    } else if(!prev){
+      approval = { status: 'draft' };
+    } else if(changed && ['approved', 'pending'].includes(prevAppr.status)){
+      if(!confirm(`This IDP is "${APPROVAL_STATUS[prevAppr.status]}". Your changes will move it back to Draft and it will need approval again. Continue?`)) return;
+      approval = { status: 'draft', previousNote: `Edited by HR/OD after ${prevAppr.status === 'approved' ? 'approval' : 'submission'}` };
+    } else {
+      approval = prevAppr.legacy ? { status: 'approved', legacy: true } : prevAppr;
+    }
+
     const data = {
       nik: a.nik, email: (emp.email || a.email || '').toLowerCase(), nama: a.nama || emp.nama || '', jabatan: a.jabatan || '', level: a.level || '',
-      periode: a.periode, periodeRank: periodeRank(a.periode), items, catatan: draft.catatan.trim(),
-      viewerEmails: viewerEmailsFor(a.nik, employeesByNik), updatedAt: serverTimestamp(), updatedBy: currentProfile.email,
+      divisi: emp.divisi || a.divisi || '', departemen: emp.departemen || a.departemen || '',
+      periode: a.periode, periodeRank: periodeRank(a.periode), items, catatan,
+      atasanNik: boss?.nik || '', atasanNama: boss?.nama || '', atasanEmail: (boss?.email || '').toLowerCase(),
+      viewerEmails: viewerEmailsFor(a.nik, employeesByNik), approval,
+      updatedAt: serverTimestamp(), updatedBy: currentProfile.email,
     };
+    if(approval.status === 'approved' && prev?.ack && !changed) data.ack = prev.ack;
+
     try{
-      await setDoc(doc(db, 'developmentPlans', `${a.periode}_${a.nik}`), data);
-      plans[`${a.periode}_${a.nik}`] = data;
+      const batch = writeBatch(db);
+      batch.set(doc(db, 'developmentPlans', id), data);
+      // salinan aksi mentoring/coaching untuk mentor
+      const keep = new Set();
+      items.filter(it => ['mentoring', 'coaching'].includes(it.jenis) && it.mentorEmail).forEach(it => {
+        const mid = mentorshipIdOf(id, it.id); keep.add(mid);
+        batch.set(doc(db, 'mentorships', mid), {
+          planId: id, itemId: it.id, periode: a.periode, nik: a.nik, menteeNama: data.nama, menteeJabatan: data.jabatan,
+          kompetensiId: it.kompetensiId, kompetensiNama: it.kompetensiNama, jenis: it.jenis, deskripsi: it.deskripsi, targetTanggal: it.targetTanggal,
+          status: it.status, statusAt: it.statusAt || '', mentorEmail: it.mentorEmail, mentorNik: it.mentorNik, mentorNama: it.mentorNama,
+          atasanEmail: data.atasanEmail, atasanNama: data.atasanNama, menteeEmail: data.email, viewerEmails: data.viewerEmails, planStatus: approval.status, updatedAt: nowIso,
+        });
+      });
+      const old = await getDocs(query(collection(db, 'mentorships'), where('planId', '==', id))).catch(() => null);
+      old?.forEach(d => { if(!keep.has(d.id)) batch.delete(doc(db, 'mentorships', d.id)); });
+      await batch.commit();
+      plans[id] = data;
+      draft.items = JSON.parse(JSON.stringify(items));
       draft.dirty = false;
-      showToast('IDP saved.');
+      showToast({ submit: 'IDP saved and sent to the manager for approval.', approveHr: 'IDP saved and approved.' }[mode] || (approval.status === 'draft' ? 'IDP saved as draft.' : 'IDP saved.'));
       renderList(); renderEditor();
     } catch(err){ console.error('Gagal simpan developmentPlans:', err.code, err.message, data); showToast('Save failed: ' + err.message); }
   }
+
 
   window.addEventListener('beforeunload', e => { if(draft?.dirty){ e.preventDefault(); e.returnValue = ''; } });
 

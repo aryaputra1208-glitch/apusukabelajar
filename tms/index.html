@@ -63,27 +63,34 @@
     const profile = await ensureUserProfile(user);
     const email = (user.email || '').toLowerCase();
     const isAdmin = profile.role === 'admin';
-    const [isViewer, hasIdp] = await Promise.all([
+    const all = async (q, label) => { try{ const out = []; (await getDocs(q)).forEach(d => out.push(d.data())); return out; } catch(err){ console.error('Gagal cek akses', label, err.code, err.message); return []; } };
+    const [isViewer, hasIdp, teamPlans, ships] = await Promise.all([
       isAdmin ? false : exists(query(collection(db, 'assessments'), where('viewerEmails', 'array-contains', email), limit(1)), 'assessments'),
       exists(query(collection(db, 'developmentPlans'), where('email', '==', email), limit(1)), 'developmentPlans'),
+      all(query(collection(db, 'developmentPlans'), where('atasanEmail', '==', email)), 'team'),
+      all(query(collection(db, 'mentorships'), where('mentorEmail', '==', email)), 'mentorships'),
     ]);
+    const pendingMine = teamPlans.filter(p => p.approval?.status === 'pending').length;
+    const menteeCount = new Set(ships.map(m => m.planId)).size;
 
     let html = '';
     if(isAdmin){
       html += section('Employee Development', [
         { href: 'profile.html', icon: 'user-check', title: 'Competency Profile', desc: 'Expected vs actual, gaps, progress' },
         { href: 'idp.html', icon: 'check', title: 'IDP', desc: 'Plan training, mentoring, coaching, assignments' },
+        { href: 'idp-dashboard.html', icon: 'chart-bar', title: 'IDP Dashboard', desc: 'Approvals, progress, overdue & reminders' },
       ]);
       html += section('Master Data (HR/OD)', [
         { href: 'employees.html', icon: 'users', title: 'Employees', desc: 'NIK, level, manager & email' },
         { href: 'competencies.html', icon: 'layout-grid', title: 'Competency Dictionary', desc: 'Behavioral indicators by job level' },
         { href: 'performance.html', icon: 'chart-bar', title: 'Performance Data', desc: 'Import PA & KPI scores by period' },
       ]);
-    } else if(isViewer){
-      html += section('Your Team', [
-        { href: 'profile.html', icon: 'user-check', title: 'Team Competency Profile', desc: 'Gaps, IDPs & team progress' },
-      ]);
     }
+    const teamCards = [];
+    if(teamPlans.length) teamCards.push({ href: 'team.html', icon: 'users', title: 'My Team', desc: pendingMine ? `<strong style="color:var(--pink);">${pendingMine} IDP${pendingMine === 1 ? '' : 's'} awaiting your approval</strong>` : 'Approve IDPs & update team progress' });
+    if(menteeCount) teamCards.push({ href: 'mentees.html', icon: 'user-check', title: 'My Mentees', desc: `${menteeCount} mentee${menteeCount === 1 ? '' : 's'} · update mentoring progress` });
+    if(isViewer) teamCards.push({ href: 'profile.html', icon: 'chart-bar', title: 'Team Competency Profile', desc: 'Scores, gaps & IDPs (DH and above)' });
+    html += section('Your Team', teamCards);
     if(hasIdp){
       html += section('For You', [
         { href: 'my-idp.html', icon: 'file-text', title: 'My IDP', desc: 'Your development plan' },

@@ -116,7 +116,7 @@
   import {
     LEVEL_COLUMNS, KATEGORI_ORDER, DEFAULT_SCALE, DEFAULT_WEIGHTS, slugify, escapeHtml, levelLabel,
     normalizePeriode, periodeRank, periodeLabel, scoreLabel, round2, computeFinal, viewerEmailsFor, gapsFor,
-  } from '../competency-shared.js?v=20261108';
+  } from '../competency-shared.js?v=20261111';
   import { collection, getDocs, doc, getDoc, setDoc, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const F = id => document.getElementById(id);
@@ -396,9 +396,21 @@
       let nIdp = 0;
       try{
         const plans = []; (await getDocs(collection(db, 'developmentPlans'))).forEach(d => plans.push({ id: d.id, ...d.data() }));
-        const changedIdp = plans.map(pl => ({ pl, v: viewerEmailsFor(pl.nik, employeesByNik) })).filter(({ pl, v }) => JSON.stringify(v) !== JSON.stringify(pl.viewerEmails || []));
-        await writeInBatches(changedIdp, (b, { pl, v }) => b.set(doc(db, 'developmentPlans', pl.id), { viewerEmails: v }, { merge: true }));
+        // akses IDP: atasan DH+ (viewerEmails), atasan langsung (approver), email karyawan
+        const accessOf = pl => {
+          const emp = employeesByNik[pl.nik] || {}; const boss = employeesByNik[emp.atasanNik] || {};
+          return { viewerEmails: viewerEmailsFor(pl.nik, employeesByNik), atasanNik: boss.nik || '', atasanNama: boss.nama || '', atasanEmail: (boss.email || '').toLowerCase(), email: (emp.email || pl.email || '').toLowerCase() };
+        };
+        const sig = o => JSON.stringify([o.viewerEmails || [], o.atasanNik || '', o.atasanEmail || '', o.email || '']);
+        const changedIdp = plans.map(pl => ({ pl, v: accessOf(pl) })).filter(({ pl, v }) => sig(v) !== sig(pl));
+        await writeInBatches(changedIdp, (b, { pl, v }) => b.set(doc(db, 'developmentPlans', pl.id), v, { merge: true }));
         nIdp = changedIdp.length;
+        // salinan untuk mentor ikut disamakan
+        const byPlan = {}; plans.forEach(pl => byPlan[pl.id] = accessOf(pl));
+        const mships = []; (await getDocs(collection(db, 'mentorships'))).forEach(d => mships.push({ id: d.id, ...d.data() }));
+        const changedM = mships.filter(m => byPlan[m.planId]).map(m => ({ m, v: byPlan[m.planId] }))
+          .filter(({ m, v }) => JSON.stringify([m.viewerEmails || [], m.atasanEmail || '', m.menteeEmail || '']) !== JSON.stringify([v.viewerEmails, v.atasanEmail, v.email]));
+        await writeInBatches(changedM, (b, { m, v }) => b.set(doc(db, 'mentorships', m.id), { viewerEmails: v.viewerEmails, atasanEmail: v.atasanEmail, atasanNama: v.atasanNama, menteeEmail: v.email }, { merge: true }));
       } catch(err){ console.error('Gagal perbarui akses IDP:', err.code, err.message); }
       await loadAll();
       showToast(`Manager access updated: ${changed.length} assessments, ${nIdp} IDPs.`);

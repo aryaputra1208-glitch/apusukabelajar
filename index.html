@@ -370,7 +370,9 @@
       const snap = await getDocs(query(collection(db, 'developmentPlans'), where('email', '==', (currentUser.email || '').toLowerCase())));
       if(snap.empty) return false;
       let plan = null;
-      snap.forEach(d => { const p = d.data(); if(!plan || (p.periodeRank || 0) > (plan.periodeRank || 0)) plan = p; });
+      // hanya IDP yang sudah disetujui atasan (IDP lama tanpa approval dianggap disetujui)
+      snap.forEach(d => { const p = d.data(); if(p.approval?.status && p.approval.status !== 'approved') return; if(!plan || (p.periodeRank || 0) > (plan.periodeRank || 0)) plan = p; });
+      if(!plan) return true;
       const passed = new Set(myAttempts.filter(a => a.score == null || Number(a.score) >= 70).map(a => a.moduleId));
       const items = (plan.items || []).filter(it => it.jenis === 'training' && it.moduleId && it.status !== 'batal' && !passed.has(it.moduleId));
       const cards = items.map(it => {
@@ -406,16 +408,20 @@
     link.href = isViewer ? 'tms/index.html' : 'tms/my-idp.html';
     document.getElementById('tmsLinkIcon').innerHTML = iconSvg(isViewer ? 'user-check' : 'file-text', {size:20});
     document.getElementById('tmsLinkTitle').textContent = isViewer ? 'Buka TMS — Tim Anda' : 'IDP Saya';
-    document.getElementById('tmsLinkDesc').textContent = isViewer ? 'Profil kompetensi & IDP anggota tim Anda' + (hasIdp ? ', juga IDP Anda' : '') : 'Rencana pengembangan Anda: training, mentoring, dan lainnya';
+    document.getElementById('tmsLinkDesc').textContent = isViewer ? 'IDP & progres tim atau mentee Anda' + (hasIdp ? ', juga IDP Anda' : '') : 'Rencana pengembangan Anda: training, mentoring, dan lainnya';
     link.style.display = 'block';
   }
 
   /** Atasan DH+ yang punya anggota tim dengan data penilaian → tampilkan pintu ke Profil Kompetensi. */
   async function hasTeamProfiles(){
-    try{
-      const snap = await getDocs(query(collection(db, 'assessments'), where('viewerEmails', 'array-contains', (currentUser.email || '').toLowerCase()), limit(1)));
-      return !snap.empty;
-    } catch(err){ console.error('Gagal cek akses profil tim:', err.code, err.message); return false; }
+    const me = (currentUser.email || '').toLowerCase();
+    const any = async (q, label) => { try{ return !(await getDocs(q)).empty; } catch(err){ console.error('Gagal cek akses', label, err.code, err.message); return false; } };
+    const res = await Promise.all([
+      any(query(collection(db, 'assessments'), where('viewerEmails', 'array-contains', me), limit(1)), 'assessments'),
+      any(query(collection(db, 'developmentPlans'), where('atasanEmail', '==', me), limit(1)), 'developmentPlans'),
+      any(query(collection(db, 'mentorships'), where('mentorEmail', '==', me), limit(1)), 'mentorships'),
+    ]);
+    return res.some(Boolean);
   }
 
   document.getElementById('filterRow').addEventListener('click', (e) => {

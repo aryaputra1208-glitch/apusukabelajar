@@ -278,3 +278,119 @@ export function idpItemStatus(item, attempts) {
   if (!best) return { status: item.status || 'rencana', auto: false };
   return isPassed(best) ? { status: 'selesai', auto: true, score: best.score ?? null } : { status: 'berjalan', auto: true, score: best.score ?? null };
 }
+
+/* =========================================================
+   IDP: approval, progres & reminder (TMS sisi user)
+   - developmentPlans/{periode_nik}.approval = { status, byEmail, byNama, at, note, submittedAt }
+     status: draft → pending (HR/OD submit) → approved | revision (atasan langsung)
+   - developmentPlans.ack = { at } — karyawan menyatakan setuju dengan IDP yang sudah disetujui atasan
+   - mentorships/{planId__itemId}  — salinan item mentoring/coaching untuk mentor (mentor TIDAK baca IDP lengkap)
+   - idpUpdates/{auto}             — update progres oleh mentor/atasan/HR (sekaligus timeline/jejak audit)
+   ========================================================= */
+export const APPROVAL_STATUS = { draft: 'Draft', pending: 'Pending Approval', approved: 'Approved', revision: 'Revision Requested' };
+export const APPROVAL_STATUS_ID = { draft: 'Disusun HR/OD', pending: 'Menunggu Persetujuan Atasan', approved: 'Disetujui', revision: 'Sedang Direvisi HR/OD' };
+export const APPROVAL_BADGE = { draft: 'badge-gray', pending: 'badge-amber', approved: 'badge-green', revision: 'badge-red' };
+/** Status yang bisa dipilih mentor/atasan saat update progres. */
+export const PROGRESS_STATUS = ['rencana', 'berjalan', 'selesai'];
+
+export const planIdOf = p => `${p.periode}_${p.nik}`;
+export const mentorshipIdOf = (planId, itemId) => `${planId}__${itemId}`;
+
+/** IDP lama (sebelum ada fitur approval) dianggap sudah disetujui supaya tidak hilang dari karyawan. */
+export function planApproval(plan) {
+  return plan?.approval?.status ? plan.approval : { status: 'approved', legacy: true };
+}
+
+/** Isi IDP yang kalau berubah perlu disetujui ulang (status & tanggal target tidak termasuk). */
+export function planContentSignature(items, catatan) {
+  return JSON.stringify([(items || []).map(it => [it.id, it.kompetensiId, it.jenis, it.moduleId || '', String(it.deskripsi || '').trim(), it.mentorNik || '']), String(catatan || '').trim()]);
+}
+
+/** Progres efektif satu item: training otomatis dari post-test; aksi lain = update terbaru (mentor/atasan) atau status dari HR/OD, mana yang lebih baru. */
+export function itemProgress(item, attempts, updates) {
+  const mine = (updates || []).filter(u => u.itemId === item.id).sort((a, b) => String(b.at).localeCompare(String(a.at)));
+  const last = mine[0] || null;
+  const base = idpItemStatus(item, attempts);
+  if (base.auto || item.status === 'batal') return { ...base, last, updates: mine };
+  if (item.jenis !== 'training' && last && (!item.statusAt || String(last.at) > String(item.statusAt))) return { status: last.status, auto: false, last, updates: mine };
+  return { status: item.status || 'rencana', auto: false, last, updates: mine };
+}
+
+const DAY_MS = 86400000;
+function startOfDay(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+/** Selisih hari target terhadap hari ini (positif = belum jatuh tempo). */
+export function daysUntil(dateStr, today = new Date()) {
+  if (!dateStr) return null;
+  const d = new Date(String(dateStr).slice(0, 10) + 'T00:00:00');
+  if (isNaN(d)) return null;
+  return Math.round((d - startOfDay(today)) / DAY_MS);
+}
+/** Logika reminder (sama dengan flow Tracking IDP): H-3, hari-H, lalu tiap 3 hari selama lewat target. */
+export function reminderReason(target, today = new Date()) {
+  const n = daysUntil(target, today);
+  if (n === null) return null;
+  if (n === 3) return { kind: 'h3', label: 'Due in 3 days', days: n };
+  if (n === 0) return { kind: 'today', label: 'Due today', days: n };
+  if (n < 0 && (-n) % 3 === 0) return { kind: 'overdue', label: `${-n} days overdue`, days: n };
+  return null;
+}
+
+/** Siapa yang diingatkan untuk satu aksi: training → karyawan, mentoring/coaching → mentor, lainnya → atasan langsung. */
+export function reminderRecipient(plan, item) {
+  if (item.jenis === 'training') return { email: plan.email || '', nama: plan.nama || plan.nik, role: 'Employee' };
+  if (['mentoring', 'coaching'].includes(item.jenis) && item.mentorEmail) return { email: item.mentorEmail, nama: item.mentorNama || item.mentorEmail, role: item.jenis === 'coaching' ? 'Coach' : 'Mentor' };
+  return { email: plan.atasanEmail || '', nama: plan.atasanNama || plan.atasanNik || '', role: 'Manager' };
+}
+
+/**
+ * Daftar reminder hari ini, digabung per penerima (satu pesan per orang).
+ * plans: developmentPlans; updatesByPlan: { planId: [idpUpdates] }; attemptsFor: plan => attempts karyawan itu.
+ * → [{ email, nama, role, items: [{ plan, item, reason }], approvals: [{ plan, days }] }]
+ */
+export function computeReminders({ plans, updatesByPlan = {}, attemptsFor = () => [], today = new Date() }) {
+  const byEmail = new Map();
+  const box = (r) => {
+    const key = (r.email || '').toLowerCase() || `(no email) ${r.nama}`;
+    if (!byEmail.has(key)) byEmail.set(key, { email: r.email || '', nama: r.nama, role: r.role, items: [], approvals: [] });
+    return byEmail.get(key);
+  };
+  (plans || []).forEach(plan => {
+    const appr = planApproval(plan);
+    if (appr.status === 'pending' && appr.submittedAt) {
+      const waited = -daysUntil(appr.submittedAt, today);
+      if (waited >= 3 && waited % 3 === 0) box({ email: plan.atasanEmail, nama: plan.atasanNama || plan.atasanNik || '-', role: 'Manager' }).approvals.push({ plan, days: waited });
+    }
+    if (appr.status !== 'approved') return;
+    const ups = updatesByPlan[planIdOf(plan)] || [];
+    const att = attemptsFor(plan);
+    (plan.items || []).forEach(item => {
+      const st = itemProgress(item, att, ups).status;
+      if (st === 'selesai' || st === 'batal') return;
+      const reason = reminderReason(item.targetTanggal, today);
+      if (reason) box(reminderRecipient(plan, item)).items.push({ plan, item, reason });
+    });
+  });
+  return [...byEmail.values()].filter(r => r.items.length || r.approvals.length);
+}
+
+/** Teks email reminder (dipakai tombol "Open in Outlook"). */
+export function reminderEmail(r, tmsUrl) {
+  const lines = [`Halo ${r.nama},`, '', 'Berikut pengingat IDP (Individual Development Plan) yang perlu Anda tindak lanjuti:', ''];
+  if (r.approvals.length) {
+    lines.push('IDP menunggu persetujuan Anda:');
+    r.approvals.forEach(a => lines.push(`- ${a.plan.nama} (${periodeLabelId(a.plan.periode)}) — menunggu ${a.days} hari`));
+    lines.push('');
+  }
+  if (r.items.length) {
+    lines.push('Aksi pengembangan:');
+    const why = { h3: 'jatuh tempo 3 hari lagi', today: 'jatuh tempo hari ini', overdue: 'lewat target' };
+    r.items.forEach(({ plan, item, reason }) => {
+      const what = item.jenis === 'training' ? (item.judul || 'Training') : (item.deskripsi || IDP_JENIS_ID[item.jenis]);
+      const who = r.role === 'Employee' ? '' : `${plan.nama} — `;
+      lines.push(`- ${who}${what} [${item.kompetensiNama || ''}] · target ${item.targetTanggal} (${why[reason.kind]}${reason.kind === 'overdue' ? ' ' + (-reason.days) + ' hari' : ''})`);
+    });
+    lines.push('');
+  }
+  lines.push(r.role === 'Employee' ? `Lanjutkan belajar di LMS: ${tmsUrl.replace(/tms\/?$/, '')}` : `Update progres di TMS: ${tmsUrl}`, '', 'Terima kasih,', 'Tim HR/OD');
+  return { subject: `[Reminder IDP] ${r.approvals.length ? r.approvals.length + ' persetujuan, ' : ''}${r.items.length} aksi perlu ditindaklanjuti`, body: lines.join('\n') };
+}

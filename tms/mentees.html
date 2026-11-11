@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Mentees — Anteraja TMS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../lms-design-system.css?v=20261105b">
+<link rel="stylesheet" href="../lms-glass.css?v=20261109">
+<style>
+  .wrap.wide { max-width: 1100px; }
+  .avatar { width: 28px; height: 28px; border-radius: 50%; }
+  .user-chip { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); }
+  .stat-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 20px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); padding: 16px 18px; }
+  .stat-num { font-size: 26px; font-weight: 700; color: var(--pink); line-height: 1; }
+  .stat-label { font-size: 12px; color: var(--text-2); margin-top: 6px; }
+  table.data-table tr.clickable { cursor: pointer; }
+  table.data-table tr.selected td { background: var(--pink-bg); }
+  .head-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 28px 0 14px; }
+  .act { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; padding: 14px 20px; border-bottom: 1px solid var(--border); }
+  .act:last-child { border-bottom: none; }
+  .act-side { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+  .cg-title { padding: 14px 20px 4px; font-weight: 700; display: flex; gap: 8px; align-items: center; }
+  .link-btn { color: var(--pink); font-size: 12px; font-weight: 600; cursor: pointer; background: none; border: none; padding: 0; box-shadow: none; }
+  @media (max-width: 760px) { .stat-row { grid-template-columns: repeat(2,1fr); } }
+</style>
+</head>
+<body>
+
+<div id="gate" class="locked-state">
+  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Loading...</p>
+  <p class="text-sub" id="gateSub"></p>
+</div>
+
+<div id="appShell" style="display:none;">
+  <div class="topbar">
+    <div style="display:flex; align-items:center; gap:16px;">
+      <a href="index.html" class="sidebar-logo" style="margin:0; text-decoration:none;">anteraja TMS</a>
+      <a href="index.html" class="text-sub" style="text-decoration:none; display:flex; align-items:center; gap:4px;">← TMS Menu</a>
+    </div>
+    <div class="user-chip">
+      <a href="../index.html" class="btn btn-outline btn-sm" style="margin-right:6px;">Go to LMS</a>
+      <img class="avatar" id="userAvatar" src="">
+      <span id="userName"></span>
+    </div>
+  </div>
+  <div class="wrap wide">
+    <h1 class="text-h1">My Mentees</h1>
+    <p class="text-sub" style="margin-bottom:18px;">Only the mentoring and coaching activities you guide are shown here.</p>
+    <div class="stat-row">
+      <div class="stat-card"><div class="stat-num" id="sMentee">-</div><div class="stat-label">Mentees</div></div>
+      <div class="stat-card"><div class="stat-num" id="sOpen">-</div><div class="stat-label">Activities In Progress</div></div>
+      <div class="stat-card"><div class="stat-num" id="sDone">-</div><div class="stat-label">Activities Done</div></div>
+      <div class="stat-card"><div class="stat-num" id="sLate">-</div><div class="stat-label">Overdue</div></div>
+    </div>
+    <div id="blocks"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { db, onAuth, ensureUserProfile } from '../firebase-shared.js';
+  import { escapeHtml, periodeRank, periodeLabel, IDP_JENIS, IDP_STATUS, itemProgress } from '../competency-shared.js?v=20261111';
+  import { STATUS_BADGE, fmtDate, targetHtml, isOverdue, timelineHtml, progressBar, askProgress, postUpdate } from './idp-ui.js?v=20261111';
+  import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+
+  const F = id => document.getElementById(id);
+  let me = '', profile = null, ships = [], updates = [];
+  const showToast = msg => { const t = F('toast'); t.textContent = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); };
+  const asItem = m => ({ id: m.itemId, jenis: m.jenis, kompetensiId: m.kompetensiId, status: m.status, statusAt: m.statusAt, targetTanggal: m.targetTanggal, mentorEmail: m.mentorEmail });
+  const prog = m => itemProgress(asItem(m), [], updates.filter(u => u.planId === m.planId));
+
+  async function grab(q, label){
+    try{ const out = []; (await getDocs(q)).forEach(d => out.push({ _id: d.id, ...d.data() })); return out; }
+    catch(err){ console.error('Gagal baca', label, err.code, err.message); return []; }
+  }
+
+  function render(){
+    const groups = new Map();
+    ships.sort((a, b) => (periodeRank(b.periode) - periodeRank(a.periode)) || (a.menteeNama || '').localeCompare(b.menteeNama || ''))
+      .forEach(m => { if(!groups.has(m.planId)) groups.set(m.planId, []); groups.get(m.planId).push(m); });
+    let open = 0, done = 0, late = 0;
+    F('blocks').innerHTML = [...groups.values()].map(list => {
+      const m0 = list[0]; const approved = (m0.planStatus || 'approved') === 'approved';
+      const st = list.map(m => ({ m, p: prog(m) })).filter(x => x.p.status !== 'batal');
+      const nDone = st.filter(x => x.p.status === 'selesai').length;
+      if(approved){ done += nDone; open += st.length - nDone; late += st.filter(x => isOverdue(x.m, x.p.status)).length; }
+      return `<div class="panel" style="margin-bottom:16px;">
+        <div class="panel-head">
+          <div><h3 class="text-h2" style="margin:0;">${escapeHtml(m0.menteeNama || m0.nik)}</h3>
+            <div class="text-meta">${escapeHtml(m0.menteeJabatan || '')} · IDP ${escapeHtml(periodeLabel(m0.periode))}${m0.atasanNama ? ' · manager ' + escapeHtml(m0.atasanNama) : ''}</div></div>
+          ${approved ? `<div style="min-width:200px;">${progressBar(nDone, st.length)}</div>` : '<span class="badge badge-amber">Awaiting manager approval</span>'}
+        </div>
+        ${st.map(({ m, p }) => `<div class="act">
+          <div style="min-width:0;">
+            <div style="font-weight:600;">${escapeHtml(m.deskripsi || '')}</div>
+            <div class="text-meta">${escapeHtml(IDP_JENIS[m.jenis] || m.jenis)} · ${escapeHtml(m.kompetensiNama || '')}${m.targetTanggal ? ' · ' + targetHtml(m, p.status) : ''}</div>
+            ${p.updates.length ? `<button class="link-btn" data-tl="${escapeHtml(m._id)}" style="margin-top:4px;">History (${p.updates.length})</button><div data-tlbox="${escapeHtml(m._id)}" style="display:none;">${timelineHtml(p.updates)}</div>` : ''}
+          </div>
+          <div class="act-side">
+            <span class="badge ${STATUS_BADGE[p.status] || 'badge-gray'}">${escapeHtml(IDP_STATUS[p.status] || p.status)}</span>
+            ${approved ? `<button class="btn btn-outline btn-sm" data-up="${escapeHtml(m._id)}">Update Progress</button>` : ''}
+          </div>
+        </div>`).join('')}
+      </div>`;
+    }).join('');
+    F('sMentee').textContent = groups.size; F('sOpen').textContent = open; F('sDone').textContent = done; F('sLate').textContent = late;
+    F('blocks').querySelectorAll('[data-tl]').forEach(b => b.addEventListener('click', () => {
+      const box = F('blocks').querySelector(`[data-tlbox="${CSS.escape(b.dataset.tl)}"]`); box.style.display = box.style.display === 'none' ? 'block' : 'none';
+    }));
+    F('blocks').querySelectorAll('[data-up]').forEach(b => b.addEventListener('click', async () => {
+      const m = ships.find(x => x._id === b.dataset.up);
+      const res = await askProgress({ title: m.menteeNama, subtitle: m.deskripsi, current: prog(m).status });
+      if(!res) return;
+      try{
+        const u = await postUpdate({ src: { planId: m.planId, nik: m.nik, periode: m.periode, menteeEmail: m.menteeEmail, atasanEmail: m.atasanEmail, viewerEmails: m.viewerEmails }, item: asItem(m), ...res, byRole: m.jenis === 'coaching' ? 'Coach' : 'Mentor', profile });
+        updates.push(u); showToast('Progress updated.'); render();
+      } catch(err){ console.error('Gagal simpan update:', err.code, err.message); showToast('Update failed: ' + err.message); }
+    }));
+  }
+
+  onAuth(async (user) => {
+    if(!user){ F('gateTitle').textContent = 'Please sign in'; F('gateSub').innerHTML = `<a href="../index.html">Sign in to the LMS first</a>.`; return; }
+    profile = await ensureUserProfile(user);
+    me = (user.email || '').toLowerCase();
+    [ships, updates] = await Promise.all([
+      grab(query(collection(db, 'mentorships'), where('mentorEmail', '==', me)), 'mentorships'),
+      grab(query(collection(db, 'idpUpdates'), where('mentorEmail', '==', me)), 'idpUpdates'),
+    ]);
+    if(!ships.length){
+      F('gateTitle').textContent = 'No mentees yet';
+      F('gateSub').innerHTML = `You'll see activities here once HR/OD assigns you as a mentor or coach in someone's IDP. <a href="index.html">Back to TMS</a>.`;
+      return;
+    }
+    F('userAvatar').src = profile.photoURL || ''; F('userName').textContent = profile.displayName;
+    F('gate').style.display = 'none'; F('appShell').style.display = 'block';
+    render();
+  });
+</script>
+<script src="../lms-motion.js?v=20261109" defer></script>
+</body>
+</html>

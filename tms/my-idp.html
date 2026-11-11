@@ -42,6 +42,7 @@
   <div class="wrap">
     <h1 class="text-h1">IDP Saya</h1>
     <p class="text-sub" style="margin-bottom:6px;" id="periodeInfo"></p>
+    <div class="card" id="ackBox" style="display:none; margin:14px 0 14px;"></div>
     <div class="card" id="catatanBox" style="display:none; margin:14px 0 20px; border-left:3px solid var(--pink); border-radius:0;"></div>
     <div class="stat-row">
       <div class="stat-card"><div class="stat-num" id="sTotal">-</div><div class="stat-label">Aksi Pengembangan</div></div>
@@ -49,15 +50,16 @@
       <div class="stat-card"><div class="stat-num" id="sTraining">-</div><div class="stat-label">Training di LMS Belum Selesai</div></div>
     </div>
     <div id="blocks"></div>
-    <p class="text-meta" style="margin-top:20px;">IDP disusun oleh tim HR/OD bersama atasan Anda. Item training otomatis selesai saat Anda lulus post-test di LMS. Untuk aksi lain (mentoring, coaching, penugasan), konfirmasi progres ke HR/OD.</p>
+    <p class="text-meta" style="margin-top:20px;">IDP disusun oleh tim HR/OD dan disetujui atasan Anda. Item training otomatis selesai saat Anda lulus post-test di LMS. Progres aksi lain (mentoring, coaching, penugasan) diperbarui oleh mentor atau atasan Anda.</p>
   </div>
 </div>
 
 <script type="module">
   import { db, onAuth, ensureUserProfile } from '../firebase-shared.js';
   import { iconSvg } from '../lms-icons.js';
-  import { escapeHtml, periodeRank, periodeLabelId as periodeLabel, IDP_JENIS_ID as IDP_JENIS, IDP_STATUS_ID as IDP_STATUS, idpItemStatus } from '../competency-shared.js?v=20261108';
-  import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+  import { escapeHtml, periodeRank, periodeLabelId as periodeLabel, IDP_JENIS_ID as IDP_JENIS, IDP_STATUS_ID as IDP_STATUS, planApproval, itemProgress, APPROVAL_STATUS_ID } from '../competency-shared.js?v=20261111';
+  import { timelineHtml, targetHtml } from './idp-ui.js?v=20261111';
+  import { collection, getDocs, query, where, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const F = id => document.getElementById(id);
   const STATUS_BADGE = { rencana: 'badge-gray', berjalan: 'badge-purple', selesai: 'badge-green', batal: 'badge-red' };
@@ -66,22 +68,52 @@
   async function load(user){
     const email = (user.email || '').toLowerCase();
     let plans = [];
-    try{ (await getDocs(query(collection(db, 'developmentPlans'), where('email', '==', email)))).forEach(d => plans.push(d.data())); }
+    try{ (await getDocs(query(collection(db, 'developmentPlans'), where('email', '==', email)))).forEach(d => plans.push({ _id: d.id, ...d.data() })); }
     catch(err){ console.error('Gagal baca developmentPlans:', err.code, err.message); }
     if(!plans.length){
       F('gateTitle').textContent = 'Belum ada IDP';
       F('gateSub').innerHTML = `Rencana pengembangan Anda belum disusun oleh HR/OD. <a href="../index.html">Kembali ke LMS</a>.`;
       return false;
     }
-    const plan = plans.sort((a,b) => periodeRank(b.periode) - periodeRank(a.periode))[0];
+    plans.sort((a,b) => periodeRank(b.periode) - periodeRank(a.periode));
+    const plan = plans.find(p => planApproval(p).status === 'approved');
+    if(!plan){
+      const st = planApproval(plans[0]).status;
+      F('gateTitle').textContent = 'IDP Anda sedang disiapkan';
+      F('gateSub').innerHTML = `Status: <strong>${escapeHtml(APPROVAL_STATUS_ID[st] || st)}</strong>. IDP akan tampil di sini setelah disetujui atasan Anda. <a href="../index.html">Kembali ke LMS</a>.`;
+      return false;
+    }
+    const newer = plans[0] !== plan ? planApproval(plans[0]).status : null;
+    let updates = [];
+    try{ (await getDocs(query(collection(db, 'idpUpdates'), where('menteeEmail', '==', email)))).forEach(d => updates.push(d.data())); }
+    catch(err){ console.error('Gagal baca idpUpdates:', err.code, err.message); }
+    updates = updates.filter(u => u.planId === plan._id);
 
     // Riwayat training sendiri: online (uid/email) + offline (NIK) — untuk status item training.
     const attempts = [];
     const run = async q => { try{ (await getDocs(q)).forEach(d => attempts.push(d.data())); } catch(err){ console.error('Gagal baca attempts:', err.code, err.message); } };
     await Promise.all([ run(query(collection(db, 'attempts'), where('uid', '==', user.uid))), run(query(collection(db, 'attempts'), where('nik', '==', plan.nik))) ]);
 
-    const items = (plan.items || []).filter(it => it.status !== 'batal').map(it => ({ ...it, eff: idpItemStatus(it, attempts) }));
-    F('periodeInfo').textContent = `Periode ${periodeLabel(plan.periode)} · ${items.length} aksi untuk ${new Set(items.map(i => i.kompetensiId)).size} kompetensi`;
+    const items = (plan.items || []).filter(it => it.status !== 'batal').map(it => ({ ...it, eff: itemProgress(it, attempts, updates) }));
+    const appr = planApproval(plan);
+    F('ackBox').style.display = 'block';
+    F('ackBox').innerHTML = appr.legacy ? '' : plan.ack?.at
+      ? `<span class="badge badge-green">Disetujui</span> <span class="text-meta">oleh ${escapeHtml(appr.byNama || 'atasan')} · Anda menyetujui ${escapeHtml(fmtDate(plan.ack.at))}</span>${appr.note ? `<div class="text-meta" style="margin-top:6px;">Catatan atasan: “${escapeHtml(appr.note)}”</div>` : ''}`
+      : `<div class="text-h3" style="margin-bottom:4px;">IDP Anda sudah disetujui ${escapeHtml(appr.byNama || 'atasan')}</div>
+         ${appr.note ? `<div class="text-meta">Catatan atasan: “${escapeHtml(appr.note)}”</div>` : ''}
+         <div class="text-meta" style="margin-top:4px;">Baca rencana di bawah, lalu nyatakan setuju supaya pengembangan bisa dimulai.</div>
+         <button class="btn btn-primary btn-sm" id="ackBtn" style="margin-top:10px;">Saya Setuju dengan IDP Ini</button>`;
+    if(!appr.legacy && !plan.ack?.at) F('ackBox').style.borderLeft = '3px solid var(--pink)';
+    if(appr.legacy) F('ackBox').style.display = 'none';
+    F('ackBtn')?.addEventListener('click', async () => {
+      try{
+        const ack = { at: new Date().toISOString() };
+        await updateDoc(doc(db, 'developmentPlans', plan._id), { ack });
+        plan.ack = ack; await load(user);
+      } catch(err){ console.error('Gagal simpan ack:', err.code, err.message); alert('Gagal menyimpan: ' + err.message); }
+    });
+
+    F('periodeInfo').textContent = `Periode ${periodeLabel(plan.periode)} · ${items.length} aksi untuk ${new Set(items.map(i => i.kompetensiId)).size} kompetensi` + (newer ? ` · IDP periode ${periodeLabel(plans[0].periode)} sedang disiapkan (${APPROVAL_STATUS_ID[newer]})` : '');
     if(plan.catatan){ F('catatanBox').style.display = 'block'; F('catatanBox').innerHTML = `<div class="text-h3" style="margin-bottom:6px;">Fokus Pengembangan</div><div>${escapeHtml(plan.catatan)}</div>`; }
     F('sTotal').textContent = items.length;
     F('sDone').textContent = items.filter(i => i.eff.status === 'selesai').length;
@@ -95,7 +127,8 @@
         ${list.map(it => `<div class="act">
           <div>
             <div style="font-weight:700;">${it.jenis === 'training' ? escapeHtml(it.judul || 'Modul training') : escapeHtml(it.deskripsi || '')}</div>
-            <div class="text-meta">${escapeHtml(IDP_JENIS[it.jenis] || it.jenis)}${it.mentorNama ? ' · ' + (it.jenis === 'coaching' ? 'Coach: ' : 'Mentor: ') + escapeHtml(it.mentorNama) : ''}${it.targetTanggal ? ' · target ' + escapeHtml(fmtDate(it.targetTanggal)) : ''}</div>
+            <div class="text-meta">${escapeHtml(IDP_JENIS[it.jenis] || it.jenis)}${it.mentorNama ? ' · ' + (it.jenis === 'coaching' ? 'Coach: ' : 'Mentor: ') + escapeHtml(it.mentorNama) : ''}${it.targetTanggal ? ' · ' + targetHtml(it, it.eff.status, 'id') : ''}</div>
+            ${it.eff.updates?.length ? `<details style="margin-top:6px;"><summary class="text-meta" style="cursor:pointer;">Riwayat progres (${it.eff.updates.length})</summary>${timelineHtml(it.eff.updates, 'id')}</details>` : ''}
             ${it.jenis === 'training' && it.moduleId && it.eff.status !== 'selesai' ? (it.mode === 'offline' ? '<div class="text-meta" style="margin-top:6px;">Training tatap muka — jadwal diinfokan tim training.</div>' : `<a href="../trainee-learn.html?module=${encodeURIComponent(it.moduleId)}" class="btn btn-primary btn-sm" style="margin-top:8px;">Mulai Belajar</a>`) : ''}
           </div>
           <span class="badge ${STATUS_BADGE[it.eff.status] || 'badge-gray'}">${escapeHtml(IDP_STATUS[it.eff.status] || it.eff.status)}</span>
