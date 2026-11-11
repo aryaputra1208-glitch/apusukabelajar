@@ -394,3 +394,87 @@ export function reminderEmail(r, tmsUrl) {
   lines.push(r.role === 'Employee' ? `Lanjutkan belajar di LMS: ${tmsUrl.replace(/tms\/?$/, '')}` : `Update progres di TMS: ${tmsUrl}`, '', 'Terima kasih,', 'Tim HR/OD');
   return { subject: `[Reminder IDP] ${r.approvals.length ? r.approvals.length + ' persetujuan, ' : ''}${r.items.length} aksi perlu ditindaklanjuti`, body: lines.join('\n') };
 }
+
+/* =========================================================
+   HAV MAP — konfigurasi (settings/havConfig) & penempatan karyawan
+   Sumbu X = performa, sumbu Y = potensi. Grid persegi 3×3 / 4×4 / 5×5.
+   cells[baris][kolom]: baris 0 = potensi TERTINGGI (atas), kolom 0 = performa TERENDAH (kiri).
+   ========================================================= */
+export const HAV_PERF_SOURCES = {
+  final: 'PA final score (PA + KPI)',
+  kpi: 'KPI score',
+  pa: 'PA score (competency average)',
+};
+export const HAV_POT_SOURCES = {
+  competency: 'Competency average (all competencies)',
+  category: 'Competency category only',
+  selected: 'Selected competencies only',
+  imported: 'Potential score (imported "Skor Potensi" column)',
+};
+export const HAV_ZONES = {
+  g: { label: 'Green', bg: 'rgba(34,160,90,.28)', fg: '#0f5a31', dot: '#22a05a' },
+  y: { label: 'Yellow', bg: 'rgba(240,170,20,.30)', fg: '#6b4800', dot: '#f0aa14' },
+  r: { label: 'Red', bg: 'rgba(225,60,60,.22)', fg: '#861a1a', dot: '#e13c3c' },
+  n: { label: 'Gray', bg: 'rgba(120,120,128,.16)', fg: '#3f3f46', dot: '#9ca3af' },
+};
+const HAV_LEVEL_PRESET = {
+  3: [['Low', 0], ['Moderate', 2.8], ['High', 3.6]],
+  4: [['Low', 0], ['Below Expectation', 2.5], ['Meets', 3.25], ['High', 4]],
+  5: [['Very Low', 0], ['Low', 2], ['Moderate', 3], ['High', 3.8], ['Very High', 4.75]],
+};
+const HAV_9BOX = [
+  [['Potential Gem', 'y'], ['High Potential', 'g'], ['Star', 'g']],
+  [['Inconsistent Player', 'r'], ['Core Player', 'y'], ['High Performer', 'g']],
+  [['Risk', 'r'], ['Average Performer', 'r'], ['Solid Performer', 'y']],
+];
+export function havLevels(size) { return HAV_LEVEL_PRESET[size].map(([label, min]) => ({ label, min })); }
+export function havDefaultCells(size) {
+  if (size === 3) return HAV_9BOX.map(row => row.map(([name, zone]) => ({ name, zone })));
+  // grid lain: warna dari diagonal (kanan-atas hijau, kiri-bawah merah), nama diisi admin
+  return Array.from({ length: size }, (_, r) => Array.from({ length: size }, (_, c) => {
+    const score = c + (size - 1 - r), mid = size - 1;
+    return { name: '', zone: score > mid ? 'g' : score === mid ? 'y' : 'r' };
+  }));
+}
+export function havDefaultConfig(size = 3) {
+  return { size, perfSource: 'final', potSource: 'competency', potCategory: '', potCompetencies: [],
+    perfLevels: havLevels(size), potLevels: havLevels(size), cells: havDefaultCells(size) };
+}
+/** Lengkapi konfigurasi tersimpan supaya selalu valid. */
+export function havNormalize(cfg) {
+  const size = [3, 4, 5].includes(cfg?.size) ? cfg.size : 3;
+  const base = havDefaultConfig(size);
+  const lv = arr => Array.isArray(arr) && arr.length === size ? arr.map((l, i) => ({ label: String(l.label || base.perfLevels[i].label), min: Number(l.min) || 0 })) : null;
+  const cells = Array.isArray(cfg?.cells) && cfg.cells.length === size && cfg.cells.every(r => Array.isArray(r) && r.length === size) ? cfg.cells : base.cells;
+  return { ...base, ...(cfg || {}), size, perfLevels: lv(cfg?.perfLevels) || base.perfLevels, potLevels: lv(cfg?.potLevels) || base.potLevels,
+    cells: cells.map(r => r.map(c => ({ name: String(c?.name || ''), zone: HAV_ZONES[c?.zone] ? c.zone : 'n' }))) };
+}
+/** Performa & potensi sama-sama dari skor kompetensi PA → sumbu saling berkorelasi kuat. */
+export function havAxesOverlap(cfg) {
+  return cfg.perfSource === 'pa' && cfg.potSource === 'competency'
+    || (cfg.perfSource === 'pa' && ['category', 'selected'].includes(cfg.potSource))
+    || (cfg.perfSource === 'final' && ['competency', 'category', 'selected'].includes(cfg.potSource));
+}
+const avg = arr => arr.length ? round2(arr.reduce((s, v) => s + v, 0) / arr.length) : null;
+/** Skor performa & potensi satu assessment menurut konfigurasi. competencies = isi kamus (butuh .kategori). */
+export function havScores(a, cfg, competencies = []) {
+  const perf = cfg.perfSource === 'kpi' ? a.skorKPI : cfg.perfSource === 'pa' ? a.skorPA : a.skorFinal;
+  const komp = a.kompetensi || {};
+  let pot = null;
+  if (cfg.potSource === 'imported') pot = a.skorPotensi;
+  else {
+    let ids = Object.keys(komp);
+    if (cfg.potSource === 'category') ids = ids.filter(id => (competencies.find(c => c.id === id)?.kategori || '') === cfg.potCategory);
+    if (cfg.potSource === 'selected') ids = ids.filter(id => (cfg.potCompetencies || []).includes(id));
+    pot = avg(ids.map(id => komp[id]).filter(v => v != null && !isNaN(v)));
+  }
+  return { perf: perf == null || isNaN(perf) ? null : Number(perf), pot: pot == null || isNaN(pot) ? null : Number(pot) };
+}
+function havIdx(v, levels) { let i = 0; levels.forEach((l, k) => { if (v >= l.min) i = k; }); return i; }
+/** Posisi di grid → { perf, pot, row, col, cell } atau null kalau skor salah satu sumbu kosong. */
+export function havPlace(a, cfg, competencies = []) {
+  const { perf, pot } = havScores(a, cfg, competencies);
+  if (perf == null || pot == null) return null;
+  const col = havIdx(perf, cfg.perfLevels), potI = havIdx(pot, cfg.potLevels), row = cfg.size - 1 - potI;
+  return { perf, pot, row, col, cell: cfg.cells[row][col] };
+}

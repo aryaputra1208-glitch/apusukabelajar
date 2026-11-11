@@ -74,8 +74,8 @@
 <script type="module">
   import { db, onAuth, ensureUserProfile } from '../firebase-shared.js';
   import { iconSvg } from '../lms-icons.js';
-  import { escapeHtml, periodeRank, periodeLabel, IDP_JENIS, IDP_STATUS, APPROVAL_STATUS, APPROVAL_BADGE, planApproval, itemProgress, planIdOf } from '../competency-shared.js?v=20261111';
-  import { STATUS_BADGE, fmtDate, targetHtml, isOverdue, timelineHtml, progressBar, askProgress, askNote, postUpdate } from './idp-ui.js?v=20261111b';
+  import { escapeHtml, periodeRank, periodeLabel, IDP_JENIS, IDP_STATUS, APPROVAL_STATUS, APPROVAL_BADGE, planApproval, itemProgress, planIdOf } from '../competency-shared.js?v=20261111b';
+  import { STATUS_BADGE, fmtDate, targetHtml, isOverdue, timelineHtml, progressBar, askProgress, askNote, postUpdate } from './idp-ui.js?v=20261111c';
   import { collection, getDocs, query, where, doc, updateDoc, writeBatch } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const F = id => document.getElementById(id);
@@ -261,7 +261,7 @@
     renderList(); renderDetail();
   });
 </script>
-<script type="module" src="./tms-shell.js?v=20261111c"></script>
+<script type="module" src="./tms-shell.js?v=20261111d"></script>
 <script src="../lms-motion.js?v=20261109" defer></script>
 </body>
 </html>

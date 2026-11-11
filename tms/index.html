@@ -71,7 +71,8 @@
 <script type="module">
   import { db, onAuth, ensureUserProfile } from '../firebase-shared.js';
   import { iconSvg } from '../lms-icons.js';
-  import { itemProgress, planIdOf } from '../competency-shared.js?v=20261111';
+  import { itemProgress, planIdOf, havNormalize, havPlace, HAV_ZONES, HAV_PERF_SOURCES, HAV_POT_SOURCES, escapeHtml, periodeLabel } from '../competency-shared.js?v=20261111b';
+  import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
   import { collection, getDocs, query, where, limit } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const F = id => document.getElementById(id);
@@ -128,7 +129,7 @@
     F('userAvatar').src = profile.photoURL || '';
     F('userName').textContent = profile.displayName;
     F('sections').innerHTML = html;
-    if(isAdmin) bindHav();
+    if(isAdmin) await bindHav();
   });
 
   /* ================= Dashboard admin (HR/OD) ================= */
@@ -143,6 +144,7 @@
     ]);
     const rank = p => { const m = String(p || '').match(/^(\d{4})(?:-S([12]))?$/); return m ? Number(m[1]) * 10 + (m[2] ? Number(m[2]) : 3) : 0; };
     const lastP = assess.map(a => a.periode).sort((a, b) => rank(b) - rank(a))[0];
+    havAssess = assess.filter(a => a.periode === lastP); havPeriod = lastP;
     const nAssessed = assess.filter(a => a.periode === lastP).length;
     const st = p => p.approval?.status || 'approved';
     const nApproved = plans.filter(p => st(p) === 'approved').length;
@@ -163,8 +165,8 @@
       <div class="hav-wrap">
         <div class="panel" style="margin:0;">
           <div class="panel-head">
-            <div><h3 class="text-h2" style="margin:0;">HAV Map</h3><div class="text-meta">Performance × Potential · click a box to see who is in it</div></div>
-            <div style="display:flex; gap:8px; align-items:center;"><span class="mock-tag">Template · no data yet</span></div>
+            <div><h3 class="text-h2" style="margin:0;">HAV Map</h3><div class="text-meta" id="havSub">Performance × Potential · click a box to see who is in it</div></div>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end;"><select id="havDiv" style="margin:0; max-width:140px;"></select><select id="havLvl" style="margin:0; max-width:130px;"></select><a href="hav-setup.html" class="btn btn-outline btn-sm">Setup</a></div>
           </div>
           <div class="hav-body"><div class="hav-grid" id="havGrid"></div></div>
         </div>
@@ -181,50 +183,57 @@
       </div>`;
   }
 
-  // 9-box generik: baris = potensi (atas = tinggi), kolom = performa (kanan = tinggi)
-  const BOX = [
-    [{ k: 'gem',  n: 'Potential Gem',       z: 'y' }, { k: 'hipo', n: 'High Potential',   z: 'g' }, { k: 'star',  n: 'Star',            z: 'g' }],
-    [{ k: 'inc',  n: 'Inconsistent Player', z: 'r' }, { k: 'core', n: 'Core Player',      z: 'y' }, { k: 'hiper', n: 'High Performer',  z: 'g' }],
-    [{ k: 'risk', n: 'Risk',                z: 'r' }, { k: 'avg',  n: 'Average Performer', z: 'r' }, { k: 'solid', n: 'Solid Performer', z: 'y' }],
-  ];
-  const LVL = ['Low', 'Moderate', 'High'];
-  const ZCOL = { g: '#22a05a', y: '#f0aa14', r: '#e13c3c' };
-  // Belum ada data: nanti diisi skor PA final (performa) & skor kompetensi/potensi per karyawan.
-  const band = v => v < 2.8 ? 0 : v < 3.6 ? 1 : 2;
-  const boxOf = e => BOX[2 - band(e.pot)][band(e.perf)];
-  let havData = [], havSel = 'star';
-  function bindHav(){
-    havData = [];
+  // HAV Map: memakai setup admin (settings/havConfig) + data PA periode terakhir
+  let havAssess = [], havPeriod = '', havCfg = null, havComps = [], havSel = null, havRows = [];
+  async function bindHav(){
+    const [cs, comps] = await Promise.all([
+      getDoc(doc(db, 'settings', 'havConfig')).catch(() => null),
+      getDocs(collection(db, 'competencies')).then(s => { const o = []; s.forEach(d => o.push({ id: d.id, ...d.data() })); return o; }).catch(() => []),
+    ]);
+    havCfg = havNormalize(cs?.exists() ? cs.data() : {}); havComps = comps;
+    havRows = havAssess.map(a => ({ a, p: havPlace(a, havCfg, havComps) }));
+    const opts = (k, all) => `<option value="">${all}</option>` + [...new Set(havAssess.map(a => a[k]).filter(Boolean))].sort().map(v => `<option>${escapeHtml(v)}</option>`).join('');
+    F('havDiv').innerHTML = opts('divisi', 'All divisions'); F('havLvl').innerHTML = opts('level', 'All levels');
+    F('havDiv').addEventListener('change', drawHav); F('havLvl').addEventListener('change', drawHav);
+    F('havSub').textContent = `${HAV_PERF_SOURCES[havCfg.perfSource]} × ${HAV_POT_SOURCES[havCfg.potSource].replace(/ \(.*\)$/, '')}${havPeriod ? ' · ' + periodeLabel(havPeriod) : ''}`;
     drawHav();
   }
   function drawHav(){
-    const rows = havData;
-    const by = {}; rows.forEach(e => (by[boxOf(e).k] = by[boxOf(e).k] || []).push(e));
-    const pct = n => rows.length ? Math.round(n / rows.length * 100) : 0;
-    let g = `<div class="hav-ylab">Potential (competency) →</div>`;
-    BOX.forEach((row, r) => row.forEach((b, c) => {
-      const n = (by[b.k] || []).length;
-      g += `<button type="button" class="hav-cell z-${b.z} ${b.k === havSel ? 'sel' : ''}" data-k="${b.k}" style="grid-row:${r + 1}; grid-column:${c + 2};">
-        <div><div class="nm">${b.n}</div><div class="ax">${LVL[2 - r]} pot · ${LVL[c]} perf</div></div>
-        <div><span class="ct">${n}</span> <span class="pc">${pct(n)}%</span></div></button>`;
-    }));
-    g += `<div class="hav-xlab">Performance (PA final score) →</div>`;
-    F('havGrid').innerHTML = g;
-    F('havTotal').textContent = `${rows.length} employees`;
-    F('havDist').innerHTML = BOX.flat().slice().sort((a, b) => (by[b.k] || []).length - (by[a.k] || []).length).map(b => {
-      const n = (by[b.k] || []).length;
-      return `<div class="dist-row" data-k="${b.k}"><span class="dot" style="background:${ZCOL[b.z]}"></span><span>${b.n}</span><strong>${n}</strong><span class="text-meta" style="min-width:34px; text-align:right;">${pct(n)}%</span></div>`;
-    }).join('');
-    const sel = BOX.flat().find(b => b.k === havSel);
-    const list = (by[havSel] || []).sort((a, b) => (b.perf + b.pot) - (a.perf + a.pot));
-    F('havSelTitle').textContent = sel.n;
+    const n = havCfg.size, div = F('havDiv').value, lvl = F('havLvl').value;
+    const rows = havRows.filter(({ a }) => (!div || a.divisi === div) && (!lvl || a.level === lvl));
+    const placed = rows.filter(r => r.p), by = {};
+    placed.forEach(r => (by[r.p.row + '-' + r.p.col] = by[r.p.row + '-' + r.p.col] || []).push(r));
+    const pct = x => placed.length ? Math.round(x / placed.length * 100) : 0;
+    if(!havSel){ let best = null; for(let r = 0; r < n; r++) for(let c = 0; c < n; c++) if(!best && (by[r + '-' + c] || []).length) best = r + '-' + c; havSel = best || '0-' + (n - 1); }
+    const grid = F('havGrid');
+    grid.style.gridTemplateColumns = `26px repeat(${n}, 1fr)`;
+    grid.style.gridTemplateRows = `repeat(${n}, minmax(${n > 3 ? 84 : 122}px, auto)) 26px`;
+    let g = `<div class="hav-ylab" style="grid-row:1 / ${n + 1};">Potential →</div>`;
+    for(let r = 0; r < n; r++) for(let c = 0; c < n; c++){
+      const cell = havCfg.cells[r][c], z = HAV_ZONES[cell.zone], k = r + '-' + c, cnt = (by[k] || []).length;
+      g += `<button type="button" class="hav-cell ${k === havSel ? 'sel' : ''}" data-k="${k}" style="grid-row:${r + 1}; grid-column:${c + 2}; background:${z.bg} !important; color:${z.fg};">
+        <div><div class="nm">${escapeHtml(cell.name) || '&nbsp;'}</div><div class="ax">${escapeHtml(havCfg.potLevels[n - 1 - r].label)} pot · ${escapeHtml(havCfg.perfLevels[c].label)} perf</div></div>
+        <div><span class="ct">${cnt}</span> <span class="pc">${pct(cnt)}%</span></div></button>`;
+    }
+    g += `<div class="hav-xlab" style="grid-column:2 / ${n + 2}; grid-row:${n + 1};">Performance →</div>`;
+    grid.innerHTML = g;
+    const unplaced = rows.length - placed.length;
+    F('havTotal').textContent = `${placed.length} employees${unplaced ? ` · ${unplaced} missing a score` : ''}`;
+    const cellsFlat = []; for(let r = 0; r < n; r++) for(let c = 0; c < n; c++) cellsFlat.push({ k: r + '-' + c, ...havCfg.cells[r][c] });
+    F('havDist').innerHTML = cellsFlat.filter(x => x.name || (by[x.k] || []).length).sort((a, b) => (by[b.k] || []).length - (by[a.k] || []).length).map(x => {
+      const cnt = (by[x.k] || []).length;
+      return `<div class="dist-row" data-k="${x.k}"><span class="dot" style="background:${HAV_ZONES[x.zone].dot}"></span><span>${escapeHtml(x.name) || 'Box ' + x.k}</span><strong>${cnt}</strong><span class="text-meta" style="min-width:34px; text-align:right;">${pct(cnt)}%</span></div>`;
+    }).join('') || '<div class="empty-state"><p>No data yet.</p></div>';
+    const [sr, sc] = havSel.split('-').map(Number), sCell = havCfg.cells[sr]?.[sc] || { name: '' };
+    const list = (by[havSel] || []).sort((x, y) => (y.p.perf + y.p.pot) - (x.p.perf + x.p.pot));
+    F('havSelTitle').textContent = sCell.name || 'Selected box';
     F('havSelCount').textContent = `${list.length} employee${list.length === 1 ? '' : 's'}`;
-    F('havList').innerHTML = list.map(e => `<div class="hav-row"><div><strong>${e.nama}</strong><div class="text-meta">${e.jabatan} · ${e.divisi}</div></div><div class="text-meta" style="text-align:right;">Perf ${e.perf.toFixed(2)}<br>Pot ${e.pot.toFixed(2)}</div></div>`).join('')
-      || `<div class="empty-state"><p>${rows.length ? 'No one in this box.' : 'No data yet.'}</p></div>`;
+    F('havList').innerHTML = list.map(({ a, p }) => `<a class="hav-row" href="profile.html?nik=${encodeURIComponent(a.nik)}&periode=${encodeURIComponent(a.periode)}" style="color:inherit; text-decoration:none;"><div><strong>${escapeHtml(a.nama)}</strong><div class="text-meta">${escapeHtml(a.jabatan || '')} · ${escapeHtml(a.divisi || '')}</div></div><div class="text-meta" style="text-align:right;">Perf ${p.perf.toFixed(2)}<br>Pot ${p.pot.toFixed(2)}</div></a>`).join('')
+      || `<div class="empty-state"><p>${placed.length ? 'No one in this box.' : 'No data yet.'}</p></div>`;
     document.querySelectorAll('#havGrid [data-k], #havDist [data-k]').forEach(el => el.addEventListener('click', () => { havSel = el.dataset.k; drawHav(); }));
   }
 </script>
-<script type="module" src="./tms-shell.js?v=20261111c"></script>
+<script type="module" src="./tms-shell.js?v=20261111d"></script>
 <script src="../lms-motion.js?v=20261109" defer></script>
 </body>
 </html>

@@ -68,7 +68,7 @@
         <h2 class="text-h2" style="margin:0;">Import PA &amp; KPI Results via Excel</h2>
         <span class="link-add" id="downloadTemplateBtn"></span>
       </div>
-      <p class="text-sub" style="margin-bottom:12px;">Columns: <strong>NIK, Periode</strong> (<em>2026</em> annual, <em>2026-S1</em> / <em>2026-S2</em> semester), then <strong>one column per competency</strong> (dictionary name, score 1–5). Optional: <strong>Skor KPI</strong>, <strong>Skor PA</strong> (blank = competency average), <strong>Skor Final</strong> (blank = weighted). Re-importing a period overwrites only the people in the file.</p>
+      <p class="text-sub" style="margin-bottom:12px;">Columns: <strong>NIK, Periode</strong> (<em>2026</em> annual, <em>2026-S1</em> / <em>2026-S2</em> semester), then <strong>one column per competency</strong> (dictionary name, score 1–5). Optional: <strong>Skor KPI</strong>, <strong>Skor PA</strong> (blank = competency average), <strong>Skor Final</strong> (blank = weighted), <strong>Skor Potensi</strong> (1–5, for HAV Map). Re-importing a period overwrites only the people in the file.</p>
       <div class="dropzone" id="excelDropzone"></div>
       <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" style="display:none">
       <div id="previewBox" class="preview-box" style="display:none;"></div>
@@ -117,7 +117,7 @@
   import {
     LEVEL_COLUMNS, KATEGORI_ORDER, DEFAULT_SCALE, DEFAULT_WEIGHTS, slugify, escapeHtml, levelLabel,
     normalizePeriode, periodeRank, periodeLabel, scoreLabel, round2, computeFinal, viewerEmailsFor, gapsFor,
-  } from '../competency-shared.js?v=20261111';
+  } from '../competency-shared.js?v=20261111b';
   import { collection, getDocs, doc, getDoc, setDoc, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const F = id => document.getElementById(id);
@@ -271,7 +271,7 @@
     if(headerIdx === -1) throw new Error('NIK column not found.');
     const header = rows[headerIdx].map(normHead);
     const col = name => header.indexOf(name);
-    const iNik = col('nik'), iPer = col('periode'), iKpi = col('skor-kpi'), iPa = col('skor-pa'), iFin = col('skor-final');
+    const iNik = col('nik'), iPer = col('periode'), iKpi = col('skor-kpi'), iPa = col('skor-pa'), iFin = col('skor-final'), iPot = col('skor-potensi');
     const compCols = competencies.map(c => ({ id: c.id, nama: c.nama, i: header.indexOf(slugify(c.nama)) }));
     const missingComps = compCols.filter(c => c.i === -1).map(c => c.nama);
     const warnings = [], records = [];
@@ -300,14 +300,15 @@
       const kpi = iKpi >= 0 ? toNum(r[iKpi]) : null;
       const paImp = iPa >= 0 ? toNum(r[iPa]) : null;
       const finImp = iFin >= 0 ? toNum(r[iFin]) : null;
-      [['KPI', kpi], ['PA', paImp], ['Final', finImp]].forEach(([n, v]) => { if(v !== null && (isNaN(v) || v < 0 || v > 5)){ warnings.push(`Row ${line} (${emp.nama}): ${n} score "${v}" outside 0–5.`); bad = true; } });
+      const potImp = iPot >= 0 ? toNum(r[iPot]) : null;
+      [['KPI', kpi], ['PA', paImp], ['Final', finImp], ['Potential', potImp]].forEach(([n, v]) => { if(v !== null && (isNaN(v) || v < 0 || v > 5)){ warnings.push(`Row ${line} (${emp.nama}): ${n} score "${v}" outside 0–5.`); bad = true; } });
       if(bad) return;
       if(!Object.keys(kompetensi).length && paImp === null){ warnings.push(`Row ${line} (${emp.nama}): no competency scores or PA score, skipped.`); return; }
       if(!Object.keys(kompetensi).length) warnings.push(`Row ${line} (${emp.nama}): PA score only, no competency scores; gaps can't be calculated.`);
       if(!emp.levelKey) warnings.push(`Row ${line} (${emp.nama}): level "${emp.level || '-'}" not mapped to the dictionary; gaps still calculated, expected indicators not shown.`);
       const vals = Object.values(kompetensi);
       const skorPA = paImp !== null ? paImp : round2(vals.reduce((s, v) => s + v, 0) / vals.length);
-      records.push({ nik, periode, kompetensi, skorPA, skorKPI: kpi, skorFinalImport: finImp });
+      records.push({ nik, periode, kompetensi, skorPA, skorKPI: kpi, skorFinalImport: finImp, skorPotensi: potImp });
     });
     // NIK+periode dobel → yang terakhir dipakai
     const map = {}; records.forEach(r => map[`${r.periode}_${r.nik}`] = r);
@@ -342,7 +343,7 @@
       nik: r.nik, periode: r.periode, periodeRank: periodeRank(r.periode),
       nama: emp.nama || '', email: emp.email || '', jabatan: emp.jabatan || '', level: emp.level || '', levelKey: emp.levelKey || null,
       divisi: emp.divisi || '', departemen: emp.departemen || '',
-      kompetensi: r.kompetensi, skorPA: r.skorPA, skorKPI: r.skorKPI ?? null, ...fin,
+      kompetensi: r.kompetensi, skorPA: r.skorPA, skorKPI: r.skorKPI ?? null, skorPotensi: r.skorPotensi ?? null, ...fin,
       viewerEmails: viewerEmailsFor(r.nik, employeesByNik),
       updatedAt: serverTimestamp(), updatedBy: currentProfile.email,
     };
@@ -423,9 +424,9 @@
   F('downloadTemplateBtn').innerHTML = iconSvg('file-text', {size:13}) + ' Download Template (with employee list)';
   F('downloadTemplateBtn').addEventListener('click', () => {
     if(!competencies.length){ showToast('The competency dictionary is empty.'); return; }
-    const header = ['NIK', 'Nama', 'Level', 'Periode', 'Skor KPI', 'Skor PA', 'Skor Final', ...competencies.map(c => c.nama)];
+    const header = ['NIK', 'Nama', 'Level', 'Periode', 'Skor KPI', 'Skor PA', 'Skor Final', 'Skor Potensi', ...competencies.map(c => c.nama)];
     const body = employees.filter(e => (e.status || 'Aktif') === 'Aktif').sort((a,b) => (a.nama||'').localeCompare(b.nama||''))
-      .map(e => [e.nik, e.nama || '', e.level || '', '', '', '', '', ...competencies.map(() => '')]);
+      .map(e => [e.nik, e.nama || '', e.level || '', '', '', '', '', '', ...competencies.map(() => '')]);
     const ws = XLSX.utils.aoa_to_sheet([header, ...body]);
     ws['!cols'] = header.map((h, i) => ({ wch: i < 2 ? 22 : Math.max(10, Math.min(28, h.length + 2)) }));
     const wb = XLSX.utils.book_new();
@@ -454,7 +455,7 @@
     loadAll();
   });
 </script>
-<script type="module" src="./tms-shell.js?v=20261111c"></script>
+<script type="module" src="./tms-shell.js?v=20261111d"></script>
 <script src="../lms-motion.js?v=20261109" defer></script>
 </body>
 </html>

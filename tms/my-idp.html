@@ -58,8 +58,8 @@
 <script type="module">
   import { db, onAuth, ensureUserProfile } from '../firebase-shared.js';
   import { iconSvg } from '../lms-icons.js';
-  import { escapeHtml, periodeRank, periodeLabelId as periodeLabel, IDP_JENIS_ID as IDP_JENIS, IDP_STATUS_ID as IDP_STATUS, planApproval, itemProgress, APPROVAL_STATUS_ID } from '../competency-shared.js?v=20261111';
-  import { timelineHtml, targetHtml } from './idp-ui.js?v=20261111b';
+  import { escapeHtml, periodeRank, periodeLabelId as periodeLabel, IDP_JENIS_ID as IDP_JENIS, IDP_STATUS_ID as IDP_STATUS, planApproval, itemProgress, APPROVAL_STATUS_ID } from '../competency-shared.js?v=20261111b';
+  import { timelineHtml, targetHtml } from './idp-ui.js?v=20261111c';
   import { collection, getDocs, query, where, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const F = id => document.getElementById(id);
@@ -150,7 +150,7 @@
     if(await load(user)){ F('gate').style.display = 'none'; F('appShell').style.display = 'block'; }
   });
 </script>
-<script type="module" src="./tms-shell.js?v=20261111c"></script>
+<script type="module" src="./tms-shell.js?v=20261111d"></script>
 <script src="../lms-motion.js?v=20261109" defer></script>
 </body>
 </html>

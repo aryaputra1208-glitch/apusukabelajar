@@ -88,6 +88,7 @@ onAuth(async (user) => {
         { href: 'employees.html', icon: 'users', label: 'Employees' },
         { href: 'competencies.html', icon: 'layout-grid', label: 'Competency Dictionary' },
         { href: 'performance.html', icon: 'chart-bar', label: 'Performance Data' },
+        { href: 'hav-setup.html', icon: 'layout-grid', label: 'HAV Map Setup' },
       ] : [] },
       { group: 'Your Team', items: [
         ...(nTeam ? [{ href: 'team.html', icon: 'users', label: 'My Team', badge: nPendingMine || '' }] : []),
