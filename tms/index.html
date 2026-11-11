@@ -42,7 +42,15 @@
   .dist-row { display: grid; grid-template-columns: 12px 1fr auto auto; gap: 10px; align-items: center; padding: 7px 20px; font-size: 12.5px; cursor: pointer; }
   .dist-row .dot { width: 10px; height: 10px; border-radius: 3px; }
   .mock-tag { white-space: nowrap; font-size: 11px; font-weight: 600; background: var(--amber-bg, #fff3d6); color: #7a5300; border-radius: 999px; padding: 2px 9px; }
-  @media (max-width: 900px) { .kpi-row { grid-template-columns: repeat(2,1fr); } .hav-wrap { grid-template-columns: 1fr; } }
+  .idp-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 30px 0 12px; scroll-margin-top: 20px; }
+  .idp-head select, .idp-head input { margin: 0; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .rem { display: flex; justify-content: space-between; gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--border); align-items: flex-start; }
+  .rem:last-child { border-bottom: none; }
+  .rem ul { margin: 6px 0 0; padding-left: 18px; font-size: 12.5px; color: var(--text-2); }
+  .rem-btns { display: flex; gap: 6px; flex-shrink: 0; }
+  .btn { white-space: nowrap; }
+  @media (max-width: 900px) { .kpi-row { grid-template-columns: repeat(2,1fr); } .hav-wrap { grid-template-columns: 1fr; } .two { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -67,11 +75,13 @@
     <div id="sections"></div>
   </div>
 </div>
+<div class="toast" id="toast"></div>
 
 <script type="module">
   import { db, onAuth, ensureUserProfile } from '../firebase-shared.js';
   import { iconSvg } from '../lms-icons.js';
-  import { itemProgress, planIdOf, havNormalize, havPlace, HAV_ZONES, HAV_PERF_SOURCES, HAV_POT_SOURCES, escapeHtml, periodeLabel } from '../competency-shared.js?v=20261111d';
+  import { itemProgress, planIdOf, havNormalize, havPlace, HAV_ZONES, HAV_PERF_SOURCES, HAV_POT_SOURCES, escapeHtml, periodeLabel, periodeRank, IDP_JENIS, planApproval, daysUntil, computeReminders, reminderEmail } from '../competency-shared.js?v=20261111d';
+  import { fmtDate, isOverdue } from './idp-ui.js?v=20261111e';
   import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
   import { collection, getDocs, query, where, limit } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
@@ -116,19 +126,22 @@
     F('userAvatar').src = profile.photoURL || '';
     F('userName').textContent = profile.displayName;
     F('sections').innerHTML = html;
-    if(isAdmin) await bindHav();
+    if(isAdmin){ await bindHav(); bindIdp(); if(location.hash === '#idp') F('idp')?.scrollIntoView(); }
   });
 
   /* ================= Dashboard admin (HR/OD) ================= */
   const cnt = async (q, label) => { try{ return (await getDocs(q)).size; } catch(err){ console.error('Gagal hitung', label, err.code, err.message); return null; } };
   async function adminDashboardHtml(){
-    const [nEmp, plans, assess, updates, attempts] = await Promise.all([
-      cnt(collection(db, 'employees'), 'employees'),
+    const [emps, plans, assess, updates, attempts] = await Promise.all([
+      getDocs(collection(db, 'employees')).then(s => { const o = []; s.forEach(d => o.push({ _id: d.id, ...d.data() })); return o; }).catch(err => { console.error('Gagal baca employees', err.code, err.message); return null; }),
       getDocs(collection(db, 'developmentPlans')).then(s => { const o = []; s.forEach(d => o.push(d.data())); return o; }).catch(() => []),
       getDocs(collection(db, 'assessments')).then(s => { const o = []; s.forEach(d => o.push(d.data())); return o; }).catch(() => []),
       getDocs(collection(db, 'idpUpdates')).then(s => { const o = []; s.forEach(d => o.push(d.data())); return o; }).catch(() => []),
       getDocs(collection(db, 'attempts')).then(s => { const o = []; s.forEach(d => o.push(d.data())); return o; }).catch(() => []),
     ]);
+    const nEmp = emps ? emps.length : null;
+    idpPlans = plans; idpAttempts = attempts; idpUpdatesByPlan = {}; updates.forEach(u => (idpUpdatesByPlan[u.planId] = idpUpdatesByPlan[u.planId] || []).push(u));
+    idpEmp = {}; (emps || []).forEach(e => idpEmp[e._id] = e);
     const rank = p => { const m = String(p || '').match(/^(\d{4})(?:-S([12]))?$/); return m ? Number(m[1]) * 10 + (m[2] ? Number(m[2]) : 3) : 0; };
     const lastP = assess.map(a => a.periode).sort((a, b) => rank(b) - rank(a))[0];
     havAssess = assess.filter(a => a.periode === lastP); havPeriod = lastP;
@@ -146,8 +159,8 @@
       <div class="kpi-row">
         <a class="kpi" href="employees.html"><div class="n">${v(nEmp)}</div><div class="l">Employees</div><div class="s">In master data</div></a>
         <a class="kpi" href="performance.html"><div class="n">${nAssessed}</div><div class="l">Assessed</div><div class="s">${lastP ? 'Latest period ' + lastP : 'No PA imported yet'}</div></a>
-        <a class="kpi" href="idp-dashboard.html"><div class="n">${nApproved}/${plans.length}</div><div class="l">IDPs Approved</div><div class="s">All periods</div></a>
-        <a class="kpi" href="idp-dashboard.html"><div class="n">${ongoing}</div><div class="l">Ongoing IDPs</div><div class="s">Approved, activities still running</div></a>
+        <a class="kpi" href="#idp"><div class="n">${nApproved}/${plans.length}</div><div class="l">IDPs Approved</div><div class="s">All periods</div></a>
+        <a class="kpi" href="#idp"><div class="n">${ongoing}</div><div class="l">Ongoing IDPs</div><div class="s">Approved, activities still running</div></a>
       </div>
       <div class="hav-wrap">
         <div class="panel" style="margin:0;">
@@ -174,6 +187,50 @@
             <div class="hav-list" id="havList"></div>
           </div>
         </div>
+      </div>
+
+      <div class="idp-head" id="idp">
+        <h2 class="text-h1" style="margin:0; font-size:22px;">IDP Overview</h2>
+        <div style="display:flex; gap:8px;">
+          <select id="periodeSelect" style="min-width:170px;"></select>
+          <select id="divSelect" style="max-width:220px;"></select>
+        </div>
+      </div>
+      <div class="kpi-row" style="margin-top:0;">
+        <div class="kpi"><div class="n" id="kIdp">-</div><div class="l">IDPs</div><div class="s" id="kIdpSub"></div></div>
+        <div class="kpi"><div class="n" id="kAppr">-</div><div class="l">Approved</div><div class="s" id="kApprSub"></div></div>
+        <div class="kpi"><div class="n" id="kDone">-</div><div class="l">Activities Done</div><div class="s" id="kDoneSub"></div></div>
+        <div class="kpi"><div class="n" id="kLate">-</div><div class="l">Overdue Activities</div><div class="s" id="kLateSub"></div></div>
+      </div>
+      <div class="panel" style="margin:0;">
+        <div class="panel-head"><h3 class="text-h2" style="margin:0;">By Division</h3></div>
+        <div style="overflow-x:auto;">
+        <table class="data-table">
+          <thead><tr><th>Division</th><th>IDPs</th><th>Draft</th><th>Pending</th><th>Revision</th><th>Approved</th><th>Agreed by Employee</th><th>Activities Done</th><th>Overdue</th></tr></thead>
+          <tbody id="divBody"></tbody>
+        </table>
+        </div>
+      </div>
+      <div class="two">
+        <div class="panel" style="margin:0;">
+          <div class="panel-head"><h3 class="text-h2" style="margin:0;">Waiting HR/OD Validation</h3><span class="text-meta" id="pendCount"></span></div>
+          <div id="pendList"></div>
+        </div>
+        <div class="panel" style="margin:0;">
+          <div class="panel-head"><h3 class="text-h2" style="margin:0;">Overdue Activities</h3><span class="text-meta" id="lateCount"></span></div>
+          <div id="lateList"></div>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:16px;">
+        <div class="panel-head">
+          <div><h3 class="text-h2" style="margin:0;">Reminders</h3>
+            <div class="text-meta">H-3, due date, then every 3 days while overdue · returned IDPs every 3 days · one message per person</div></div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input type="date" id="remDate" style="margin:0; max-width:170px;">
+            <button class="btn btn-outline btn-sm" id="copyAllBtn">Copy All</button>
+          </div>
+        </div>
+        <div id="remList"></div>
       </div>`;
   }
 
@@ -226,8 +283,120 @@
       || `<div class="empty-state"><p>${placed.length ? 'No one in this box.' : 'No data yet.'}</p></div>`;
     document.querySelectorAll('#havGrid [data-k], #havDist [data-k]').forEach(el => el.addEventListener('click', () => { havSel = el.dataset.k; drawHav(); }));
   }
+
+  /* ================= IDP Overview (dulu halaman IDP Dashboard) ================= */
+  let idpPlans = [], idpUpdatesByPlan = {}, idpAttempts = [], idpEmp = {}, periode = '';
+  const showToast = msg => { const t = F('toast'); t.textContent = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); };
+  const pct = (a, b) => b ? Math.round(a / b * 100) + '%' : '-';
+  const divOf = p => p.divisi || idpEmp[p.nik]?.divisi || '(No division)';
+  const attemptsFor = p => idpAttempts.filter(t => t.nik === p.nik || (p.email && t.email === p.email));
+  const tmsUrl = new URL('.', location.href).href;
+  const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+  function bindIdp(){
+    const periodes = [...new Set(idpPlans.map(p => p.periode))].sort((a, b) => periodeRank(b) - periodeRank(a));
+    periode = periodes[0] || '';
+    F('periodeSelect').innerHTML = periodes.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(periodeLabel(p))}</option>`).join('') || '<option value="">No IDPs yet</option>';
+    F('remDate').value = todayStr();
+    F('periodeSelect').addEventListener('change', e => { periode = e.target.value; F('divSelect').value = ''; renderIdp(); });
+    F('divSelect').addEventListener('change', renderIdp);
+    F('remDate').addEventListener('change', renderIdp);
+    F('copyAllBtn').addEventListener('click', () => {
+      if(!reminders.length) return showToast('No reminders for this date.');
+      copy(reminders.map(r => { const m = reminderEmail(r, tmsUrl); return `To: ${r.email || '(no email) ' + r.nama}\nSubject: ${m.subject}\n\n${m.body}`; }).join('\n\n----------\n\n'));
+    });
+    renderIdp();
+  }
+  function renderIdp(){
+    const div = F('divSelect').value;
+    const inPeriod = idpPlans.filter(p => p.periode === periode);
+    const divs = [...new Set(inPeriod.map(divOf))].sort();
+    F('divSelect').innerHTML = `<option value="">All divisions</option>` + divs.map(d => `<option ${d === div ? 'selected' : ''}>${escapeHtml(d)}</option>`).join('');
+    const rows = inPeriod.filter(p => !div || divOf(p) === div);
+
+    // per IDP
+    const facts = rows.map(p => {
+      const appr = planApproval(p);
+      const items = (p.items || []).filter(it => it.status !== 'batal').map(it => ({ it, s: itemProgress(it, attemptsFor(p), idpUpdatesByPlan[planIdOf(p)] || []).status }));
+      return { p, appr, items, done: items.filter(x => x.s === 'selesai').length, late: items.filter(x => isOverdue(x.it, x.s)) };
+    });
+    const approved = facts.filter(f => f.appr.status === 'approved');
+    const pend = facts.filter(f => f.appr.status === 'pending');
+    const actTotal = approved.reduce((n, f) => n + f.items.length, 0), actDone = approved.reduce((n, f) => n + f.done, 0);
+    const late = approved.flatMap(f => f.late.map(x => ({ ...x, p: f.p })));
+    const agreed = approved.filter(f => f.p.ack?.at || f.appr.legacy).length;
+
+    F('kIdp').textContent = facts.length;
+    F('kIdpSub').textContent = `${facts.filter(f => f.appr.status === 'draft').length} draft · ${facts.filter(f => f.appr.status === 'revision').length} in revision`;
+    F('kAppr').textContent = pct(approved.length, facts.length);
+    F('kApprSub').textContent = `${approved.length} approved · ${pend.length} pending · ${agreed} agreed by employee`;
+    F('kDone').textContent = pct(actDone, actTotal);
+    F('kDoneSub').textContent = `${actDone} of ${actTotal} activities (approved IDPs)`;
+    F('kLate').textContent = late.length;
+    F('kLateSub').textContent = (n => `${n} employee${n === 1 ? '' : 's'} affected`)(new Set(late.map(x => x.p.nik)).size);
+
+    // per divisi
+    const byDiv = new Map();
+    facts.forEach(f => { const d = divOf(f.p); if(!byDiv.has(d)) byDiv.set(d, []); byDiv.get(d).push(f); });
+    F('divBody').innerHTML = [...byDiv.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([d, fs]) => {
+      const c = st => fs.filter(f => f.appr.status === st).length;
+      const ap = fs.filter(f => f.appr.status === 'approved');
+      const tot = ap.reduce((n, f) => n + f.items.length, 0), dn = ap.reduce((n, f) => n + f.done, 0), lt = ap.reduce((n, f) => n + f.late.length, 0);
+      return `<tr><td><strong>${escapeHtml(d)}</strong></td><td>${fs.length}</td><td>${c('draft') || '-'}</td><td>${c('pending') ? `<span class="badge badge-amber">${c('pending')}</span>` : '-'}</td>
+        <td>${c('revision') ? `<span class="badge badge-red">${c('revision')}</span>` : '-'}</td><td>${ap.length}</td><td>${ap.filter(f => f.p.ack?.at || f.appr.legacy).length}/${ap.length}</td>
+        <td>${tot ? `${dn}/${tot} <span class="text-meta">(${pct(dn, tot)})</span>` : '-'}</td><td>${lt ? `<span class="badge badge-red">${lt}</span>` : '-'}</td></tr>`;
+    }).join('') || '<tr><td colspan="9"><div class="empty-state"><p>No IDPs for this period.</p></div></td></tr>';
+
+    // pending approval, paling lama di atas
+    const pendSorted = pend.map(f => ({ ...f, days: f.appr.submittedAt ? -daysUntil(f.appr.submittedAt) : null })).sort((a, b) => (b.days ?? 0) - (a.days ?? 0));
+    F('pendCount').textContent = pendSorted.length ? `${pendSorted.length} IDP${pendSorted.length === 1 ? '' : 's'}` : '';
+    F('pendList').innerHTML = pendSorted.map(f => `<div class="rem">
+      <div><a href="idp.html?nik=${encodeURIComponent(f.p.nik)}&periode=${encodeURIComponent(f.p.periode)}" style="font-weight:600; color:var(--text);">${escapeHtml(f.p.nama)}</a>
+        <div class="text-meta">Mentor: ${escapeHtml(f.p.mentorNama || '-')}${f.p.mentorEmail ? '' : ' · <span style="color:var(--red);">no mentor set</span>'}</div></div>
+      <span class="badge ${f.days >= 7 ? 'badge-red' : f.days >= 3 ? 'badge-amber' : 'badge-gray'}">${f.days == null ? '-' : f.days === 0 ? 'today' : f.days + 'd'}</span>
+    </div>`).join('') || `<div class="empty-state">${iconSvg('check',{size:22})}<p style="margin-top:6px;">Nothing waiting for validation.</p></div>`;
+
+    // overdue
+    const lateSorted = late.sort((a, b) => String(a.it.targetTanggal).localeCompare(String(b.it.targetTanggal)));
+    F('lateCount').textContent = lateSorted.length ? `${lateSorted.length} activit${lateSorted.length === 1 ? 'y' : 'ies'}` : '';
+    F('lateList').innerHTML = lateSorted.slice(0, 30).map(x => `<div class="rem">
+      <div style="min-width:0;"><a href="idp.html?nik=${encodeURIComponent(x.p.nik)}&periode=${encodeURIComponent(x.p.periode)}" style="font-weight:600; color:var(--text);">${escapeHtml(x.p.nama)}</a>
+        <div class="text-meta">${escapeHtml(x.it.jenis === 'training' ? (x.it.judul || 'Training') : (x.it.deskripsi || ''))} · ${escapeHtml(IDP_JENIS[x.it.jenis] || x.it.jenis)}${x.it.mentorNama ? ' · ' + escapeHtml(x.it.mentorNama) : ''}</div></div>
+      <span class="badge badge-red">${-daysUntil(x.it.targetTanggal)}d</span>
+    </div>`).join('') + (lateSorted.length > 30 ? `<div class="text-meta" style="padding:10px 20px;">+ ${lateSorted.length - 30} more</div>` : '')
+      || `<div class="empty-state">${iconSvg('check',{size:22})}<p style="margin-top:6px;">No overdue activities.</p></div>`;
+
+    renderReminders(rows);
+  }
+
+  let reminders = [];
+  function renderReminders(rows){
+    const d = F('remDate').value ? new Date(F('remDate').value + 'T08:00:00') : new Date();
+    reminders = computeReminders({ plans: rows, updatesByPlan: idpUpdatesByPlan, attemptsFor, today: d });
+    F('remList').innerHTML = reminders.map((r, i) => `<div class="rem">
+      <div style="min-width:0;">
+        <strong>${escapeHtml(r.nama)}</strong> <span class="text-meta">· ${escapeHtml(r.role)} · ${r.email ? escapeHtml(r.email) : '<span style="color:var(--red);">no email</span>'}</span>
+        <ul>
+          ${r.approvals.map(a => `<li>Fix the IDP of ${escapeHtml(a.plan.nama)} returned by HR/OD (${a.days} days ago)</li>`).join('')}
+          ${r.items.map(({ plan, item, reason }) => `<li>${r.role === 'Employee' ? '' : escapeHtml(plan.nama) + ': '}${escapeHtml(item.jenis === 'training' ? (item.judul || 'Training') : (item.deskripsi || ''))} · <span class="${reason.kind === 'overdue' ? 'overdue' : ''}">${escapeHtml(reason.label)}</span></li>`).join('')}
+        </ul>
+      </div>
+      <div class="rem-btns">
+        ${r.email ? `<a class="btn btn-primary btn-sm" data-mail="${i}" href="#">Open in Outlook</a>` : ''}
+        <button class="btn btn-outline btn-sm" data-copy="${i}">Copy</button>
+      </div>
+    </div>`).join('') || `<div class="empty-state">${iconSvg('check',{size:22})}<p style="margin-top:6px;">No reminders for ${escapeHtml(fmtDate(d))}.</p></div>`;
+    F('remList').querySelectorAll('[data-mail]').forEach(a => a.addEventListener('click', e => {
+      e.preventDefault(); const r = reminders[Number(a.dataset.mail)]; const m = reminderEmail(r, tmsUrl);
+      location.href = `mailto:${encodeURIComponent(r.email)}?subject=${encodeURIComponent(m.subject)}&body=${encodeURIComponent(m.body)}`;
+    }));
+    F('remList').querySelectorAll('[data-copy]').forEach(b => b.addEventListener('click', () => {
+      const r = reminders[Number(b.dataset.copy)]; const m = reminderEmail(r, tmsUrl);
+      copy(`To: ${r.email}\nSubject: ${m.subject}\n\n${m.body}`);
+    }));
+  }
+  function copy(text){ navigator.clipboard?.writeText(text).then(() => showToast('Copied.'), () => prompt('Copy this text:', text)); }
 </script>
-<script type="module" src="./tms-shell.js?v=20261111f"></script>
+<script type="module" src="./tms-shell.js?v=20261111g"></script>
 <script src="../lms-motion.js?v=20261109" defer></script>
 </body>
 </html>

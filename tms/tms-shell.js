@@ -78,11 +78,10 @@ onAuth(async (user) => {
     if (seq !== authSeq) return; // sudah ganti akun selagi menunggu
 
     const nav = [
-      { group: 'General', items: isAdmin ? [{ href: 'index.html', icon: 'home', label: 'Home' }] : [] },
+      { group: 'General', items: isAdmin ? [{ href: 'index.html', icon: 'home', label: 'Home', badge: nPendingAll || '' }] : [] },
       { group: 'Employee Development', items: isAdmin ? [
         { href: 'profile.html', icon: 'user-check', label: 'Competency Profile' },
         { href: 'idp.html', icon: 'check', label: 'IDP' },
-        { href: 'idp-dashboard.html', icon: 'chart-bar', label: 'IDP Dashboard', badge: nPendingAll || '' },
       ] : [] },
       { group: 'Master Data', items: isAdmin ? [
         { href: 'employees.html', icon: 'users', label: 'Employees' },
