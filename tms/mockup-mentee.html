@@ -215,9 +215,7 @@
     F('detail').innerHTML = `<div class="panel" style="margin:0;">
       <div class="panel-head"><div><h3 class="text-h2" style="margin:0;">IDP ${p.periode}</h3><div class="text-meta">Disetujui mentor</div></div><span class="badge ${p.status === 'Selesai' ? 'badge-green' : 'badge-purple'}">${p.status}</span></div>
       <div class="summary">${donut(done, prog, a.length)}
-        <div><div style="font-weight:700; font-size:16px; margin-bottom:4px;">${done} dari ${a.length} aktivitas selesai · ${p.comps.length} kompetensi</div>
-          <div class="text-sub" style="margin:0;">${p.catatan}</div>
-          <div class="legend"><span><i style="background:#16A34A"></i>Selesai ${done}</span><span><i style="background:#8b5cf6"></i>Berjalan ${prog}</span><span><i style="background:rgba(120,120,128,.25)"></i>Belum mulai ${a.length - done - prog}</span></div>
+        <div><div class="legend" style="margin-top:0;"><span><i style="background:#16A34A"></i>Selesai ${done}</span><span><i style="background:#8b5cf6"></i>Berjalan ${prog}</span><span><i style="background:rgba(120,120,128,.25)"></i>Belum mulai ${a.length - done - prog}</span></div>
           <div class="mentor"><div class="av">${p.mentor.split(' ').map(w => w[0]).join('')}</div><div><b>${p.mentor}</b><div class="text-meta">Mentor · ${p.mentorJab}</div></div></div>
         </div></div></div>`;
     F('progress').innerHTML = `<div class="panel" style="margin:0;">
