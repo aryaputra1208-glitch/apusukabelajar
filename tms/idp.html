@@ -19,8 +19,15 @@
   .gap-row { display: grid; grid-template-columns: 220px 1fr; gap: 14px; padding: 14px 20px; border-bottom: 1px solid var(--border); align-items: start; }
   .gap-row:last-child { border-bottom: none; }
   .sug { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-  .item { border-bottom: 1px solid var(--border); padding: 14px 20px; display: grid; grid-template-columns: 1.1fr 0.9fr 2fr 0.9fr 0.9fr auto; gap: 10px; align-items: start; }
-  .item:last-child { border-bottom: none; }
+  .comp-group { border-bottom: 1px solid var(--border); }
+  .comp-group:last-child { border-bottom: none; }
+  .cg-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 20px 6px; flex-wrap: wrap; }
+  .cg-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .cg-title strong { font-size: 14px; }
+  .item { padding: 10px 20px; display: grid; grid-template-columns: 22px 0.9fr 2fr 0.9fr 0.9fr auto; gap: 10px; align-items: start; }
+  .item + .item { border-top: 1px dashed var(--border); }
+  .comp-group .item:last-child { padding-bottom: 16px; }
+  .item-no { padding-top: 26px; font-size: 12px; font-weight: 700; color: var(--text-3); }
   .item input, .item select, .item textarea { margin-bottom: 0; }
   .item .lbl { font-size: 11px; color: var(--text-3); font-weight: 700; margin-bottom: 4px; letter-spacing: .03em; }
   .link-add { color: var(--pink); font-weight: 700; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
@@ -215,24 +222,25 @@
       return `<div class="gap-row">
         <div><strong>${escapeHtml(compName(g.id))}</strong><div class="text-meta">Score ${fmt(g.skor)} · gap ${fmt(g.gap)}</div><div style="margin-top:6px;">${stBadge(statuses[g.id]?.status)}</div></div>
         <div class="sug">
-          ${sug.map(r => `<span class="chip" data-add-training="${escapeHtml(g.id)}" data-module="${escapeHtml(r.moduleId)}" title="Tambah sebagai item training">+ ${escapeHtml(r.judul)}</span>`).join('')}
-          ${!sug.length ? `<span class="text-meta">${already.size ? 'Modul yang cocok sudah masuk IDP.' : 'Belum ada modul yang membangun kompetensi ini untuk level ini.'}</span>` : ''}
+          ${sug.map(r => `<span class="chip" data-add-training="${escapeHtml(g.id)}" data-module="${escapeHtml(r.moduleId)}" title="Add as training activity">+ ${escapeHtml(r.judul)}</span>`).join('')}
+          ${!sug.length ? `<span class="text-meta">${already.size ? 'Matching modules are already in the IDP.' : 'No module builds this competency for this level yet.'}</span>` : ''}
           <span class="link-add" data-add-other="${escapeHtml(g.id)}">${iconSvg('plus',{size:12})} Mentoring / coaching / assignment</span>
         </div>
       </div>`;
     }).join('');
 
     const compSelect = sel => `<option value="">- Competency -</option>` + competencies.map(c => `<option value="${escapeHtml(c.id)}" ${c.id===sel?'selected':''}>${escapeHtml(c.nama)}</option>`).join('');
-    const itemRows = draft.items.map((it, i) => {
+    const itemRow = (it, i, no) => {
       const eff = idpItemStatus(it, attemptList);
       const isTraining = it.jenis === 'training';
       return `<div class="item" data-i="${i}">
-        <div><div class="lbl">COMPETENCY</div><select data-f="kompetensiId">${compSelect(it.kompetensiId)}</select></div>
+        <div class="item-no">${no}.</div>
         <div><div class="lbl">TYPE</div><select data-f="jenis">${Object.entries(IDP_JENIS).map(([k,v]) => `<option value="${k}" ${k===it.jenis?'selected':''}>${v}</option>`).join('')}</select></div>
         <div>
+          ${!it.kompetensiId ? `<div class="lbl">COMPETENCY</div><select data-f="kompetensiId" style="margin-bottom:8px;">${compSelect('')}</select>` : ''}
           ${isTraining
             ? `<div class="lbl">LMS MODULE</div><select data-f="moduleId">${moduleOptions(it.kompetensiId, it.moduleId)}</select>`
-            : `<div class="lbl">ACTION DESCRIPTION</div><textarea rows="2" data-f="deskripsi" placeholder="e.g. Shadow the manager on weekly planning for 4 weeks">${escapeHtml(it.deskripsi || '')}</textarea>
+            : `<div class="lbl">ACTIVITY</div><textarea rows="2" data-f="deskripsi" placeholder="e.g. Shadow the manager on weekly planning for 4 weeks">${escapeHtml(it.deskripsi || '')}</textarea>
                ${['mentoring','coaching'].includes(it.jenis) ? `<div class="lbl" style="margin-top:8px;">${it.jenis === 'mentoring' ? 'MENTOR' : 'COACH'}</div><input type="text" list="employeeList" data-f="mentor" value="${escapeHtml(it.mentorNik ? `${it.mentorNik} — ${it.mentorNama || ''}` : '')}" placeholder="Type name / NIK">` : ''}`}
         </div>
         <div><div class="lbl">TARGET</div><input type="date" data-f="targetTanggal" value="${escapeHtml(it.targetTanggal || '')}"></div>
@@ -241,7 +249,27 @@
             ? `<span class="badge ${eff.status==='selesai'?'badge-green':'badge-purple'}">${IDP_STATUS[eff.status]}</span><div class="text-meta" style="margin-top:4px;">Auto from post-test${eff.score != null ? ' (' + eff.score + ')' : ''}</div>`
             : `<select data-f="status">${Object.entries(IDP_STATUS).map(([k,v]) => `<option value="${k}" ${k===(it.status||'rencana')?'selected':''}>${v}</option>`).join('')}</select>`}
         </div>
-        <div style="padding-top:18px;"><button class="icon-btn tone-red" data-del="${i}" title="Remove action">${iconSvg('trash',{size:14})}</button></div>
+        <div style="padding-top:18px;"><button class="icon-btn tone-red" data-del="${i}" title="Remove activity">${iconSvg('trash',{size:14})}</button></div>
+      </div>`;
+    };
+    // Kelompokkan aktivitas per kompetensi: urutan = kompetensi ber-gap dulu, lalu sisanya sesuai urutan input.
+    const groups = new Map();
+    gaps.forEach(g => { if(draft.items.some(it => it.kompetensiId === g.id)) groups.set(g.id, []); });
+    draft.items.forEach((it, i) => { const k = it.kompetensiId || ''; if(!groups.has(k)) groups.set(k, []); groups.get(k).push(i); });
+    if(groups.has('')){ const u = groups.get(''); groups.delete(''); groups.set('', u); }
+    const itemRows = [...groups.entries()].map(([cid, idxs]) => {
+      const g = gaps.find(x => x.id === cid);
+      const done = idxs.filter(i => idpItemStatus(draft.items[i], attemptList).status === 'selesai').length;
+      return `<div class="comp-group">
+        <div class="cg-head">
+          <div class="cg-title">
+            <strong>${cid ? escapeHtml(compName(cid)) : 'Competency not selected'}</strong>
+            ${g ? `<span class="text-meta">gap ${fmt(g.gap)}</span>` : ''}
+            <span class="badge badge-gray">${idxs.length} activit${idxs.length === 1 ? 'y' : 'ies'} · ${done} done</span>
+          </div>
+          ${cid ? `<span class="link-add" data-add-to="${escapeHtml(cid)}">${iconSvg('plus',{size:12})} Add activity</span>` : ''}
+        </div>
+        ${idxs.map((i, n) => itemRow(draft.items[i], i, n + 1)).join('')}
       </div>`;
     }).join('');
 
@@ -267,13 +295,13 @@
       </div>
 
       <div class="panel section-gap">
-        <div class="panel-head"><h3 class="text-h2" style="margin:0;">Development Plan</h3><span class="link-add" id="addBlankBtn">${iconSvg('plus',{size:12})} Add action</span></div>
-        ${itemRows || '<div class="empty-state"><p>No actions yet. Add from suggestions above or via "Add action".</p></div>'}
+        <div class="panel-head"><h3 class="text-h2" style="margin:0;">Development Plan</h3><span class="link-add" id="addBlankBtn">${iconSvg('plus',{size:12})} Add competency</span></div>
+        ${itemRows || '<div class="empty-state"><p>No activities yet. Add from suggestions above or via "Add competency".</p></div>'}
       </div>
 
       <div class="card section-gap">
         <label>Development notes / goals (visible to employee)</label>
-        <textarea id="planCatatan" rows="2" placeholder="Contoh: Fokus semester ini menguatkan perencanaan mingguan tim hub.">${escapeHtml(draft.catatan)}</textarea>
+        <textarea id="planCatatan" rows="2" placeholder="e.g. This semester, focus on strengthening the hub team's weekly planning.">${escapeHtml(draft.catatan)}</textarea>
       </div>
 
       <div class="sticky-save">
@@ -299,6 +327,12 @@
       draft.items.push({ id: newId(), kompetensiId: '', jenis: 'training', moduleId: '', status: 'rencana', targetTanggal: '', dibuat: new Date().toISOString() });
       draft.dirty = true; renderEditor();
     });
+    ed.querySelectorAll('[data-add-to]').forEach(el => el.addEventListener('click', () => {
+      // sisipkan setelah aktivitas terakhir kompetensi ini supaya urutan tetap rapi
+      let last = -1; draft.items.forEach((it, i) => { if(it.kompetensiId === el.dataset.addTo) last = i; });
+      draft.items.splice(last + 1, 0, { id: newId(), kompetensiId: el.dataset.addTo, jenis: 'mentoring', deskripsi: '', status: 'rencana', targetTanggal: '', dibuat: new Date().toISOString() });
+      draft.dirty = true; renderEditor();
+    }));
     ed.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => {
       draft.items.splice(Number(b.dataset.del), 1); draft.dirty = true; renderEditor();
     }));
@@ -327,7 +361,7 @@
   async function savePlan(){
     const a = assessments.find(x => x.nik === selectedNik && x.periode === selectedPeriode);
     const bad = draft.items.findIndex(it => !it.kompetensiId || (it.jenis === 'training' ? !it.moduleId : !String(it.deskripsi || '').trim()));
-    if(bad !== -1){ showToast(`Action ${bad + 1} is incomplete: select a competency and ${draft.items[bad].jenis === 'training' ? 'a module' : 'add a description'}.`); return; }
+    if(bad !== -1){ showToast(`An activity under "${draft.items[bad].kompetensiId ? compName(draft.items[bad].kompetensiId) : 'Competency not selected'}" is incomplete: select a competency and ${draft.items[bad].jenis === 'training' ? 'a module' : 'add a description'}.`); return; }
     const emp = employeesByNik[a.nik] || {};
     const items = draft.items.map(it => {
       const clean = { id: it.id, kompetensiId: it.kompetensiId, kompetensiNama: compName(it.kompetensiId), jenis: it.jenis,
