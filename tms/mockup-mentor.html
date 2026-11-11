@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup: Mentor View — Anteraja TMS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../lms-design-system.css?v=20261105b">
+<link rel="stylesheet" href="../lms-glass.css?v=20261111b">
+<style>
+  body { padding-left: 232px; }
+  .admin-sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 232px; padding: 18px 12px; overflow-y: auto; z-index: 40; box-sizing: border-box; }
+  .admin-sidebar .as-logo { font-weight: 700; font-size: 18px; color: var(--pink); padding: 0 10px 6px; display: block; text-decoration: none; }
+  .admin-sidebar .as-role { font-size: 11px; color: var(--text-3); padding: 0 10px 8px; }
+  .admin-sidebar .as-group { font-size: 11px; font-weight: 600; color: var(--text-3); margin: 16px 10px 6px; }
+  .admin-sidebar a.as-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; color: var(--text-2); font-size: 13px; font-weight: 500; text-decoration: none; margin-bottom: 2px; }
+  .admin-sidebar a.as-item.active { background: var(--pink); color: #fff; }
+  .admin-sidebar .as-badge { margin-left: auto; background: var(--red-bg); color: var(--red); font-size: 11px; font-weight: 700; border-radius: 999px; padding: 1px 7px; }
+  .admin-sidebar a.as-item.active .as-badge { background: rgba(255,255,255,.25); color: #fff; }
+  .topbar > :last-child { margin-left: auto; }
+  .mock-banner { background: #FEF3C7; color: #92400E; font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 999px; display: inline-block; }
+  .wrap.wide { max-width: 1180px; }
+  .kpi-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin: 14px 0 18px; }
+  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); padding: 16px 18px; }
+  .kpi .n { font-size: 26px; font-weight: 700; color: var(--pink); line-height: 1; }
+  .kpi .l { font-size: 12px; color: var(--text-2); margin-top: 6px; }
+  .layout { display: grid; grid-template-columns: 300px minmax(0,1fr); gap: 16px; align-items: start; }
+  .mentee { display: flex; gap: 12px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .mentee:last-child { border-bottom: none; }
+  .mentee.sel { background: var(--pink-bg); }
+  .mentee .av { width: 36px; height: 36px; border-radius: 50%; background: var(--pink-bg); color: var(--pink-dark); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+  .mentee.sel .av { background: var(--pink); color: #fff; }
+  .mini { height: 5px; border-radius: 99px; background: rgba(0,0,0,.07); overflow: hidden; margin-top: 6px; }
+  .mini > span { display: block; height: 100%; background: var(--green); }
+  /* ringkasan */
+  .summary { display: grid; grid-template-columns: 170px 1fr; gap: 24px; align-items: center; padding: 20px; }
+  .donut { position: relative; width: 150px; height: 150px; }
+  .donut .c { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .donut .c b { font-size: 30px; line-height: 1; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--text-2); margin-top: 10px; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+  /* chart per kompetensi */
+  .comp { padding: 14px 20px; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .comp:last-child { border-bottom: none; }
+  .comp-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 8px; }
+  .comp-head strong { font-size: 14px; }
+  .bar { display: flex; gap: 3px; height: 30px; }
+  .seg { flex: 1; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; position: relative; min-width: 0; transition: transform .12s; }
+  .seg:hover { transform: translateY(-1px); }
+  .seg span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding: 0 6px; }
+  .s-selesai { background: var(--green); color: #fff; }
+  .s-berjalan { background: repeating-linear-gradient(135deg, #a78bfa 0 8px, #8b5cf6 8px 16px); color: #fff; }
+  .s-rencana { background: rgba(120,120,128,.14); color: var(--text-2); }
+  .seg.late { box-shadow: inset 0 0 0 2px var(--red); }
+  .acts { margin-top: 12px; display: none; }
+  .comp.open .acts { display: block; }
+  .act { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,.55); margin-top: 6px; }
+  .act .meta { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+  .late-t { color: var(--red); font-weight: 600; }
+  .approve { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; border-left: 3px solid var(--amber); border-radius: 0; }
+  @media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } .kpi-row { grid-template-columns: repeat(2,1fr); } }
+  @media (max-width: 900px) { body { padding-left: 0; } .admin-sidebar { display: none; } }
+</style>
+</head>
+<body>
+<nav class="admin-sidebar" aria-label="TMS menu">
+  <a class="as-logo" href="#">anteraja TMS</a><div class="as-role">Mentor</div>
+  <div class="as-group">General</div>
+  <a class="as-item" href="#">Home</a>
+  <div class="as-group">Mentoring</div>
+  <a class="as-item active" href="#">My Mentees <span class="as-badge">1</span></a>
+  <div class="as-group">Other Apps</div>
+  <a class="as-item" href="../index.html">LMS</a>
+</nav>
+<div class="topbar">
+  <span class="mock-banner">Mockup · sample data, nothing is saved</span>
+  <div class="user-chip" style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-2);">Budi Santoso (Mentor)</div>
+</div>
+
+<div class="wrap wide">
+  <h1 class="text-h1" style="margin-bottom:0;">My Mentees</h1>
+  <div class="kpi-row">
+    <div class="kpi"><div class="n" id="kMentee">-</div><div class="l">Mentees</div></div>
+    <div class="kpi"><div class="n" id="kAppr">-</div><div class="l">IDPs to Approve</div></div>
+    <div class="kpi"><div class="n" id="kDone">-</div><div class="l">Activities Done</div></div>
+    <div class="kpi"><div class="n" id="kLate">-</div><div class="l">Overdue Activities</div></div>
+  </div>
+  <div class="layout">
+    <div class="panel" style="margin:0;"><div class="panel-head"><h3 class="text-h2" style="margin:0;">Mentees</h3><span class="text-meta">Semester 1 2026</span></div><div id="list"></div></div>
+    <div id="detail"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+  const TODAY = new Date('2026-11-11');
+  const ST = { rencana: 'Planned', berjalan: 'In Progress', selesai: 'Done' };
+  const BADGE = { rencana: 'badge-gray', berjalan: 'badge-purple', selesai: 'badge-green' };
+  const mentees = [
+    { nama: 'Sari Lestari', jabatan: 'Supervisor Hub Cakung', approval: 'approved', catatan: 'Fokus semester ini: perencanaan mingguan tim hub dan keberanian mengambil keputusan di lapangan.',
+      comps: [
+        { nama: 'Analysis & Decision Making', gap: 1.5, acts: [
+          { j: 'Training: Problem Solving with Data', t: 'Training', target: '2026-10-30', s: 'selesai' },
+          { j: 'Analisis root cause keterlambatan sortir & presentasi ke DH', t: 'Assignment', target: '2026-11-20', s: 'berjalan' } ] },
+        { nama: 'Planning & Controlling', gap: 1.0, acts: [
+          { j: 'Menyusun rencana mingguan hub selama 4 minggu', t: 'Assignment', target: '2026-11-05', s: 'berjalan' },
+          { j: 'Review rencana mingguan bersama mentor', t: 'Mentoring', target: '2026-11-28', s: 'rencana' },
+          { j: 'Training: Operational Planning Basics', t: 'Training', target: '2026-10-15', s: 'selesai' } ] },
+        { nama: 'Empowerment', gap: 0.5, acts: [
+          { j: 'Mendelegasikan briefing pagi ke 2 koordinator', t: 'Coaching', target: '2026-12-10', s: 'rencana' } ] },
+      ] },
+    { nama: 'Andi Pratama', jabatan: 'Coordinator Linehaul', approval: 'pending', catatan: 'Membangun kemampuan koordinasi lintas tim.',
+      comps: [
+        { nama: 'Collaboration', gap: 1.0, acts: [
+          { j: 'Shadowing rapat koordinasi linehaul–hub 3x', t: 'Mentoring', target: '2026-12-05', s: 'rencana' },
+          { j: 'Training: Effective Communication', t: 'Training', target: '2026-12-15', s: 'rencana' } ] },
+        { nama: 'Customer Focus', gap: 0.5, acts: [
+          { j: 'Menangani 5 eskalasi klien B2B bersama mentor', t: 'Assignment', target: '2026-12-20', s: 'rencana' } ] },
+      ] },
+    { nama: 'Dewi Kusuma', jabatan: 'Staff Admin Operasional', approval: 'approved', catatan: 'Ketelitian data dan inisiatif perbaikan proses.',
+      comps: [
+        { nama: 'Attention to Detail', gap: 1.0, acts: [
+          { j: 'Training: Data Accuracy Fundamentals', t: 'Training', target: '2026-09-30', s: 'selesai' },
+          { j: 'Membuat checklist validasi data harian', t: 'Assignment', target: '2026-10-20', s: 'selesai' } ] },
+        { nama: 'Initiative', gap: 0.5, acts: [
+          { j: 'Mengusulkan 1 perbaikan proses input manifest', t: 'Assignment', target: '2026-11-30', s: 'berjalan' } ] },
+      ] },
+  ];
+  let sel = 0, open = 0;
+  const F = id => document.getElementById(id);
+  const all = m => m.comps.flatMap(c => c.acts);
+  const late = a => a.s !== 'selesai' && new Date(a.target) < TODAY;
+  const fmt = d => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
+  const toast = msg => { const t = F('toast'); t.textContent = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2200); };
+
+  function donut(done, prog, total){
+    const R = 62, C = 2 * Math.PI * R, d = total ? done / total : 0, p = total ? prog / total : 0;
+    return `<div class="donut"><svg viewBox="0 0 150 150" width="150" height="150">
+      <circle cx="75" cy="75" r="${R}" fill="none" stroke="rgba(120,120,128,.14)" stroke-width="16"/>
+      <circle cx="75" cy="75" r="${R}" fill="none" stroke="#8b5cf6" stroke-width="16" stroke-dasharray="${(d + p) * C} ${C}" transform="rotate(-90 75 75)" stroke-linecap="butt"/>
+      <circle cx="75" cy="75" r="${R}" fill="none" stroke="#16A34A" stroke-width="16" stroke-dasharray="${d * C} ${C}" transform="rotate(-90 75 75)"/>
+    </svg><div class="c"><b>${pct(done, total)}%</b><span class="text-meta">done</span></div></div>`;
+  }
+
+  function render(){
+    const acts = mentees.flatMap(all);
+    F('kMentee').textContent = mentees.length;
+    F('kAppr').textContent = mentees.filter(m => m.approval === 'pending').length;
+    F('kDone').textContent = `${acts.filter(a => a.s === 'selesai').length}/${acts.length}`;
+    F('kLate').textContent = acts.filter(late).length;
+    F('list').innerHTML = mentees.map((m, i) => {
+      const a = all(m), d = a.filter(x => x.s === 'selesai').length;
+      return `<div class="mentee ${i === sel ? 'sel' : ''}" data-i="${i}"><div class="av">${m.nama.split(' ').map(w => w[0]).join('')}</div>
+        <div style="flex:1; min-width:0;"><div style="display:flex; justify-content:space-between; gap:8px;"><strong style="font-size:13.5px;">${m.nama}</strong>${m.approval === 'pending' ? '<span class="badge badge-amber">To approve</span>' : `<span class="text-meta">${pct(d, a.length)}%</span>`}</div>
+        <div class="text-meta">${m.jabatan}</div>${m.approval === 'pending' ? '' : `<div class="mini"><span style="width:${pct(d, a.length)}%"></span></div>`}</div></div>`;
+    }).join('');
+    document.querySelectorAll('.mentee').forEach(el => el.onclick = () => { sel = +el.dataset.i; open = 0; render(); });
+
+    const m = mentees[sel], a = all(m);
+    const done = a.filter(x => x.s === 'selesai').length, prog = a.filter(x => x.s === 'berjalan').length;
+    const pending = m.approval === 'pending';
+    F('detail').innerHTML = `
+      ${pending ? `<div class="card approve" style="margin-bottom:16px;"><div><div class="text-h3" style="margin-bottom:4px;">IDP ${m.nama} needs your approval</div><div class="text-meta">Prepared by HR/OD · review the plan below, then approve or ask for changes.</div></div>
+        <div style="display:flex; gap:8px;"><button class="btn btn-outline" id="revBtn">Request Revision</button><button class="btn btn-primary" id="apprBtn">Approve IDP</button></div></div>` : ''}
+      <div class="panel" style="margin:0 0 16px;">
+        <div class="panel-head"><div><h3 class="text-h2" style="margin:0;">${m.nama}</h3><div class="text-meta">${m.jabatan} · IDP Semester 1 2026</div></div>
+          <span class="badge ${pending ? 'badge-amber' : 'badge-green'}">${pending ? 'Pending approval' : 'Approved'}</span></div>
+        <div class="summary">
+          ${donut(done, prog, a.length)}
+          <div>
+            <div style="font-weight:700; font-size:16px; margin-bottom:4px;">${done} of ${a.length} activities done · ${m.comps.length} competencies</div>
+            <div class="text-sub" style="margin:0;">${m.catatan}</div>
+            <div class="legend"><span><i style="background:#16A34A"></i>Done ${done}</span><span><i style="background:#8b5cf6"></i>In progress ${prog}</span><span><i style="background:rgba(120,120,128,.25)"></i>Planned ${a.length - done - prog}</span><span><i style="background:transparent; box-shadow: inset 0 0 0 2px var(--red);"></i>Overdue ${a.filter(late).length}</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel" style="margin:0;">
+        <div class="panel-head"><h3 class="text-h2" style="margin:0;">Progress by Competency</h3><span class="text-meta">Each block = one activity · click a competency to update</span></div>
+        ${m.comps.map((c, ci) => {
+          const d = c.acts.filter(x => x.s === 'selesai').length, share = Math.round(100 / c.acts.length);
+          return `<div class="comp ${ci === open ? 'open' : ''}" data-ci="${ci}">
+            <div class="comp-head"><div><strong>${c.nama}</strong> <span class="text-meta">· gap ${c.gap.toFixed(1)}</span></div><span class="text-meta"><b style="color:var(--text);">${pct(d, c.acts.length)}%</b> · ${d}/${c.acts.length} done</span></div>
+            <div class="bar">${c.acts.map(x => `<div class="seg s-${x.s} ${late(x) ? 'late' : ''}" title="${x.j} · ${ST[x.s]}"><span>${share}%</span></div>`).join('')}</div>
+            <div class="acts">${c.acts.map((x, ai) => `<div class="act">
+              <div style="min-width:0;"><div style="font-weight:600; font-size:13.5px;">${x.j}</div>
+                <div class="meta">${x.t} · weight ${share}% · <span class="${late(x) ? 'late-t' : ''}">target ${fmt(x.target)}${late(x) ? ' · overdue' : ''}</span></div></div>
+              <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0;">
+                <span class="badge ${BADGE[x.s]}">${ST[x.s]}</span>
+                ${pending ? '' : `<button class="btn btn-outline btn-sm" data-up="${ci}-${ai}">${x.s === 'selesai' ? 'Reopen' : x.s === 'berjalan' ? 'Mark Done' : 'Start'}</button>`}
+              </div></div>`).join('')}</div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    document.querySelectorAll('.comp').forEach(el => el.onclick = e => { if(e.target.closest('[data-up]') || e.target.closest('.acts')) return; open = +el.dataset.ci === open ? -1 : +el.dataset.ci; render(); });
+    document.querySelectorAll('[data-up]').forEach(b => b.onclick = e => {
+      e.stopPropagation(); const [ci, ai] = b.dataset.up.split('-').map(Number); const x = m.comps[ci].acts[ai];
+      x.s = x.s === 'rencana' ? 'berjalan' : x.s === 'berjalan' ? 'selesai' : 'berjalan';
+      toast(`Updated: ${ST[x.s]}`); render();
+    });
+    F('apprBtn')?.addEventListener('click', () => { m.approval = 'approved'; toast('IDP approved (mockup)'); render(); });
+    F('revBtn')?.addEventListener('click', () => toast('A note box for HR/OD would open here'));
+  }
+  render();
+</script>
+<script src="../lms-motion.js?v=20261109" defer></script>
+</body>
+</html>
