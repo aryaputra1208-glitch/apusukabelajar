@@ -164,7 +164,7 @@
         <div class="panel" style="margin:0;">
           <div class="panel-head">
             <div><h3 class="text-h2" style="margin:0;">HAV Map</h3><div class="text-meta">Performance × Potential · click a box to see who is in it</div></div>
-            <div style="display:flex; gap:8px; align-items:center;"><span class="mock-tag">Mockup · sample data</span><select id="havDiv" style="margin:0; max-width:170px;"></select></div>
+            <div style="display:flex; gap:8px; align-items:center;"><span class="mock-tag">Template · no data yet</span></div>
           </div>
           <div class="hav-body"><div class="hav-grid" id="havGrid"></div></div>
         </div>
@@ -189,31 +189,16 @@
   ];
   const LVL = ['Low', 'Moderate', 'High'];
   const ZCOL = { g: '#22a05a', y: '#f0aa14', r: '#e13c3c' };
-  // Data contoh (deterministik) — nanti diganti skor PA (performa) & skor kompetensi/potensi asli.
-  function sampleEmployees(){
-    let seed = 7; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
-    const first = ['Andi','Budi','Citra','Dewi','Eko','Fajar','Gita','Hendra','Indah','Joko','Kartika','Lukman','Maya','Nanda','Oki','Putri','Rizky','Sari','Teguh','Umi','Vina','Wahyu','Yuni','Zaki'];
-    const last = ['Pratama','Wijaya','Saputra','Lestari','Hidayat','Kusuma','Santoso','Rahmawati'];
-    const divs = ['Operation','Finance','Human Capital','IT','Commercial','Marketing'];
-    const jab = ['Staff','Coordinator','Supervisor','Section Head','Department Head'];
-    return Array.from({ length: 64 }, (_, i) => {
-      const perf = +(1.6 + rnd() * 3.3).toFixed(2), pot = +(1.6 + rnd() * 3.3).toFixed(2);
-      return { nama: `${first[i % first.length]} ${last[(i * 3) % last.length]}`, divisi: divs[Math.floor(rnd() * divs.length)], jabatan: jab[Math.floor(rnd() * jab.length)], perf, pot };
-    });
-  }
+  // Belum ada data: nanti diisi skor PA final (performa) & skor kompetensi/potensi per karyawan.
   const band = v => v < 2.8 ? 0 : v < 3.6 ? 1 : 2;
   const boxOf = e => BOX[2 - band(e.pot)][band(e.perf)];
   let havData = [], havSel = 'star';
   function bindHav(){
-    havData = sampleEmployees();
-    const divs = [...new Set(havData.map(e => e.divisi))].sort();
-    F('havDiv').innerHTML = `<option value="">All divisions</option>` + divs.map(d => `<option>${d}</option>`).join('');
-    F('havDiv').addEventListener('change', drawHav);
+    havData = [];
     drawHav();
   }
   function drawHav(){
-    const div = F('havDiv').value;
-    const rows = havData.filter(e => !div || e.divisi === div);
+    const rows = havData;
     const by = {}; rows.forEach(e => (by[boxOf(e).k] = by[boxOf(e).k] || []).push(e));
     const pct = n => rows.length ? Math.round(n / rows.length * 100) : 0;
     let g = `<div class="hav-ylab">Potential (competency) →</div>`;
@@ -235,7 +220,7 @@
     F('havSelTitle').textContent = sel.n;
     F('havSelCount').textContent = `${list.length} employee${list.length === 1 ? '' : 's'}`;
     F('havList').innerHTML = list.map(e => `<div class="hav-row"><div><strong>${e.nama}</strong><div class="text-meta">${e.jabatan} · ${e.divisi}</div></div><div class="text-meta" style="text-align:right;">Perf ${e.perf.toFixed(2)}<br>Pot ${e.pot.toFixed(2)}</div></div>`).join('')
-      || '<div class="empty-state"><p>No one in this box.</p></div>';
+      || `<div class="empty-state"><p>${rows.length ? 'No one in this box.' : 'No data yet.'}</p></div>`;
     document.querySelectorAll('#havGrid [data-k], #havDist [data-k]').forEach(el => el.addEventListener('click', () => { havSel = el.dataset.k; drawHav(); }));
   }
 </script>
