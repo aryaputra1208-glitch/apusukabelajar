@@ -187,3 +187,11 @@ body .tabs.lz .tab-btn { position: relative; }
 }
 
 @media (prefers-reduced-motion: reduce) { .lens, .lz .li { transition: none !important; } }
+
+/* ===== Navigasi antar halaman terasa seperti satu aplikasi (Chrome/Edge): sidebar & topbar diam, isi berganti halus ===== */
+@view-transition { navigation: auto; }
+.admin-sidebar { view-transition-name: app-sidebar; }
+.topbar { view-transition-name: app-topbar; }
+::view-transition-group(app-sidebar), ::view-transition-group(app-topbar) { animation-duration: 0s; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .16s; }
+@media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }

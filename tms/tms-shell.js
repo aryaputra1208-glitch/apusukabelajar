@@ -30,21 +30,26 @@ async function count(q, label) {
 }
 
 function render(nav, roleLabel) {
-  unrender();
-  const style = document.createElement('style'); style.id = 'tms-shell-css'; style.textContent = CSS; document.head.appendChild(style);
   const cur = here();
-  const aside = document.createElement('nav');
-  aside.className = 'admin-sidebar';
-  aside.setAttribute('aria-label', 'TMS menu');
-  aside.innerHTML = `<a class="as-logo" href="index.html">anteraja TMS</a><div class="as-role">${roleLabel}</div>` +
+  const inner = `<a class="as-logo" href="index.html">anteraja TMS</a><div class="as-role">${roleLabel}</div>` +
     nav.filter(g => g.items.length).map(g => `<div class="as-group">${g.group}</div>` + g.items.map(it =>
-      `<a class="as-item ${it.href === cur ? 'active' : ''}" href="${it.href}">${iconSvg(it.icon, { size: 16 })}<span>${it.label}</span>${it.badge ? `<span class="as-badge">${it.badge}</span>` : ''}</a>`
+      `<a class="as-item" href="${it.href}">${iconSvg(it.icon, { size: 16 })}<span>${it.label}</span>${it.badge ? `<span class="as-badge">${it.badge}</span>` : ''}</a>`
     ).join('')).join('');
-  document.body.prepend(aside);
+  const html = `<nav class="admin-sidebar" aria-label="TMS menu">${inner}</nav>`;
+  try { sessionStorage.setItem('tmsNavCache', JSON.stringify({ html, css: CSS })); } catch {}
+  if (!document.getElementById('tms-shell-css')) { const style = document.createElement('style'); style.id = 'tms-shell-css'; style.textContent = CSS; document.head.appendChild(style); }
+  let aside = document.querySelector('.admin-sidebar');
+  // sidebar dari cache (tms-shell-early.js) dipertahankan; isinya hanya diganti kalau menu berubah — tanpa kedip
+  if (!aside) { aside = document.createElement('nav'); aside.className = 'admin-sidebar'; aside.setAttribute('aria-label', 'TMS menu'); document.body.prepend(aside); }
+  if (aside.dataset.sig !== inner) {
+    aside.innerHTML = inner; aside.dataset.sig = inner;
+  }
+  aside.querySelectorAll('a.as-item').forEach(a => a.classList.toggle('active', a.getAttribute('href') === cur));
   document.body.classList.add('has-admin-sidebar');
 }
 
 function unrender() {
+  try { sessionStorage.removeItem('tmsNavCache'); } catch {}
   document.querySelector('.admin-sidebar')?.remove();
   document.getElementById('tms-shell-css')?.remove();
   document.body.classList.remove('has-admin-sidebar');
@@ -53,8 +58,7 @@ function unrender() {
 let authSeq = 0;
 onAuth(async (user) => {
   const seq = ++authSeq;
-  unrender();
-  if (!user || user.isAnonymous || !user.email) return;
+  if (!user || user.isAnonymous || !user.email) { unrender(); return; }
   try {
     const profile = await ensureUserProfile(user);
     const email = (user.email || '').toLowerCase();

@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../lms-design-system.css?v=20261105b">
-<link rel="stylesheet" href="../lms-glass.css?v=20261109">
+<link rel="stylesheet" href="../lms-glass.css?v=20261111">
 <style>
   .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 12px; margin-bottom: 28px; }
   .menu-card { border: 1px solid var(--border); border-radius: var(--r-card); padding: 20px; text-decoration: none; color: var(--text); display: block; background: var(--surface); transition: border-color .12s; }
@@ -15,9 +15,38 @@
   .menu-icon { width: 40px; height: 40px; border-radius: var(--r-control); background: var(--pink-bg); color: var(--pink-dark); display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
   .user-chip { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); }
   .avatar { width: 28px; height: 28px; border-radius: 50%; }
+  .wrap.wide { max-width: 1180px; }
+  .kpi-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin: 16px 0 18px; }
+  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); padding: 16px 18px; text-decoration: none; color: var(--text); display: block; }
+  .kpi .n { font-size: 26px; font-weight: 700; color: var(--pink); line-height: 1; }
+  .kpi .l { font-size: 12px; color: var(--text-2); margin-top: 6px; }
+  .kpi .s { font-size: 11.5px; color: var(--text-3); margin-top: 3px; }
+  .hav-wrap { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(260px, 1fr); gap: 16px; }
+  .hav-body { padding: 18px 20px 20px; }
+  .hav-grid { display: grid; grid-template-columns: 26px repeat(3, 1fr); grid-template-rows: repeat(3, minmax(122px, auto)) 26px; gap: 8px; }
+  .hav-ylab { grid-row: 1 / 4; grid-column: 1; writing-mode: vertical-rl; transform: rotate(180deg); text-align: center; font-size: 11.5px; font-weight: 600; color: var(--text-2); letter-spacing: .02em; }
+  .hav-xlab { grid-column: 2 / 5; grid-row: 4; text-align: center; font-size: 11.5px; font-weight: 600; color: var(--text-2); align-self: end; }
+  .hav-cell { border-radius: 12px; padding: 12px; cursor: pointer; border: 1.5px solid transparent; display: flex; flex-direction: column; justify-content: space-between; transition: transform .12s, border-color .12s; text-align: left; font: inherit; }
+  .hav-cell:hover { transform: translateY(-1px); }
+  .hav-cell.sel { border-color: var(--text); }
+  .hav-cell .nm { font-size: 12.5px; font-weight: 700; }
+  .hav-cell .ct { font-size: 24px; font-weight: 700; line-height: 1; }
+  .hav-cell .pc { font-size: 11px; opacity: .8; }
+  .hav-cell .ax { font-size: 10.5px; opacity: .7; margin-top: 2px; }
+  .z-g { background: rgba(34,160,90,.30) !important; color: #0f5a31; }
+  .z-y { background: rgba(240,170,20,.32) !important; color: #6b4800; }
+  .z-r { background: rgba(225,60,60,.24) !important; color: #861a1a; }
+  .hav-list { max-height: 420px; overflow-y: auto; }
+  .hav-row { display: flex; justify-content: space-between; gap: 10px; padding: 10px 20px; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .hav-row:last-child { border-bottom: none; }
+  .dist-row { display: grid; grid-template-columns: 12px 1fr auto auto; gap: 10px; align-items: center; padding: 7px 20px; font-size: 12.5px; cursor: pointer; }
+  .dist-row .dot { width: 10px; height: 10px; border-radius: 3px; }
+  .mock-tag { white-space: nowrap; font-size: 11px; font-weight: 600; background: var(--amber-bg, #fff3d6); color: #7a5300; border-radius: 999px; padding: 2px 9px; }
+  @media (max-width: 900px) { .kpi-row { grid-template-columns: repeat(2,1fr); } .hav-wrap { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
+<script src="./tms-shell-early.js?v=20261111"></script>
 
 <div id="gate" class="locked-state">
   <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Loading...</p>
@@ -33,8 +62,8 @@
       <span id="userName"></span>
     </div>
   </div>
-  <div class="wrap">
-    <h1 class="text-h1">Talent Management</h1>
+  <div class="wrap" id="mainWrap">
+    <h1 class="text-h1" id="pageTitle">Talent Management</h1>
     <div id="sections"></div>
   </div>
 </div>
@@ -75,16 +104,9 @@
 
     let html = '';
     if(isAdmin){
-      html += section('Employee Development', [
-        { href: 'profile.html', icon: 'user-check', title: 'Competency Profile', desc: 'Expected vs actual, gaps, progress' },
-        { href: 'idp.html', icon: 'check', title: 'IDP', desc: 'Plan training, mentoring, coaching, assignments' },
-        { href: 'idp-dashboard.html', icon: 'chart-bar', title: 'IDP Dashboard', desc: 'Approvals, progress, overdue & reminders' },
-      ]);
-      html += section('Master Data (HR/OD)', [
-        { href: 'employees.html', icon: 'users', title: 'Employees', desc: 'NIK, level, manager & email' },
-        { href: 'competencies.html', icon: 'layout-grid', title: 'Competency Dictionary', desc: 'Behavioral indicators by job level' },
-        { href: 'performance.html', icon: 'chart-bar', title: 'Performance Data', desc: 'Import PA & KPI scores by period' },
-      ]);
+      F('mainWrap').classList.add('wide');
+      F('pageTitle').textContent = 'Dashboard';
+      html += await adminDashboardHtml();
     }
     const teamCards = [];
     if(teamPlans.length) teamCards.push({ href: 'team.html', icon: 'users', title: 'My Team', desc: pendingMine ? `<strong style="color:var(--pink);">${pendingMine} IDP${pendingMine === 1 ? '' : 's'} awaiting your approval</strong>` : 'Approve IDPs & update team progress' });
@@ -105,9 +127,110 @@
     F('userAvatar').src = profile.photoURL || '';
     F('userName').textContent = profile.displayName;
     F('sections').innerHTML = html;
+    if(isAdmin) bindHav();
   });
+
+  /* ================= Dashboard admin (HR/OD) ================= */
+  const cnt = async (q, label) => { try{ return (await getDocs(q)).size; } catch(err){ console.error('Gagal hitung', label, err.code, err.message); return null; } };
+  async function adminDashboardHtml(){
+    const [nEmp, plans, assess] = await Promise.all([
+      cnt(collection(db, 'employees'), 'employees'),
+      getDocs(collection(db, 'developmentPlans')).then(s => { const o = []; s.forEach(d => o.push(d.data())); return o; }).catch(() => []),
+      getDocs(collection(db, 'assessments')).then(s => { const o = []; s.forEach(d => o.push(d.data())); return o; }).catch(() => []),
+    ]);
+    const rank = p => { const m = String(p || '').match(/^(\d{4})(?:-S([12]))?$/); return m ? Number(m[1]) * 10 + (m[2] ? Number(m[2]) : 3) : 0; };
+    const lastP = assess.map(a => a.periode).sort((a, b) => rank(b) - rank(a))[0];
+    const nAssessed = assess.filter(a => a.periode === lastP).length;
+    const st = p => p.approval?.status || 'approved';
+    const nApproved = plans.filter(p => st(p) === 'approved').length, nPending = plans.filter(p => st(p) === 'pending').length;
+    const v = n => n == null ? '-' : n;
+    return `
+      <div class="kpi-row">
+        <a class="kpi" href="employees.html"><div class="n">${v(nEmp)}</div><div class="l">Employees</div><div class="s">In master data</div></a>
+        <a class="kpi" href="performance.html"><div class="n">${nAssessed}</div><div class="l">Assessed</div><div class="s">${lastP ? 'Latest period ' + lastP : 'No PA imported yet'}</div></a>
+        <a class="kpi" href="idp-dashboard.html"><div class="n">${nApproved}/${plans.length}</div><div class="l">IDPs Approved</div><div class="s">All periods</div></a>
+        <a class="kpi" href="idp-dashboard.html"><div class="n">${nPending}</div><div class="l">Pending Approval</div><div class="s">Waiting for managers</div></a>
+      </div>
+      <div class="hav-wrap">
+        <div class="panel" style="margin:0;">
+          <div class="panel-head">
+            <div><h3 class="text-h2" style="margin:0;">HAV Map</h3><div class="text-meta">Performance × Potential · click a box to see who is in it</div></div>
+            <div style="display:flex; gap:8px; align-items:center;"><span class="mock-tag">Mockup · sample data</span><select id="havDiv" style="margin:0; max-width:170px;"></select></div>
+          </div>
+          <div class="hav-body"><div class="hav-grid" id="havGrid"></div></div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <div class="panel" style="margin:0;">
+            <div class="panel-head"><h3 class="text-h2" style="margin:0;">Distribution</h3><span class="text-meta" id="havTotal"></span></div>
+            <div id="havDist" style="padding:6px 0 10px;"></div>
+          </div>
+          <div class="panel" style="margin:0;">
+            <div class="panel-head"><h3 class="text-h2" style="margin:0;" id="havSelTitle">Star</h3><span class="text-meta" id="havSelCount"></span></div>
+            <div class="hav-list" id="havList"></div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // 9-box generik: baris = potensi (atas = tinggi), kolom = performa (kanan = tinggi)
+  const BOX = [
+    [{ k: 'gem',  n: 'Potential Gem',       z: 'y' }, { k: 'hipo', n: 'High Potential',   z: 'g' }, { k: 'star',  n: 'Star',            z: 'g' }],
+    [{ k: 'inc',  n: 'Inconsistent Player', z: 'r' }, { k: 'core', n: 'Core Player',      z: 'y' }, { k: 'hiper', n: 'High Performer',  z: 'g' }],
+    [{ k: 'risk', n: 'Risk',                z: 'r' }, { k: 'avg',  n: 'Average Performer', z: 'r' }, { k: 'solid', n: 'Solid Performer', z: 'y' }],
+  ];
+  const LVL = ['Low', 'Moderate', 'High'];
+  const ZCOL = { g: '#22a05a', y: '#f0aa14', r: '#e13c3c' };
+  // Data contoh (deterministik) — nanti diganti skor PA (performa) & skor kompetensi/potensi asli.
+  function sampleEmployees(){
+    let seed = 7; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+    const first = ['Andi','Budi','Citra','Dewi','Eko','Fajar','Gita','Hendra','Indah','Joko','Kartika','Lukman','Maya','Nanda','Oki','Putri','Rizky','Sari','Teguh','Umi','Vina','Wahyu','Yuni','Zaki'];
+    const last = ['Pratama','Wijaya','Saputra','Lestari','Hidayat','Kusuma','Santoso','Rahmawati'];
+    const divs = ['Operation','Finance','Human Capital','IT','Commercial','Marketing'];
+    const jab = ['Staff','Coordinator','Supervisor','Section Head','Department Head'];
+    return Array.from({ length: 64 }, (_, i) => {
+      const perf = +(1.6 + rnd() * 3.3).toFixed(2), pot = +(1.6 + rnd() * 3.3).toFixed(2);
+      return { nama: `${first[i % first.length]} ${last[(i * 3) % last.length]}`, divisi: divs[Math.floor(rnd() * divs.length)], jabatan: jab[Math.floor(rnd() * jab.length)], perf, pot };
+    });
+  }
+  const band = v => v < 2.8 ? 0 : v < 3.6 ? 1 : 2;
+  const boxOf = e => BOX[2 - band(e.pot)][band(e.perf)];
+  let havData = [], havSel = 'star';
+  function bindHav(){
+    havData = sampleEmployees();
+    const divs = [...new Set(havData.map(e => e.divisi))].sort();
+    F('havDiv').innerHTML = `<option value="">All divisions</option>` + divs.map(d => `<option>${d}</option>`).join('');
+    F('havDiv').addEventListener('change', drawHav);
+    drawHav();
+  }
+  function drawHav(){
+    const div = F('havDiv').value;
+    const rows = havData.filter(e => !div || e.divisi === div);
+    const by = {}; rows.forEach(e => (by[boxOf(e).k] = by[boxOf(e).k] || []).push(e));
+    const pct = n => rows.length ? Math.round(n / rows.length * 100) : 0;
+    let g = `<div class="hav-ylab">Potential (competency) →</div>`;
+    BOX.forEach((row, r) => row.forEach((b, c) => {
+      const n = (by[b.k] || []).length;
+      g += `<button type="button" class="hav-cell z-${b.z} ${b.k === havSel ? 'sel' : ''}" data-k="${b.k}" style="grid-row:${r + 1}; grid-column:${c + 2};">
+        <div><div class="nm">${b.n}</div><div class="ax">${LVL[2 - r]} pot · ${LVL[c]} perf</div></div>
+        <div><span class="ct">${n}</span> <span class="pc">${pct(n)}%</span></div></button>`;
+    }));
+    g += `<div class="hav-xlab">Performance (PA final score) →</div>`;
+    F('havGrid').innerHTML = g;
+    F('havTotal').textContent = `${rows.length} employees`;
+    F('havDist').innerHTML = BOX.flat().slice().sort((a, b) => (by[b.k] || []).length - (by[a.k] || []).length).map(b => {
+      const n = (by[b.k] || []).length;
+      return `<div class="dist-row" data-k="${b.k}"><span class="dot" style="background:${ZCOL[b.z]}"></span><span>${b.n}</span><strong>${n}</strong><span class="text-meta" style="min-width:34px; text-align:right;">${pct(n)}%</span></div>`;
+    }).join('');
+    const sel = BOX.flat().find(b => b.k === havSel);
+    const list = (by[havSel] || []).sort((a, b) => (b.perf + b.pot) - (a.perf + a.pot));
+    F('havSelTitle').textContent = sel.n;
+    F('havSelCount').textContent = `${list.length} employee${list.length === 1 ? '' : 's'}`;
+    F('havList').innerHTML = list.map(e => `<div class="hav-row"><div><strong>${e.nama}</strong><div class="text-meta">${e.jabatan} · ${e.divisi}</div></div><div class="text-meta" style="text-align:right;">Perf ${e.perf.toFixed(2)}<br>Pot ${e.pot.toFixed(2)}</div></div>`).join('')
+      || '<div class="empty-state"><p>No one in this box.</p></div>';
+    document.querySelectorAll('#havGrid [data-k], #havDist [data-k]').forEach(el => el.addEventListener('click', () => { havSel = el.dataset.k; drawHav(); }));
+  }
 </script>
-<script type="module" src="./tms-shell.js?v=20261111"></script>
+<script type="module" src="./tms-shell.js?v=20261111b"></script>
 <script src="../lms-motion.js?v=20261109" defer></script>
 </body>
 </html>
