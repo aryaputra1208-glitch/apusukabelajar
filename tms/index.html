@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../lms-design-system.css?v=20261105b">
-<link rel="stylesheet" href="../lms-glass.css?v=20261111">
+<link rel="stylesheet" href="../lms-glass.css?v=20261111b">
 <style>
   .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 12px; margin-bottom: 28px; }
   .menu-card { border: 1px solid var(--border); border-radius: var(--r-card); padding: 20px; text-decoration: none; color: var(--text); display: block; background: var(--surface); transition: border-color .12s; }
@@ -46,7 +46,7 @@
 </style>
 </head>
 <body>
-<script src="./tms-shell-early.js?v=20261111"></script>
+<script src="./tms-shell-early.js?v=20261111c"></script>
 
 <div id="gate" class="locked-state">
   <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Loading...</p>
@@ -224,7 +224,7 @@
     document.querySelectorAll('#havGrid [data-k], #havDist [data-k]').forEach(el => el.addEventListener('click', () => { havSel = el.dataset.k; drawHav(); }));
   }
 </script>
-<script type="module" src="./tms-shell.js?v=20261111b"></script>
+<script type="module" src="./tms-shell.js?v=20261111c"></script>
 <script src="../lms-motion.js?v=20261109" defer></script>
 </body>
 </html>

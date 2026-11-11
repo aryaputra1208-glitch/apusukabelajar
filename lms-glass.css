@@ -195,3 +195,6 @@ body .tabs.lz .tab-btn { position: relative; }
 ::view-transition-group(app-sidebar), ::view-transition-group(app-topbar) { animation-duration: 0s; }
 ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .16s; }
 @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
+/* Layar "Loading..." baru muncul kalau memuat > 0,35 dtk — pindah halaman yang cepat tidak berkedip */
+.locked-state { animation: lockedIn .2s ease .35s both; }
+@keyframes lockedIn { from { opacity: 0; } to { opacity: 1; } }

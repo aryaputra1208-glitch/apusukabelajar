@@ -73,7 +73,7 @@ async function applyTestAs(user) {
   let isRealAdmin = false;
   try { const s = await getDoc(doc(db, 'users', user.uid)); isRealAdmin = s.exists() && s.data().role === 'admin'; } catch {}
   if (!isRealAdmin) { if (getTestAs()) setTestAs(null); return user; }
-  import('./dev-test-as.js?v=20261111c').then(m => m.mountTestAs({ realEmail: user.email })).catch(err => console.error('Mode uji gagal dimuat:', err));
+  import('./dev-test-as.js?v=20261111d').then(m => m.mountTestAs({ realEmail: user.email })).catch(err => console.error('Mode uji gagal dimuat:', err));
   const t = getTestAs();
   if (!t || (!t.role && !t.email)) return user;
   return {
@@ -95,7 +95,13 @@ export async function ensureUserProfile(user) {
     const real = snap.data(), t = user.__testAs;
     let nama = '';
     if (t.email) { try { const q = await getDocs(query(collection(db, 'employees'), where('email', '==', t.email), limit(1))); q.forEach(d => nama = d.data().nama || ''); } catch {} }
-    return { ...real, role: t.role || real.role, email: user.email, displayName: `${nama || (t.email ? t.email : real.displayName)} (test)` };
+    // role kosong + pilih karyawan = pakai role LMS orang itu (kalau belum pernah login: trainee)
+    let role = t.role;
+    if (!role && t.email) {
+      role = 'trainee';
+      try { const q = await getDocs(query(collection(db, 'users'), where('email', '==', t.email), limit(1))); q.forEach(d => role = d.data().role || 'trainee'); } catch {}
+    }
+    return { ...real, role: role || real.role, email: user.email, displayName: `${nama || (t.email ? t.email : real.displayName)} (test)` };
   }
   if (snap.exists()) {
     return snap.data();

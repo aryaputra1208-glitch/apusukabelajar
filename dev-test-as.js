@@ -33,7 +33,7 @@ export function mountTestAs({ realEmail }) {
   const roleLbl = { admin: 'Admin', trainer: 'Trainer', trainee: 'Trainee' };
   const btn = document.createElement('button');
   btn.className = 'tas-btn';
-  btn.textContent = active ? `Testing: ${t.role ? roleLbl[t.role] : 'own role'}${t.email ? ' · ' + (t.nama || t.email) : ''}` : 'Test as…';
+  btn.textContent = active ? `Testing: ${t.email ? (t.nama || t.email) : ''}${t.role ? (t.email ? ' · ' : '') + roleLbl[t.role] : ''}` : 'Test as…';
   document.body.appendChild(btn);
   if (active) {
     const bn = document.createElement('div'); bn.className = 'tas-banner';
@@ -50,14 +50,14 @@ export function mountTestAs({ realEmail }) {
       <div class="m">Preview the app as another role or employee. You are still signed in as ${esc(realEmail)}; data access stays admin.</div>
       <label>LMS role</label>
       <select id="tasRole">
-        <option value="">My real role (Admin)</option>
+        <option value="">Auto (selected person's role)</option>
         <option value="admin">Admin</option>
         <option value="trainer">Trainer</option>
         <option value="trainee">Trainee</option>
       </select>
       <label>View as employee (TMS: manager, mentor, employee)</label>
       <select id="tasEmp"><option value="">Myself</option></select>
-      <div class="m" style="margin-top:6px;">Pick a manager to see My Team, a mentor for My Mentees, or an employee for IDP Saya.</div>
+      <div class="m" style="margin-top:6px;">Pick a manager to see My Team, a mentor for My Mentees, or an employee for IDP Saya. Leave LMS role on Auto to see exactly what that person sees.</div>
       <div class="m" id="tasNoEmail" style="margin-top:6px; color:#a15c00; display:none;"></div>
       <div class="row"><button id="tasReset">Reset</button><button class="p" id="tasApply">Apply</button></div>`;
     document.body.appendChild(panel);
@@ -80,9 +80,10 @@ export function mountTestAs({ realEmail }) {
       const email = (sel.value || '').toLowerCase();
       const nama = email ? (emps.find(e => e.email === email)?.nama || '') : '';
       setTestAs(role || email ? { role, email, nama } : null);
+      try { sessionStorage.removeItem('tmsNavCache'); } catch {}
       location.reload();
     });
-    panel.querySelector('#tasReset').addEventListener('click', () => { setTestAs(null); location.reload(); });
+    panel.querySelector('#tasReset').addEventListener('click', () => { setTestAs(null); try { sessionStorage.removeItem('tmsNavCache'); } catch {} location.reload(); });
     try {
       const snap = await getDocs(collection(db, 'employees'));
       snap.forEach(d => { const e = d.data(); emps.push({ nik: d.id, nama: e.nama || d.id, jabatan: e.jabatan || '', level: e.level || '', email: (e.email || '').toLowerCase() }); });

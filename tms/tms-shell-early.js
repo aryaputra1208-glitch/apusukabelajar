@@ -8,6 +8,7 @@
     var st = document.createElement('style'); st.id = 'tms-shell-css'; st.textContent = c.css; document.head.appendChild(st);
     var box = document.createElement('div'); box.innerHTML = c.html;
     var nav = box.firstElementChild;
+    if (c.sig) nav.setAttribute('data-sig', c.sig);
     var cur = location.pathname.split('/').pop() || 'index.html';
     nav.querySelectorAll('a.as-item').forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === cur); });
     document.body.prepend(nav);

@@ -35,14 +35,18 @@ function render(nav, roleLabel) {
     nav.filter(g => g.items.length).map(g => `<div class="as-group">${g.group}</div>` + g.items.map(it =>
       `<a class="as-item" href="${it.href}">${iconSvg(it.icon, { size: 16 })}<span>${it.label}</span>${it.badge ? `<span class="as-badge">${it.badge}</span>` : ''}</a>`
     ).join('')).join('');
+  const sig = String(inner.length) + ':' + inner.slice(-200);
   const html = `<nav class="admin-sidebar" aria-label="TMS menu">${inner}</nav>`;
-  try { sessionStorage.setItem('tmsNavCache', JSON.stringify({ html, css: CSS })); } catch {}
+  try { sessionStorage.setItem('tmsNavCache', JSON.stringify({ html, css: CSS, sig })); } catch {}
   if (!document.getElementById('tms-shell-css')) { const style = document.createElement('style'); style.id = 'tms-shell-css'; style.textContent = CSS; document.head.appendChild(style); }
   let aside = document.querySelector('.admin-sidebar');
   // sidebar dari cache (tms-shell-early.js) dipertahankan; isinya hanya diganti kalau menu berubah — tanpa kedip
   if (!aside) { aside = document.createElement('nav'); aside.className = 'admin-sidebar'; aside.setAttribute('aria-label', 'TMS menu'); document.body.prepend(aside); }
-  if (aside.dataset.sig !== inner) {
-    aside.innerHTML = inner; aside.dataset.sig = inner;
+  if (aside.dataset.sig !== sig) {
+    // ganti isi tanpa membuang elemen lensa animasi (dipasang lms-motion.js)
+    const lens = aside.querySelector(':scope > .lens');
+    aside.innerHTML = inner; aside.dataset.sig = sig;
+    if (lens) aside.prepend(lens);
   }
   aside.querySelectorAll('a.as-item').forEach(a => a.classList.toggle('active', a.getAttribute('href') === cur));
   document.body.classList.add('has-admin-sidebar');
