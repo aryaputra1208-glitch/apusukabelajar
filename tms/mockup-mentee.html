@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup: IDP Saya (Mentee) — Anteraja TMS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../lms-design-system.css?v=20261105b">
+<link rel="stylesheet" href="../lms-glass.css?v=20261111b">
+<style>
+  body { padding-left: 232px; }
+  .admin-sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 232px; padding: 18px 12px; overflow-y: auto; z-index: 40; box-sizing: border-box; }
+  .admin-sidebar .as-logo { font-weight: 700; font-size: 18px; color: var(--pink); padding: 0 10px 6px; display: block; text-decoration: none; }
+  .admin-sidebar .as-role { font-size: 11px; color: var(--text-3); padding: 0 10px 8px; }
+  .admin-sidebar .as-group { font-size: 11px; font-weight: 600; color: var(--text-3); margin: 16px 10px 6px; }
+  .admin-sidebar a.as-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; color: var(--text-2); font-size: 13px; font-weight: 500; text-decoration: none; margin-bottom: 2px; }
+  .admin-sidebar a.as-item.active { background: var(--pink); color: #fff; }
+  .admin-sidebar .as-badge { margin-left: auto; background: var(--red-bg); color: var(--red); font-size: 11px; font-weight: 700; border-radius: 999px; padding: 1px 7px; }
+  .admin-sidebar a.as-item.active .as-badge { background: rgba(255,255,255,.25); color: #fff; }
+  .topbar > :last-child { margin-left: auto; }
+  .mock-banner { background: #FEF3C7; color: #92400E; font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 999px; display: inline-block; }
+  .wrap.wide { max-width: 1180px; }
+  .kpi-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin: 14px 0 18px; }
+  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); padding: 16px 18px; }
+  .kpi .n { font-size: 26px; font-weight: 700; color: var(--pink); line-height: 1; }
+  .kpi .l { font-size: 12px; color: var(--text-2); margin-top: 6px; }
+  .layout { display: grid; grid-template-columns: 300px minmax(0,1fr); gap: 16px; align-items: start; }
+  .mentee { display: flex; gap: 12px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .mentee:last-child { border-bottom: none; }
+  .mentee.sel { background: var(--pink-bg); }
+  .mentee .av { width: 36px; height: 36px; border-radius: 50%; background: var(--pink-bg); color: var(--pink-dark); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+  .mentee.sel .av { background: var(--pink); color: #fff; }
+  .mini { height: 5px; border-radius: 99px; background: rgba(0,0,0,.07); overflow: hidden; margin-top: 6px; }
+  .mini > span { display: block; height: 100%; background: var(--green); }
+  /* ringkasan */
+  .summary { display: grid; grid-template-columns: 170px 1fr; gap: 24px; align-items: center; padding: 20px; }
+  .donut { position: relative; width: 150px; height: 150px; }
+  .donut .c { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .donut .c b { font-size: 30px; line-height: 1; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--text-2); margin-top: 10px; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+  /* chart per kompetensi */
+  .comp { padding: 14px 20px; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .comp:last-child { border-bottom: none; }
+  .comp-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 8px; }
+  .comp-head strong { font-size: 14px; }
+  .bar { display: flex; gap: 3px; height: 30px; }
+  .seg { flex: 1; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; position: relative; min-width: 0; transition: transform .12s; }
+  .seg:hover { transform: translateY(-1px); }
+  .seg span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding: 0 6px; }
+  .s-selesai { background: var(--green); color: #fff; }
+  .s-berjalan { background: repeating-linear-gradient(135deg, #a78bfa 0 8px, #8b5cf6 8px 16px); color: #fff; }
+  .s-rencana { background: rgba(120,120,128,.14); color: var(--text-2); }
+  .seg.late { box-shadow: inset 0 0 0 2px var(--red); }
+  .acts { margin-top: 12px; display: none; }
+  .comp.open .acts { display: block; }
+  .act { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,.55); margin-top: 6px; }
+  .act .meta { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+  .late-t { color: var(--red); font-weight: 600; }
+  .cgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; padding: 16px 20px 20px; }
+  .ccard { background: rgba(255,255,255,.6); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; }
+  .ccard-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+  .cname { font-weight: 700; font-size: 14.5px; }
+  .crow { display: flex; align-items: flex-start; gap: 10px; padding: 9px 0; }
+  .crow + .crow { border-top: 1px dashed var(--border); }
+  .ctitle { font-size: 13px; font-weight: 600; line-height: 1.35; }
+  .ctitle.done { color: var(--text-3); text-decoration: line-through; }
+  .crow .meta { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+  .data-table td .badge, .data-table td.nw, .data-table td .btn { white-space: nowrap; }
+  .ic { width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0; margin-top: 1px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+  .ic-done { background: var(--green); color: #fff; }
+  .ic-prog { border: 2px solid #8b5cf6; background: linear-gradient(90deg, #8b5cf6 50%, transparent 50%); }
+  .ic-plan { border: 2px solid rgba(120,120,128,.4); }
+  .evbox { margin-top: 8px; padding: 10px 12px; border-radius: 10px; background: var(--green-bg); font-size: 12.5px; line-height: 1.5; display: grid; gap: 4px; }
+  .dlg-back { position: fixed; inset: 0; background: rgba(20,20,30,.3); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 16px; }
+  .dlg { width: 100%; max-width: 540px; background: rgba(255,255,255,.95); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,.2); padding: 22px; }
+  .dlg h3 { margin: 0 0 2px; font-size: 17px; }
+  .dlg label { display: block; font-size: 12.5px; font-weight: 600; margin: 14px 0 5px; }
+  .dlg textarea, .dlg input { width: 100%; margin: 0; box-sizing: border-box; }
+  .dlg-act { margin-top: 10px; padding: 10px 12px; background: var(--purple-bg); color: #4c1d95; border-radius: 10px; font-size: 13px; font-weight: 600; }
+  .dlg .req { color: var(--red); }
+  .dlg .err { color: var(--red); font-size: 12.5px; min-height: 16px; margin-top: 10px; }
+  .dlg-btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
+  .cgrid { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)) !important; }
+  .tlayout { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+  .hav-grid { display: grid; grid-template-columns: 22px repeat(3, 1fr); grid-template-rows: repeat(3, minmax(92px, auto)) 22px; gap: 8px; }
+  .hav-ylab { grid-row: 1 / 4; grid-column: 1; writing-mode: vertical-rl; transform: rotate(180deg); text-align: center; font-size: 11.5px; font-weight: 600; color: var(--text-2); }
+  .hav-xlab { grid-column: 2 / 5; grid-row: 4; text-align: center; font-size: 11.5px; font-weight: 600; color: var(--text-2); align-self: end; }
+  .hav-cell { border-radius: 12px; padding: 10px; cursor: pointer; border: 1.5px solid transparent; display: flex; flex-direction: column; justify-content: space-between; text-align: left; font: inherit; }
+  .hav-cell.sel { border-color: var(--text); }
+  .hav-cell .nm { font-size: 12px; font-weight: 700; }
+  .hav-cell .who { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+  .hav-cell .who span { width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,.75); font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+  .hav-cell .ct { font-size: 20px; font-weight: 700; line-height: 1; }
+  .z-g { background: rgba(34,160,90,.28) !important; color: #0f5a31; }
+  .z-y { background: rgba(240,170,20,.30) !important; color: #6b4800; }
+  .z-r { background: rgba(225,60,60,.22) !important; color: #861a1a; }
+  .tm { display: grid; grid-template-columns: 34px 1fr auto; gap: 10px; align-items: center; padding: 11px 16px; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .tm:last-child { border-bottom: none; }
+  .tm.sel { background: var(--pink-bg); }
+  .tm .av { width: 34px; height: 34px; border-radius: 50%; background: var(--pink-bg); color: var(--pink-dark); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; }
+  .tm .sc { text-align: right; font-size: 12px; color: var(--text-2); line-height: 1.5; }
+  .hbadge { font-size: 11px; font-weight: 700; border-radius: 999px; padding: 2px 9px; white-space: nowrap; }
+  .dgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .cbar { display: grid; grid-template-columns: 190px 1fr 40px; gap: 10px; align-items: center; padding: 7px 20px; font-size: 13px; }
+  .cbar .track { position: relative; height: 10px; border-radius: 99px; background: rgba(120,120,128,.14); }
+  .cbar .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 99px; }
+  .cbar .std { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--text); opacity: .55; }
+  .hist { display: flex; gap: 10px; padding: 14px 20px 18px; }
+  .hist div { flex: 1; text-align: center; padding: 10px 6px; border-radius: 10px; background: rgba(255,255,255,.6); }
+  .hist b { display: block; font-size: 18px; }
+  @media (max-width: 1100px) { .tlayout, .dgrid { grid-template-columns: 1fr; } }
+  .approve { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; border-left: 3px solid var(--amber); border-radius: 0; }
+  @media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } .kpi-row { grid-template-columns: repeat(2,1fr); } }
+  @media (max-width: 900px) { body { padding-left: 0; } .admin-sidebar { display: none; } }
+</style>
+<style>
+  .plan { display: flex; gap: 12px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .plan:last-child { border-bottom: none; }
+  .plan.sel { background: var(--pink-bg); }
+  .mentor { display: flex; gap: 10px; align-items: center; margin-top: 12px; padding: 10px 12px; background: rgba(255,255,255,.6); border-radius: 10px; font-size: 13px; }
+  .mentor .av { width: 32px; height: 32px; border-radius: 50%; background: var(--pink); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; }
+</style>
+</head>
+<body>
+<nav class="admin-sidebar" aria-label="Menu TMS">
+  <a class="as-logo" href="#">anteraja TMS</a><div class="as-role">Karyawan</div>
+  <div class="as-group">Umum</div>
+  <a class="as-item" href="#" data-nav="home">Beranda</a>
+  <div class="as-group">Untuk Anda</div>
+  <a class="as-item active" href="#">IDP Saya</a>
+  <div class="as-group">Aplikasi Lain</div>
+  <a class="as-item" href="../index.html">LMS</a>
+</nav>
+<div class="topbar">
+  <span class="mock-banner">Mockup · data contoh, tidak ada yang tersimpan</span>
+  <div class="user-chip" style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-2);">Sari Lestari</div>
+</div>
+
+<div class="wrap wide">
+  <h1 class="text-h1" style="margin-bottom:0;">IDP Saya</h1>
+  <div class="kpi-row">
+    <div class="kpi"><div class="n" id="kAct">-</div><div class="l">Aktivitas IDP Aktif</div></div>
+    <div class="kpi"><div class="n" id="kDone">-</div><div class="l">Sudah Selesai</div></div>
+    <div class="kpi"><div class="n" id="kTrain">-</div><div class="l">Training Belum Selesai</div></div>
+    <div class="kpi"><div class="n" id="kNext">-</div><div class="l">Target Terdekat</div></div>
+  </div>
+  <div class="layout">
+    <div class="panel" style="margin:0;"><div class="panel-head"><h3 class="text-h2" style="margin:0;">Daftar IDP</h3></div><div id="list"></div></div>
+    <div id="detail"></div>
+  </div>
+  <div id="progress" style="margin-top:16px;"></div>
+  <p class="text-meta" style="margin-top:16px;">IDP disusun HR/OD dan disetujui mentor Anda. Progres diperbarui oleh mentor; aktivitas training otomatis selesai saat Anda lulus post-test di LMS.</p>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+  const TODAY = new Date('2026-11-11');
+  const ST = { rencana: 'Belum Mulai', berjalan: 'Berjalan', selesai: 'Selesai' };
+  const plans = [
+    { periode: 'Semester 1 2026', status: 'Berjalan', mentor: 'Budi Santoso', mentorJab: 'Department Head Operasional',
+      catatan: 'Fokus semester ini: perencanaan mingguan tim hub dan keberanian mengambil keputusan di lapangan.',
+      comps: [
+        { nama: 'Analysis & Decision Making', acts: [
+          { j: 'Training: Problem Solving with Data', t: 'Training', target: '2026-10-30', s: 'selesai', done: { date: '2026-10-28', what: 'Ikut training 1 hari, lulus post-test (skor 85).', evidence: 'Mulai memakai data keterlambatan harian sebelum memutuskan alokasi kurir.' } },
+          { j: 'Analisis root cause keterlambatan sortir & presentasi ke DH', t: 'Penugasan', target: '2026-11-20', s: 'berjalan' } ] },
+        { nama: 'Planning & Controlling', acts: [
+          { j: 'Menyusun rencana mingguan hub selama 4 minggu', t: 'Penugasan', target: '2026-11-05', s: 'berjalan' },
+          { j: 'Review rencana mingguan bersama mentor', t: 'Mentoring', target: '2026-11-28', s: 'rencana' },
+          { j: 'Training: Operational Planning Basics', t: 'Training', target: '2026-12-15', s: 'rencana', lms: true } ] },
+        { nama: 'Empowerment', acts: [
+          { j: 'Mendelegasikan briefing pagi ke 2 koordinator', t: 'Coaching', target: '2026-12-10', s: 'rencana' } ] },
+      ] },
+    { periode: 'Tahunan 2025', status: 'Selesai', mentor: 'Budi Santoso', mentorJab: 'Department Head Operasional',
+      catatan: 'Penguatan dasar supervisi tim.',
+      comps: [
+        { nama: 'Collaboration', acts: [
+          { j: 'Training: Teamwork Essentials', t: 'Training', target: '2025-06-30', s: 'selesai', done: { date: '2025-06-20', what: 'Lulus post-test (skor 90).', evidence: 'Aktif mengajak tim lain di rapat koordinasi.' } },
+          { j: 'Memimpin 3 rapat koordinasi lintas tim', t: 'Penugasan', target: '2025-11-30', s: 'selesai', done: { date: '2025-11-25', what: 'Memimpin 3 rapat linehaul–hub.', evidence: 'Isu handover turun; notulen rapi dan ditindaklanjuti.' } } ] },
+      ] },
+  ];
+  let sel = 0;
+  const F = id => document.getElementById(id);
+  const all = p => p.comps.flatMap(c => c.acts);
+  const late = a => a.s !== 'selesai' && new Date(a.target) < TODAY;
+  const fmt = d => new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+  const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
+  const ICON = { selesai: '<span class="ic ic-done">✓</span>', berjalan: '<span class="ic ic-prog"></span>', rencana: '<span class="ic ic-plan"></span>' };
+  const toast = msg => { const t = F('toast'); t.textContent = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2200); };
+  function ring(p, size = 54){
+    const R = size / 2 - 5, C = 2 * Math.PI * R;
+    return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><circle cx="${size/2}" cy="${size/2}" r="${R}" fill="none" stroke="rgba(120,120,128,.15)" stroke-width="6"/>
+      <circle cx="${size/2}" cy="${size/2}" r="${R}" fill="none" stroke="#16A34A" stroke-width="6" stroke-linecap="round" stroke-dasharray="${p / 100 * C} ${C}" transform="rotate(-90 ${size/2} ${size/2})"/>
+      <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="700" fill="currentColor">${p}%</text></svg>`;
+  }
+  function donut(done, prog, total){
+    const R = 62, C = 2 * Math.PI * R, d = total ? done / total : 0, p = total ? prog / total : 0;
+    return `<div class="donut"><svg viewBox="0 0 150 150" width="150" height="150">
+      <circle cx="75" cy="75" r="${R}" fill="none" stroke="rgba(120,120,128,.14)" stroke-width="16"/>
+      <circle cx="75" cy="75" r="${R}" fill="none" stroke="#8b5cf6" stroke-width="16" stroke-dasharray="${(d + p) * C} ${C}" transform="rotate(-90 75 75)"/>
+      <circle cx="75" cy="75" r="${R}" fill="none" stroke="#16A34A" stroke-width="16" stroke-dasharray="${d * C} ${C}" transform="rotate(-90 75 75)"/>
+    </svg><div class="c"><b>${pct(done, total)}%</b><span class="text-meta">selesai</span></div></div>`;
+  }
+  function render(){
+    const cur = all(plans[0]);
+    F('kAct').textContent = cur.length;
+    F('kDone').textContent = `${cur.filter(a => a.s === 'selesai').length}/${cur.length}`;
+    F('kTrain').textContent = cur.filter(a => a.t === 'Training' && a.s !== 'selesai').length;
+    const next = cur.filter(a => a.s !== 'selesai' && new Date(a.target) >= TODAY).sort((a, b) => a.target.localeCompare(b.target))[0];
+    F('kNext').textContent = next ? new Date(next.target).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : '-';
+    F('list').innerHTML = plans.map((p, i) => { const a = all(p), d = a.filter(x => x.s === 'selesai').length; return `<div class="plan ${i === sel ? 'sel' : ''}" data-i="${i}">
+      <div style="flex:1;"><div style="display:flex; justify-content:space-between;"><strong style="font-size:13.5px;">IDP ${p.periode}</strong><span class="badge ${p.status === 'Selesai' ? 'badge-green' : 'badge-purple'}">${p.status}</span></div>
+      <div class="text-meta">${a.length} aktivitas · ${p.comps.length} kompetensi</div><div class="mini"><span style="width:${pct(d, a.length)}%"></span></div></div></div>`; }).join('');
+    document.querySelectorAll('.plan').forEach(el => el.onclick = () => { sel = +el.dataset.i; render(); });
+    const p = plans[sel], a = all(p), done = a.filter(x => x.s === 'selesai').length, prog = a.filter(x => x.s === 'berjalan').length;
+    F('detail').innerHTML = `<div class="panel" style="margin:0;">
+      <div class="panel-head"><div><h3 class="text-h2" style="margin:0;">IDP ${p.periode}</h3><div class="text-meta">Disetujui mentor</div></div><span class="badge ${p.status === 'Selesai' ? 'badge-green' : 'badge-purple'}">${p.status}</span></div>
+      <div class="summary">${donut(done, prog, a.length)}
+        <div><div style="font-weight:700; font-size:16px; margin-bottom:4px;">${done} dari ${a.length} aktivitas selesai · ${p.comps.length} kompetensi</div>
+          <div class="text-sub" style="margin:0;">${p.catatan}</div>
+          <div class="legend"><span><i style="background:#16A34A"></i>Selesai ${done}</span><span><i style="background:#8b5cf6"></i>Berjalan ${prog}</span><span><i style="background:rgba(120,120,128,.25)"></i>Belum mulai ${a.length - done - prog}</span></div>
+          <div class="mentor"><div class="av">${p.mentor.split(' ').map(w => w[0]).join('')}</div><div><b>${p.mentor}</b><div class="text-meta">Mentor · ${p.mentorJab}</div></div></div>
+        </div></div></div>`;
+    F('progress').innerHTML = `<div class="panel" style="margin:0;">
+      <div class="panel-head"><h3 class="text-h2" style="margin:0;">Progres per Kompetensi</h3><span class="text-meta">Bobot dibagi rata per aktivitas</span></div>
+      <div class="cgrid">${p.comps.map((c, ci) => { const d = c.acts.filter(x => x.s === 'selesai').length, w = Math.round(100 / c.acts.length); return `<div class="ccard">
+        <div class="ccard-head"><div><div class="cname">${c.nama}</div><div class="text-meta">${d} dari ${c.acts.length} selesai</div></div>${ring(pct(d, c.acts.length))}</div>
+        ${c.acts.map((x, ai) => `<div class="crow">${ICON[x.s]}
+          <div style="flex:1; min-width:0;"><div class="ctitle ${x.s === 'selesai' ? 'done' : ''}">${x.j}</div>
+            <div class="meta">${x.t} · ${w}% · <span class="${late(x) ? 'late-t' : ''}">${fmt(x.target)}${late(x) ? ' · lewat target' : ''}</span>${x.done ? ` · <a href="javascript:void 0" data-ev="${ci}-${ai}" style="color:var(--pink); font-weight:600;">Catatan mentor</a>` : ''}</div>
+            ${x.done ? `<div class="evbox" id="ev-${ci}-${ai}" style="display:none;"><div><b>Selesai</b> ${fmt(x.done.date)}</div><div><b>Yang dilakukan:</b> ${x.done.what}</div><div><b>Bukti kompetensi:</b> ${x.done.evidence}</div></div>` : ''}</div>
+          ${x.t === 'Training' && x.s !== 'selesai' ? `<button class="btn btn-primary btn-sm" data-lms>Mulai Belajar</button>` : `<span class="badge ${x.s === 'selesai' ? 'badge-green' : x.s === 'berjalan' ? 'badge-purple' : 'badge-gray'}">${ST[x.s]}</span>`}
+        </div>`).join('')}</div>`; }).join('')}</div></div>`;
+    document.querySelectorAll('[data-ev]').forEach(b => b.onclick = () => { const box = document.getElementById('ev-' + b.dataset.ev); box.style.display = box.style.display === 'none' ? 'block' : 'none'; });
+    document.querySelectorAll('[data-lms]').forEach(b => b.onclick = () => toast('Di versi asli: membuka modul ini di LMS'));
+  }
+  document.querySelector('[data-nav="home"]').onclick = e => { e.preventDefault(); toast('Beranda tidak termasuk mockup ini'); };
+  render();
+</script>
+<script src="../lms-motion.js?v=20261109" defer></script>
+</body>
+</html>
