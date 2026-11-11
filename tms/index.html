@@ -151,9 +151,16 @@
       </div>
       <div class="hav-wrap">
         <div class="panel" style="margin:0;">
-          <div class="panel-head">
-            <div><h3 class="text-h2" style="margin:0;">HAV Map</h3><div class="text-meta" id="havSub">Performance × Potential · click a box to see who is in it</div></div>
-            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end;"><select id="havDiv" style="margin:0; max-width:140px;"></select><select id="havLvl" style="margin:0; max-width:130px;"></select><a href="hav-setup.html" class="btn btn-outline btn-sm">Setup</a></div>
+          <div class="panel-head" style="display:block;">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+              <h3 class="text-h2" style="margin:0;">HAV Map</h3>
+              <a href="hav-setup.html" class="btn btn-outline btn-sm" style="flex:none;">Setup</a>
+            </div>
+            <div class="text-meta" id="havSub" style="margin-top:2px;">Performance × Potential</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px;">
+              <select id="havDiv" aria-label="Division" style="margin:0; width:100%; min-width:0;"></select>
+              <select id="havLvl" aria-label="Level" style="margin:0; width:100%; min-width:0;"></select>
+            </div>
           </div>
           <div class="hav-body"><div class="hav-grid" id="havGrid"></div></div>
         </div>
