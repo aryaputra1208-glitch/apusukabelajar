@@ -52,23 +52,40 @@
   <div class="wrap wide">
     <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:16px;">
       <h1 class="text-h1" style="margin:0;">Employees</h1>
-      <select id="divSelect" style="margin:0; max-width:240px;"></select>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <select id="divSelect" style="margin:0; width:auto; min-width:180px; max-width:240px;"></select>
+        <select id="locSelect" style="margin:0; width:auto; min-width:180px; max-width:240px;"></select>
+      </div>
     </div>
 
     <div class="dash-kpis">
       <div class="dk"><div class="n" id="kpiTotal">-</div><div class="l">Active Employees</div><div class="s" id="kpiTotalSub"></div></div>
+      <div class="dk"><div class="n" id="kpiHire">-</div><div class="l">New Hires (YTD)</div><div class="s" id="kpiHireSub"></div></div>
+      <div class="dk"><div class="n" id="kpiResign">-</div><div class="l">Resigns (YTD)</div><div class="s" id="kpiResignSub"></div></div>
+      <div class="dk"><div class="n" id="kpiTurn">-</div><div class="l">Turnover Rate (YTD)</div><div class="s" id="kpiTurnSub"></div></div>
+    </div>
+    <div class="dash-kpis">
       <div class="dk"><div class="n" id="kpiGender">-</div><div class="l">Gender</div><div class="s" id="kpiGenderSub"></div></div>
       <div class="dk"><div class="n" id="kpiAge">-</div><div class="l">Average Age</div><div class="s" id="kpiAgeSub"></div></div>
       <div class="dk"><div class="n" id="kpiTenure">-</div><div class="l">Average Tenure</div><div class="s" id="kpiTenureSub"></div></div>
+      <div class="dk"><div class="n" id="kpiContract">-</div><div class="l">Contracts Ending ≤ 60 Days</div><div class="s" id="kpiContractSub"></div></div>
+    </div>
+    <div class="dash-grid g2">
+      <div class="dash-card"><h3>New Hires vs Resigns</h3><div class="hint">Last 12 months</div><div id="chFlow"></div></div>
+      <div class="dash-card"><h3>By Employment Status</h3><div class="hint">Status Pegawai · active employees</div><div id="chEmpStatus"></div></div>
     </div>
     <div class="dash-grid g3">
-      <div class="dash-card"><h3>By Level</h3><div class="hint">Active employees per level</div><div id="chLevel"></div></div>
+      <div class="dash-card"><h3>By Level</h3><div class="hint">Active employees per level</div><div id="chLevel" style="max-height:330px; overflow-y:auto; padding-right:4px;"></div></div>
       <div class="dash-card"><h3 id="chOrgTitle">By Division</h3><div class="hint" id="chOrgHint">Active employees per division</div><div id="chOrg" style="max-height:330px; overflow-y:auto; padding-right:4px;"></div></div>
-      <div class="dash-card"><h3>By Gender</h3><div class="hint">Active employees</div><div id="chGender"></div></div>
+      <div class="dash-card"><h3 id="chLocTitle">By Location Group</h3><div class="hint" id="chLocHint">Active employees</div><div id="chLoc" style="max-height:330px; overflow-y:auto; padding-right:4px;"></div></div>
     </div>
     <div class="dash-grid g3">
+      <div class="dash-card"><h3>By Gender</h3><div class="hint">Active employees</div><div id="chGender"></div></div>
       <div class="dash-card"><h3>Age Groups</h3><div class="hint" id="chAgeHint">Years old</div><div id="chAge"></div></div>
       <div class="dash-card"><h3>Tenure</h3><div class="hint" id="chTenureHint">Years at Anteraja</div><div id="chTenure"></div></div>
+    </div>
+    <div class="dash-grid g2">
+      <div class="dash-card"><h3>Contracts Ending Soon</h3><div class="hint">End Date Status Pegawai within 60 days</div><div id="chContracts"></div></div>
       <div class="dash-card"><h3>Data Quality</h3><div class="hint">Click to show those employees below</div><div id="chQuality"></div></div>
     </div>
 
@@ -78,7 +95,7 @@
         <h2 class="text-h2" style="margin:0;">Upload Employees via Excel</h2>
         <span class="link-add" id="downloadTemplateBtn"></span>
       </div>
-      <p class="text-sub" style="margin-bottom:12px;">Columns: <strong>NIK, Nama, Email, Jabatan, Level, Punya Bawahan, Atasan NIK, Divisi, Departemen, Job Family, Status, Gender, Tanggal Lahir, Tanggal Masuk</strong>. Required: NIK, Nama. <em>Gender</em>: L/P. Dates: Excel date or DD/MM/YYYY. Blank optional columns keep the existing value. <em>Punya Bawahan</em>: Ya/Tidak (blank = auto from Atasan NIK). Re-uploads update by NIK.</p>
+      <p class="text-sub" style="margin-bottom:12px;">Upload the <strong>employee report as is</strong> (Company, NIP, Nama Pegawai, Tgl Lahir, Jenis Kelamin, Status Pegawai, Tgl Masuk, Tgl Resign, Divisi, Departemen, Level Jabatan, Jabatan Terakhir, Lokasi, …). Columns are read by name, in any order. Extra columns for TMS: <strong>Email</strong> and <strong>Atasan NIK</strong> (the report does not have them, so existing values are kept when they are missing). Rows with <em>Tgl Resign</em> on or before today become Inactive. A column that is in the file overwrites the saved value; a column that is not in the file leaves it unchanged. Re-uploads update by NIP.</p>
       <div class="dropzone" id="excelDropzone"></div>
       <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" style="display:none">
       <label class="check-label"><input type="checkbox" id="syncApproved" checked> Also register emails for LMS login (Manage Users); roles unchanged</label>
@@ -117,6 +134,7 @@
         <option value="">All employees</option>
         <option value="noEmail">No email</option>
         <option value="unmapped">Unmapped level</option>
+        <option value="noAtasanNik">No Atasan NIK</option>
         <option value="noAtasan">Manager NIK not found</option>
         <option value="noGender">No gender</option>
         <option value="noLahir">No birth date</option>
@@ -129,7 +147,7 @@
       <div style="overflow-x:auto">
       <table class="data-table">
         <thead><tr>
-          <th>NIK</th><th>Name</th><th>Position</th><th>Level</th><th>Dictionary Column</th><th>Manager</th><th>Division</th><th></th>
+          <th>NIP</th><th>Name</th><th>Position</th><th>Level</th><th>Dictionary Column</th><th>Manager</th><th>Division / Location</th><th></th>
         </tr></thead>
         <tbody id="empTableBody"></tbody>
       </table>
@@ -150,7 +168,22 @@
 
   // Sama dengan pilihan level di Kelola User & Buat Modul.
   const LEVEL_OPTIONS = ['','Admin','Leader','Coordinator','Staff','Supervisor','Section Head','Department Head','AVP','VP','SVP'];
-  const COLS = ['NIK','Nama','Email','Jabatan','Level','Punya Bawahan','Atasan NIK','Divisi','Departemen','Job Family','Status','Gender','Tanggal Lahir','Tanggal Masuk'];
+  // Kolom report karyawan (urutan sama dengan report HR) + kolom tambahan untuk TMS.
+  // Tiap field menerima beberapa nama kolom; dicocokkan tanpa beda huruf besar/kecil/spasi.
+  const FIELDS = [
+    ['company', ['Company']], ['nik', ['NIP', 'NIK']], ['nama', ['Nama Pegawai', 'Nama']], ['tempatLahir', ['Tempat Lahir']],
+    ['tanggalLahir', ['Tgl Lahir', 'Tanggal Lahir'], 'date'], ['gender', ['Jenis Kelamin', 'Gender'], 'gender'], ['agama', ['Agama']], ['statusNikah', ['Status Nikah']],
+    ['statusPegawai', ['Status Pegawai']], ['tanggalMasuk', ['Tgl Masuk', 'Tanggal Masuk'], 'date'],
+    ['statusMulai', ['Start Date Status Pegawai'], 'date'], ['statusAkhir', ['End Date Status Pegawai'], 'date'], ['tanggalResign', ['Tgl Resign', 'Tanggal Resign'], 'date'],
+    ['actingStatus', ['Acting Status']], ['actingMulai', ['Start Date Acting'], 'date'], ['actingAkhir', ['End Date Acting'], 'date'],
+    ['divisi', ['Divisi']], ['subDivisi', ['Sub Divisi']], ['departemen', ['Departemen']],
+    ['kodeLevel', ['Kode Level Jabatan']], ['level', ['Level Jabatan', 'Level'], 'level'], ['kodeJabatan', ['Kode Jabatan Terakhir', 'Kode Jabatan']], ['jabatan', ['Jabatan Terakhir', 'Jabatan']],
+    ['locationGroup', ['Location Group']], ['kodeLokasi', ['Kode Lokasi']], ['lokasi', ['Lokasi']], ['kodePosisi', ['Kode Posisi']], ['posisi', ['Posisi Terakhir', 'Posisi']],
+    // tambahan TMS (tidak ada di report)
+    ['email', ['Email'], 'email'], ['atasanNik', ['Atasan NIK', 'NIK Atasan', 'NIP Atasan']], ['jobFamily', ['Job Family']], ['status', ['Status']],
+  ];
+  const COLS = [...FIELDS.map(f => f[1][0]), 'Punya Bawahan'];
+  const EXTRA_KEYS = ['punyaBawahan', 'punyaBawahanSumber'];
 
   /** L/P dari berbagai penulisan (Laki-laki, Male, Pria, M / Perempuan, Female, Wanita, F). */
   function normGender(v){
@@ -166,6 +199,9 @@
     if(!s) return '';
     let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
     if(m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+    const MON = { jan: 1, feb: 2, mar: 3, apr: 4, mei: 5, may: 5, jun: 6, jul: 7, agu: 8, agt: 8, aug: 8, sep: 9, okt: 10, oct: 10, nov: 11, des: 12, dec: 12 };
+    m = s.match(/^(\d{1,2})[\s\/.-]+([A-Za-z]{3,})[\s\/.,-]+(\d{2,4})$/); // 15-Apr-1990, 15 Agustus 1990
+    if(m && MON[m[2].slice(0, 3).toLowerCase()]){ let y = +m[3]; if(y < 100) y += y > 30 ? 1900 : 2000; return `${y}-${String(MON[m[2].slice(0, 3).toLowerCase()]).padStart(2,'0')}-${String(+m[1]).padStart(2,'0')}`; }
     m = s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/);
     if(m){ let y = +m[3]; if(y < 100) y += y > 30 ? 1900 : 2000; const d = +m[1], mo = +m[2]; if(mo >= 1 && mo <= 12 && d >= 1 && d <= 31) return `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
     return null; // tidak dikenali
@@ -226,11 +262,13 @@
 
   function render(){
     const byNik = new Set(employees.map(e => e.nik));
-    const div = F('divSelect').value;
+    const div = F('divSelect').value, loc = F('locSelect').value;
     const divs = [...new Set(employees.map(e => e.divisi || '(No division)'))].sort();
     F('divSelect').innerHTML = '<option value="">All divisions</option>' + divs.map(d => `<option ${d === div ? 'selected' : ''}>${escapeHtml(d)}</option>`).join('');
-    const inDiv = employees.filter(e => !div || (e.divisi || '(No division)') === div);
-    renderDash(inDiv, div);
+    const locs = [...new Set(employees.map(e => e.locationGroup || '(No location group)'))].sort();
+    F('locSelect').innerHTML = '<option value="">All location groups</option>' + locs.map(d => `<option ${d === loc ? 'selected' : ''}>${escapeHtml(d)}</option>`).join('');
+    const inDiv = employees.filter(e => (!div || (e.divisi || '(No division)') === div) && (!loc || (e.locationGroup || '(No location group)') === loc));
+    renderDash(inDiv, div, loc);
 
     const q = (document.getElementById('searchBox').value || '').toLowerCase();
     const flag = document.getElementById('filterFlag').value;
@@ -238,6 +276,7 @@
     if(flag === 'noEmail') rows = rows.filter(e => !e.email);
     if(flag === 'unmapped') rows = rows.filter(e => !e.levelKey);
     if(flag === 'noAtasan') rows = rows.filter(e => e.atasanNik && !byNik.has(e.atasanNik));
+    if(flag === 'noAtasanNik') rows = rows.filter(e => !e.atasanNik);
     if(flag === 'noGender') rows = rows.filter(e => !e.gender);
     if(flag === 'noLahir') rows = rows.filter(e => !e.tanggalLahir);
     if(flag === 'noMasuk') rows = rows.filter(e => !e.tanggalMasuk);
@@ -248,12 +287,12 @@
 
     document.getElementById('empTableBody').innerHTML = shown.map(e => `<tr>
       <td>${escapeHtml(e.nik)}</td>
-      <td><strong>${escapeHtml(e.nama)}</strong><div class="text-meta">${e.email ? escapeHtml(e.email) : '<span style="color:#92400E;">no email</span>'}</div></td>
+      <td><strong>${escapeHtml(e.nama)}</strong>${(e.status || 'Aktif') !== 'Aktif' ? ' <span class="badge badge-gray">Inactive</span>' : ''}<div class="text-meta">${e.email ? escapeHtml(e.email) : '<span style="color:#92400E;">no email</span>'}</div></td>
       <td>${escapeHtml(e.jabatan || '-')}</td>
       <td>${escapeHtml(e.level || '-')}${e.punyaBawahan ? `<div class="text-meta">${e.jumlahBawahan || ''} reports${e.punyaBawahanSumber === 'manual' ? ' (manual)' : ''}</div>` : ''}</td>
       <td>${e.levelKey ? `<span class="badge badge-blue">${escapeHtml(levelLabel(e.levelKey))}</span>` : '<span class="badge badge-red">Unmapped</span>'}</td>
       <td class="text-meta">${e.atasanNik ? escapeHtml(nameByNik[e.atasanNik] || (e.atasanNik + ' (not found)')) : '-'}</td>
-      <td class="text-meta">${escapeHtml(e.divisi || '-')}</td>
+      <td class="text-meta">${escapeHtml(e.divisi || '-')}${e.lokasi ? `<div>${escapeHtml(e.lokasi)}</div>` : ''}</td>
       <td><button class="icon-btn row-action" data-nik="${escapeHtml(e.nik)}" title="Edit">${iconSvg('settings',{size:14})}</button></td>
     </tr>`).join('');
     const empty = document.getElementById('empEmpty');
@@ -265,26 +304,78 @@
 
   /* ===== Dashboard karyawan (status Aktif) ===== */
   const LEVEL_ORDER = ['SVP','VP','AVP','Department Head','Section Head','Supervisor','Coordinator','Leader','Staff','Admin'];
-  function renderDash(list, div){
-    const act = list.filter(e => (e.status || 'Aktif') === 'Aktif');
+  function renderDash(list, div, loc){
+    const today = todayStr(), year = today.slice(0, 4), jan1 = `${year}-01-01`;
+    const isActive = e => (e.status || 'Aktif') === 'Aktif' && !(e.tanggalResign && e.tanggalResign <= today);
+    const act = list.filter(isActive);
     const n = act.length, pctOf = (x, t = n) => t ? Math.round(x / t * 100) + '%' : '-';
+    const avgN = arr => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
+    const cnt = (arr, key) => { const m = new Map(); arr.forEach(e => { const k = key(e); m.set(k, (m.get(k) || 0) + 1); }); return [...m.entries()]; };
+    const nActing = act.filter(e => e.actingStatus && (!e.actingAkhir || e.actingAkhir >= today)).length;
     F('kpiTotal').textContent = n;
-    F('kpiTotalSub').textContent = `${list.length - n} inactive · ${list.length} in master data`;
-    // gender
+    F('kpiTotalSub').textContent = `${list.length - n} inactive / resigned${nActing ? ` · ${nActing} acting` : ''}`;
+
+    // ===== arus masuk / keluar =====
+    const hasResignData = list.some(e => e.tanggalResign);
+    const hires = list.filter(e => e.tanggalMasuk && e.tanggalMasuk >= jan1 && e.tanggalMasuk <= today);
+    const resigns = list.filter(e => e.tanggalResign && e.tanggalResign >= jan1 && e.tanggalResign <= today);
+    F('kpiHire').textContent = hires.length;
+    F('kpiHireSub').textContent = `joined since 1 Jan ${year}`;
+    F('kpiResign').textContent = hasResignData ? resigns.length : '-';
+    F('kpiResignSub').textContent = hasResignData ? `left since 1 Jan ${year}` : 'Report has no Tgl Resign yet';
+    // turnover = resign YTD / rata-rata headcount (awal tahun & sekarang)
+    const hcStart = list.filter(e => (!e.tanggalMasuk || e.tanggalMasuk < jan1) && !(e.tanggalResign && e.tanggalResign < jan1) && (e.tanggalMasuk || isActive(e))).length;
+    const avgHc = (hcStart + n) / 2;
+    F('kpiTurn').textContent = hasResignData && avgHc ? (resigns.length / avgHc * 100).toFixed(1).replace('.', ',') + '%' : '-';
+    F('kpiTurnSub').textContent = hasResignData ? `resigns ÷ avg headcount (${hcStart} on 1 Jan → ${n} now)` : 'Needs resigned employees in the report';
+    // 12 bulan terakhir
+    const months = []; { const d = new Date(); d.setDate(1); for(let i = 11; i >= 0; i--){ const x = new Date(d.getFullYear(), d.getMonth() - i, 1); months.push(`${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}`); } }
+    const mLabel = ym => new Date(ym + '-01T00:00:00').toLocaleDateString('en-GB', { month: 'short' }) + (ym.endsWith('-01') ? ' ' + ym.slice(2, 4) : '');
+    const flow = months.map(ym => ({ ym, h: list.filter(e => (e.tanggalMasuk || '').startsWith(ym)).length, r: list.filter(e => (e.tanggalResign || '').startsWith(ym)).length }));
+    const fMax = Math.max(1, ...flow.map(x => Math.max(x.h, x.r)));
+    F('chFlow').innerHTML = flow.some(x => x.h || x.r) ? `
+      <div style="display:flex; align-items:flex-end; gap:6px; height:160px; padding-top:18px;">${flow.map(x => `
+        <div style="flex:1; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end; min-width:0;">
+          <div style="display:flex; gap:2px; align-items:flex-end; height:100%; width:100%; justify-content:center;">
+            <div title="${x.h} new hires" style="width:42%; max-width:16px; height:${x.h / fMax * 100}%; min-height:${x.h ? 3 : 0}px; background:#16A34A; border-radius:4px 4px 1px 1px; position:relative;">${x.h ? `<em style="position:absolute; top:-15px; left:50%; transform:translateX(-50%); font-style:normal; font-size:10px; font-weight:700;">${x.h}</em>` : ''}</div>
+            <div title="${x.r} resigns" style="width:42%; max-width:16px; height:${x.r / fMax * 100}%; min-height:${x.r ? 3 : 0}px; background:#DC2626; border-radius:4px 4px 1px 1px; position:relative;">${x.r ? `<em style="position:absolute; top:-15px; left:50%; transform:translateX(-50%); font-style:normal; font-size:10px; font-weight:700;">${x.r}</em>` : ''}</div>
+          </div>
+          <div style="font-size:10px; color:var(--text-3); margin-top:5px; white-space:nowrap;">${mLabel(x.ym)}</div>
+        </div>`).join('')}</div>
+      <div class="mc-lg" style="grid-auto-flow:column; justify-content:start; gap:16px; margin-top:10px;"><div><i style="background:#16A34A"></i>New hires</div><div><i style="background:#DC2626"></i>Resigns</div></div>`
+      : '<div class="mc-empty">No joins or resigns in the last 12 months.</div>';
+
+    // ===== status pegawai =====
+    const sp = cnt(act, e => e.statusPegawai || '(Not filled)').sort((a, b) => b[1] - a[1]);
+    F('chEmpStatus').innerHTML = donut(sp.map(([l, v], i) => ({ label: l, v, color: l === '(Not filled)' ? 'rgba(120,120,128,.3)' : PALETTE[(i + 2) % PALETTE.length] })), `<b>${n}</b>people`, 128);
+
+    // ===== kontrak berakhir ≤ 60 hari =====
+    const in60 = new Date(Date.now() + 60 * 864e5); const lim = `${in60.getFullYear()}-${String(in60.getMonth()+1).padStart(2,'0')}-${String(in60.getDate()).padStart(2,'0')}`;
+    const ending = act.filter(e => e.statusAkhir && e.statusAkhir >= today && e.statusAkhir <= lim).sort((a, b) => a.statusAkhir.localeCompare(b.statusAkhir));
+    const overdueC = act.filter(e => e.statusAkhir && e.statusAkhir < today);
+    F('kpiContract').textContent = ending.length;
+    F('kpiContractSub').textContent = overdueC.length ? `${overdueC.length} active with end date already passed` : 'based on End Date Status Pegawai';
+    const dLeft = d => Math.round((new Date(d + 'T00:00:00') - new Date(today + 'T00:00:00')) / 864e5);
+    F('chContracts').innerHTML = (ending.length || overdueC.length) ? `<div style="display:grid; gap:2px; max-height:300px; overflow-y:auto;">${[...overdueC.map(e => ({ e, late: true })), ...ending.map(e => ({ e }))].slice(0, 60).map(({ e, late }) => `
+      <div style="display:flex; justify-content:space-between; gap:10px; padding:7px 4px; border-bottom:1px solid var(--border); font-size:12.5px;">
+        <div style="min-width:0;"><b>${escapeHtml(e.nama || e.nik)}</b><div class="text-meta" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml([e.statusPegawai, e.jabatan, e.lokasi].filter(Boolean).join(' · '))}</div></div>
+        <span class="badge ${late ? 'badge-red' : dLeft(e.statusAkhir) <= 30 ? 'badge-amber' : 'badge-gray'}" style="flex:none; align-self:center;">${late ? 'passed ' : ''}${escapeHtml(e.statusAkhir.split('-').reverse().join('/'))}${late ? '' : ` · ${dLeft(e.statusAkhir)}d`}</span></div>`).join('')}</div>`
+      : '<div class="mc-empty">No contracts ending in the next 60 days.</div>';
+
+    // ===== gender =====
     const nL = act.filter(e => e.gender === 'L').length, nP = act.filter(e => e.gender === 'P').length, nG = nL + nP;
     F('kpiGender').textContent = nG ? (nL >= nP ? `${pctOf(nL, nG)} Male` : `${pctOf(nP, nG)} Female`) : '-';
     F('kpiGenderSub').textContent = nG ? `${nL} male · ${nP} female${n - nG ? ` · ${n - nG} not filled` : ''}` : 'Gender not filled yet';
     F('chGender').innerHTML = donut([{ label: 'Male', v: nL, color: '#3B82F6' }, { label: 'Female', v: nP, color: '#E6007A' }, { label: 'Not filled', v: n - nG, color: 'rgba(120,120,128,.3)' }], `<b>${n}</b>people`, 116);
-    // umur
+    // ===== umur =====
     const ages = act.map(e => yearsSince(e.tanggalLahir)).filter(x => x != null && x > 10 && x < 80);
-    const avgN = arr => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
     const aAge = avgN(ages);
     F('kpiAge').textContent = aAge != null ? `${Math.round(aAge)} yrs` : '-';
     F('kpiAgeSub').textContent = ages.length ? `youngest ${Math.floor(Math.min(...ages))} · oldest ${Math.floor(Math.max(...ages))}${n - ages.length ? ` · ${n - ages.length} no birth date` : ''}` : 'Birth date not filled yet';
     const AB = [['< 25', 0, 25], ['25–29', 25, 30], ['30–34', 30, 35], ['35–39', 35, 40], ['40–44', 40, 45], ['45+', 45, 200]];
     F('chAge').innerHTML = vbars(AB.map(([l, lo, hi], i) => ({ label: l, v: ages.filter(a => a >= lo && a < hi).length, color: ['#93C5FD','#60A5FA','#3B82F6','#2563EB','#1D4ED8','#1E3A8A'][i] })));
     F('chAgeHint').textContent = ages.length < n ? `Years old · ${n - ages.length} without birth date` : 'Years old';
-    // masa kerja
+    // ===== masa kerja =====
     const ten = act.map(e => yearsSince(e.tanggalMasuk)).filter(x => x != null && x >= 0 && x < 60);
     const aTen = avgN(ten);
     F('kpiTenure').textContent = aTen != null ? `${aTen.toFixed(1).replace('.', ',')} yrs` : '-';
@@ -292,21 +383,29 @@
     const TB = [['< 1', 0, 1], ['1–2', 1, 3], ['3–5', 3, 6], ['6–10', 6, 11], ['11+', 11, 100]];
     F('chTenure').innerHTML = vbars(TB.map(([l, lo, hi], i) => ({ label: l + ' yr', v: ten.filter(t => t >= lo && t < hi).length, color: ['#BBF7D0','#86EFAC','#4ADE80','#16A34A','#166534'][i] })));
     F('chTenureHint').textContent = ten.length < n ? `Years at Anteraja · ${n - ten.length} without join date` : 'Years at Anteraja';
-    // level
-    const cnt = (arr, key) => { const m = new Map(); arr.forEach(e => { const k = key(e); m.set(k, (m.get(k) || 0) + 1); }); return [...m.entries()]; };
-    const lv = cnt(act, e => e.level || '(No level)').sort((a, b) => { const ia = LEVEL_ORDER.indexOf(a[0]), ib = LEVEL_ORDER.indexOf(b[0]); return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib); });
+    // ===== level (urut kode level kalau ada, lalu urutan baku) =====
+    const codeOf = {}; act.forEach(e => { if(e.level && e.kodeLevel) codeOf[e.level] = e.kodeLevel; });
+    const lv = cnt(act, e => e.level || '(No level)').sort((a, b) => {
+      if(codeOf[a[0]] && codeOf[b[0]]) return String(codeOf[b[0]]).localeCompare(String(codeOf[a[0]]), undefined, { numeric: true });
+      const ia = LEVEL_ORDER.indexOf(a[0]), ib = LEVEL_ORDER.indexOf(b[0]); return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || b[1] - a[1]; });
     F('chLevel').innerHTML = hbars(lv.map(([l, v]) => ({ label: l, value: v, color: '#8B5CF6', right: `<b>${v}</b> · ${pctOf(v)}` })));
-    // divisi → kalau 1 divisi dipilih, tampilkan per departemen
+    // ===== divisi → departemen kalau 1 divisi dipilih =====
     const byDept = !!div;
     F('chOrgTitle').textContent = byDept ? 'By Department' : 'By Division';
     F('chOrgHint').textContent = byDept ? `Active employees per department in ${div}` : 'Active employees per division';
     const org = cnt(act, e => (byDept ? e.departemen : e.divisi) || (byDept ? '(No department)' : '(No division)')).sort((a, b) => b[1] - a[1]);
     F('chOrg').innerHTML = hbars(org.map(([l, v]) => ({ label: l, value: v, color: '#E6007A', right: `<b>${v}</b> · ${pctOf(v)}` })));
-    // kualitas data
+    // ===== lokasi: group → lokasi kalau 1 group dipilih =====
+    const byLok = !!loc;
+    F('chLocTitle').textContent = byLok ? 'By Location' : 'By Location Group';
+    F('chLocHint').textContent = byLok ? `Active employees per location in ${loc}` : 'Active employees';
+    const lk = cnt(act, e => (byLok ? e.lokasi : e.locationGroup) || (byLok ? '(No location)' : '(No location group)')).sort((a, b) => b[1] - a[1]);
+    F('chLoc').innerHTML = hbars(lk.map(([l, v]) => ({ label: l, value: v, color: '#0EA5E9', right: `<b>${v}</b> · ${pctOf(v)}` })));
+    // ===== kualitas data =====
     const byNik = new Set(employees.map(e => e.nik));
-    const Q = [['noEmail', 'No email (cannot log in)', list.filter(e => !e.email).length], ['unmapped', 'Unmapped level', list.filter(e => !e.levelKey).length],
-      ['noAtasan', 'Manager NIK not found', list.filter(e => e.atasanNik && !byNik.has(e.atasanNik)).length], ['noGender', 'No gender', act.filter(e => !e.gender).length],
-      ['noLahir', 'No birth date', act.filter(e => !e.tanggalLahir).length], ['noMasuk', 'No join date', act.filter(e => !e.tanggalMasuk).length]];
+    const Q = [['noEmail', 'No email (cannot log in)', act.filter(e => !e.email).length], ['noAtasanNik', 'No Atasan NIK (no manager line)', act.filter(e => !e.atasanNik).length],
+      ['noAtasan', 'Atasan NIK not found', act.filter(e => e.atasanNik && !byNik.has(e.atasanNik)).length], ['unmapped', 'Level not mapped to dictionary', act.filter(e => !e.levelKey).length],
+      ['noGender', 'No gender', act.filter(e => !e.gender).length], ['noLahir', 'No birth date', act.filter(e => !e.tanggalLahir).length], ['noMasuk', 'No join date', act.filter(e => !e.tanggalMasuk).length]];
     F('chQuality').innerHTML = `<div style="display:grid; gap:4px;">${Q.map(([k, l, v]) => `<button type="button" data-q="${k}" style="all:unset; cursor:pointer; display:flex; justify-content:space-between; padding:7px 10px; border-radius:8px; font-size:13px; background:${v ? 'rgba(245,158,11,.10)' : 'rgba(22,163,74,.08)'};">
       <span>${l}</span><b style="color:${v ? '#B45309' : '#16A34A'}">${v || '✓'}</b></button>`).join('')}</div>`;
     F('chQuality').querySelectorAll('[data-q]').forEach(b => b.onclick = () => { F('filterFlag').value = b.dataset.q; render(); F('filterFlag').scrollIntoView({ behavior: 'smooth', block: 'center' }); });
@@ -315,6 +414,7 @@
   document.getElementById('searchBox').addEventListener('input', render);
   document.getElementById('filterFlag').addEventListener('change', render);
   document.getElementById('divSelect').addEventListener('change', render);
+  document.getElementById('locSelect').addEventListener('change', render);
 
   /* ===== Form 1 orang ===== */
   const F = id => document.getElementById(id);
@@ -337,14 +437,12 @@
   F('resetFormBtn').addEventListener('click', resetForm);
 
   F('saveOneBtn').addEventListener('click', async () => {
-    const rec = buildRecord({
+    const { rec } = buildRecord({
       'NIK': F('fNik').value, 'Nama': F('fNama').value, 'Email': F('fEmail').value, 'Jabatan': F('fJabatan').value,
       'Level': F('fLevel').value, 'Punya Bawahan': F('fBawahan').value, 'Atasan NIK': F('fAtasan').value,
       'Divisi': F('fDivisi').value, 'Departemen': F('fDept').value, 'Job Family': F('fJobFamily').value, 'Status': F('fStatus').value,
       'Gender': F('fGender').value, 'Tanggal Lahir': F('fLahir').value, 'Tanggal Masuk': F('fMasuk').value,
     });
-    // dari form: kolom yang dikosongkan memang dihapus
-    rec.gender = rec.gender || ''; rec.tanggalLahir = rec.tanggalLahir || ''; rec.tanggalMasuk = rec.tanggalMasuk || '';
     if(!rec.nik || !rec.nama){ showToast('NIK and Name are required.'); return; }
     await commitRecords([rec], F('syncApproved').checked);
     resetForm();
@@ -365,22 +463,36 @@
     const key = Object.keys(row).find(k => norm(k) === norm(name));
     return key ? String(row[key] ?? '').trim() : '';
   }
+  /**
+   * Satu baris (objek kolom→nilai) → record karyawan.
+   * Hanya field yang KOLOMNYA ADA di file yang diisi; kolom yang tidak ada = nilai lama tetap.
+   * Hasil: { rec, bad: [pesan nilai yang tidak terbaca] }
+   */
+  const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
   function buildRecord(row){
-    const manual = parseYaTidak(pick(row, 'Punya Bawahan'));
-    return {
-      nik: pick(row, 'NIK'), nama: pick(row, 'Nama'), email: pick(row, 'Email').toLowerCase(),
-      jabatan: pick(row, 'Jabatan'), level: normalizeLevel(pick(row, 'Level')),
-      punyaBawahan: manual, punyaBawahanSumber: manual === null ? 'otomatis' : 'manual',
-      atasanNik: pick(row, 'Atasan NIK'), divisi: pick(row, 'Divisi'), departemen: pick(row, 'Departemen'),
-      jobFamily: pick(row, 'Job Family'), status: pick(row, 'Status') || 'Aktif',
-      // kolom opsional: hanya ikut kalau diisi, supaya upload tanpa kolom ini tidak menghapus data lama
-      ...opt('gender', normGender(pick(row, 'Gender') || pick(row, 'Jenis Kelamin'))),
-      ...opt('tanggalLahir', normDate(pick(row, 'Tanggal Lahir'))),
-      ...opt('tanggalMasuk', normDate(pick(row, 'Tanggal Masuk') || pick(row, 'Join Date'))),
-      _raw: { gender: pick(row, 'Gender') || pick(row, 'Jenis Kelamin'), lahir: pick(row, 'Tanggal Lahir'), masuk: pick(row, 'Tanggal Masuk') || pick(row, 'Join Date') },
-    };
+    const norm = s => String(s).toLowerCase().replace(/[\s_]+/g, '');
+    const keys = {}; Object.keys(row).forEach(k => keys[norm(k)] = k);
+    const rec = {}, bad = [];
+    FIELDS.forEach(([field, names, type]) => {
+      const col = names.map(n => keys[norm(n)]).find(Boolean);
+      if(!col) return;
+      const raw = String(row[col] ?? '').trim();
+      let v = raw;
+      // nilai yang tidak terbaca → tidak diubah (nilai lama tetap) + peringatan
+      if(type === 'date'){ v = normDate(raw); if(v === null){ bad.push(`${col} "${raw}" not recognised (use DD/MM/YYYY)`); return; } }
+      else if(type === 'gender'){ v = normGender(raw); if(v === null){ bad.push(`${col} "${raw}" not recognised (use L/P)`); return; } }
+      else if(type === 'email') v = raw.toLowerCase();
+      else if(type === 'level') v = normalizeLevel(raw);
+      rec[field] = v;
+    });
+    const pbCol = keys[norm('Punya Bawahan')];
+    if(pbCol){ const manual = parseYaTidak(row[pbCol]); rec.punyaBawahan = manual; rec.punyaBawahanSumber = manual === null ? 'otomatis' : 'manual'; }
+    // status aktif: resign hari ini / sebelumnya → Nonaktif
+    if(rec.tanggalResign && rec.tanggalResign <= todayStr()) rec.status = 'Nonaktif';
+    else if('tanggalResign' in rec && !('status' in rec)) rec.status = 'Aktif';
+    if('status' in rec && !rec.status) rec.status = 'Aktif';
+    return { rec, bad };
   }
-  const opt = (k, v) => v ? { [k]: v } : {};
 
   function handleFile(file){
     const reader = new FileReader();
@@ -397,22 +509,25 @@
         const records = [], warnings = [];
         const seen = new Set(), seenEmail = {};
         rows.forEach((row, i) => {
-          const r = buildRecord(row);
+          const { rec: r, bad } = buildRecord(row);
           const line = i + 2;
           if(!r.nik || !r.nama){ warnings.push(`Row ${line}: NIK/Name empty, skipped.`); return; }
           if(seen.has(r.nik)){ warnings.push(`Row ${line}: NIK ${r.nik} duplicated in file; last row used.`); }
           if(r.email && seenEmail[r.email] && seenEmail[r.email] !== r.nik) warnings.push(`Row ${line}: email ${r.email} is also used by NIK ${seenEmail[r.email]}.`);
           if(r.email) seenEmail[r.email] = r.nik;
           if(r.level && !LEVEL_OPTIONS.includes(r.level)) warnings.push(`Row ${line}: unknown level "${r.level}".`);
-          if(r._raw.gender && !r.gender) warnings.push(`Row ${line}: gender "${r._raw.gender}" not recognised (use L/P), left empty.`);
-          if(r._raw.lahir && !r.tanggalLahir) warnings.push(`Row ${line}: birth date "${r._raw.lahir}" not recognised (use DD/MM/YYYY), left empty.`);
-          if(r._raw.masuk && !r.tanggalMasuk) warnings.push(`Row ${line}: join date "${r._raw.masuk}" not recognised (use DD/MM/YYYY), left empty.`);
-          delete r._raw;
+          bad.forEach(b => warnings.push(`Row ${line}: ${b}; saved value kept.`));
           seen.add(r.nik);
           const idx = records.findIndex(x => x.nik === r.nik);
           if(idx >= 0) records[idx] = r; else records.push(r);
         });
-        pending = { records, warnings };
+        const hdr = Object.keys(rows[0] || {}).map(k => String(k).toLowerCase().replace(/[\s_]+/g, ''));
+        const has = n => hdr.includes(n.toLowerCase().replace(/[\s_]+/g, ''));
+        const info = [];
+        if(has('Nama Pegawai') || has('NIP')) info.push('Format: employee report.');
+        if(!has('Email')) info.push('No Email column: saved emails are kept.');
+        if(!has('Atasan NIK') && !has('NIK Atasan') && !has('NIP Atasan')) info.push('No Atasan NIK column: saved managers are kept.');
+        pending = { records, warnings, info };
         renderPreview();
       } catch(err){
         console.error('Gagal baca file karyawan:', err);
@@ -436,8 +551,9 @@
     box.style.display = 'block';
     box.innerHTML = `
       <div style="font-weight:700; margin-bottom:6px;">Preview: ${records.length} employees read</div>
-      <div class="text-sub">${nBaru} new, ${records.length - nBaru} updates. ${records.filter(r => !r.email).length} without email.</div>
-      <div class="text-sub">${unmapped} unmapped levels, ${atasanMissing} manager NIKs not found.</div>
+      <div class="text-sub">${nBaru} new, ${records.length - nBaru} updates.</div>
+      <div class="text-sub">${unmapped} unmapped levels, ${atasanMissing} manager NIKs not found. ${records.filter(r => r.status === 'Nonaktif').length} resigned / inactive.</div>
+      ${(pending.info || []).length ? `<div class="text-sub">${pending.info.map(escapeHtml).join(' ')}</div>` : ''}
       ${warnings.length ? `<ul class="warn-list">${warnings.slice(0, 50).map(w => `<li>${escapeHtml(w)}</li>`).join('')}${warnings.length > 50 ? `<li>… and ${warnings.length - 50} more</li>` : ''}</ul>` : ''}
       <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
         <button class="btn btn-outline btn-sm" id="cancelUploadBtn">Cancel</button>
@@ -481,12 +597,11 @@
       for(let i = 0; i < toWrite.length; i += 200){
         const batch = writeBatch(db);
         toWrite.slice(i, i + 200).forEach(e => {
+          const data = {};
+          FIELDS.forEach(([f]) => { if(f !== 'nik') data[f] = e[f] || ''; });
+          data.status = e.status || 'Aktif';
           batch.set(doc(db, 'employees', e.nik), {
-            nama: e.nama || '', email: e.email || '', jabatan: e.jabatan || '', level: e.level || '',
-            punyaBawahan: !!e.punyaBawahan, punyaBawahanSumber: e.punyaBawahanSumber, levelKey: e.levelKey || null,
-            atasanNik: e.atasanNik || '', divisi: e.divisi || '', departemen: e.departemen || '',
-            jobFamily: e.jobFamily || '', status: e.status || 'Aktif',
-            gender: e.gender || '', tanggalLahir: e.tanggalLahir || '', tanggalMasuk: e.tanggalMasuk || '',
+            ...data, punyaBawahan: !!e.punyaBawahan, punyaBawahanSumber: e.punyaBawahanSumber || 'otomatis', levelKey: e.levelKey || null,
             updatedAt: serverTimestamp(), updatedBy: currentProfile.email,
           }, { merge: true });
           if(syncApproved && e.email && uploadedNik.has(e.nik)){
@@ -526,14 +641,16 @@
   /* ===== Template ===== */
   F('downloadTemplateBtn').innerHTML = iconSvg('file-text', {size:13}) + ' Download Template (current employees)';
   F('downloadTemplateBtn').addEventListener('click', () => {
+    const ex = (o) => [...FIELDS.map(([f]) => o[f] || ''), o.pb || ''];
     const contoh = [
-      ['12345', 'Contoh Supervisor', 'contoh.spv@anteraja.id', 'Hub Supervisor', 'Supervisor', '', '11111', 'OPERATION', 'Hub Operation', 'Operasional Hub', 'Aktif', 'L', '15/04/1990', '01/02/2019'],
-      ['23456', 'Contoh Staff', 'contoh.staff@anteraja.id', 'Hub Staff', 'Staff', 'Tidak', '12345', 'OPERATION', 'Hub Operation', 'Operasional Hub', 'Aktif', 'P', '03/11/1998', '10/07/2023'],
+      ex({ company: 'PT Tri Adi Bersama', nik: '12345', nama: 'Contoh Supervisor', tanggalLahir: '15/04/1990', gender: 'L', statusPegawai: 'PKWTT', tanggalMasuk: '01/02/2019', divisi: 'OPERATION', departemen: 'Hub Operation', level: 'Supervisor', jabatan: 'Hub Supervisor', locationGroup: 'Jabodetabek', lokasi: 'Hub Jakarta', email: 'contoh.spv@anteraja.id', atasanNik: '11111' }),
+      ex({ company: 'PT Tri Adi Bersama', nik: '23456', nama: 'Contoh Staff', tanggalLahir: '03/11/1998', gender: 'P', statusPegawai: 'PKWT', tanggalMasuk: '10/07/2023', statusAkhir: '09/07/2027', divisi: 'OPERATION', departemen: 'Hub Operation', level: 'Staff', jabatan: 'Hub Staff', locationGroup: 'Jabodetabek', lokasi: 'Hub Jakarta', email: 'contoh.staff@anteraja.id', atasanNik: '12345', pb: 'Tidak' }),
     ];
-    // sudah ada data → template berisi semua karyawan saat ini (tinggal lengkapi kolom yang kosong, mis. Gender/Tanggal)
+    // sudah ada data → template berisi semua karyawan saat ini, kolom sama dengan report (+ Email, Atasan NIK)
     const dmy = d => d ? d.split('-').reverse().join('/') : '';
-    const cur = employees.map(e => [e.nik, e.nama || '', e.email || '', e.jabatan || '', e.level || '', e.punyaBawahanSumber === 'manual' ? (e.punyaBawahan ? 'Ya' : 'Tidak') : '',
-      e.atasanNik || '', e.divisi || '', e.departemen || '', e.jobFamily || '', e.status || 'Aktif', e.gender || '', dmy(e.tanggalLahir), dmy(e.tanggalMasuk)]);
+    const typeOf = f => (FIELDS.find(x => x[0] === f) || [])[2];
+    const cur = employees.map(e => [...FIELDS.map(([f]) => typeOf(f) === 'date' ? dmy(e[f]) : (e[f] || '')),
+      e.punyaBawahanSumber === 'manual' ? (e.punyaBawahan ? 'Ya' : 'Tidak') : '']);
     const ws = XLSX.utils.aoa_to_sheet([COLS, ...(cur.length ? cur : contoh)]);
     ws['!cols'] = COLS.map(c => ({ wch: Math.max(12, c.length + 4) }));
     const wb = XLSX.utils.book_new();
