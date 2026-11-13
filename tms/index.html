@@ -45,13 +45,43 @@
   .mock-tag { white-space: nowrap; font-size: 11px; font-weight: 600; background: var(--amber-bg, #fff3d6); color: #7a5300; border-radius: 999px; padding: 2px 9px; }
   .idp-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 30px 0 12px; scroll-margin-top: 20px; }
   .idp-head select, .idp-head input { margin: 0; }
+  .charts3 { display: grid; grid-template-columns: 1fr 1fr 1.3fr; gap: 16px; margin-top: 16px; }
+  .chart-box { display: flex; align-items: center; gap: 18px; padding: 8px 20px 20px; }
+  .dn { position: relative; width: 132px; height: 132px; flex: none; }
+  .dn .c { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .dn .c b { font-size: 22px; line-height: 1; }
+  .lg { display: grid; gap: 7px; font-size: 12.5px; flex: 1; min-width: 0; }
+  .lg div { display: flex; align-items: center; gap: 8px; }
+  .lg i { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+  .lg b { margin-left: auto; }
+  .dbar { margin-top: 11px; font-size: 12.5px; }
+  .dbar .t { display: flex; justify-content: space-between; margin-bottom: 4px; gap: 8px; }
+  .stk { display: flex; height: 8px; border-radius: 99px; overflow: hidden; background: rgba(120,120,128,.14); }
+  .stk span { display: block; height: 100%; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { border: 1px solid var(--border); background: rgba(255,255,255,.6); border-radius: 99px; padding: 5px 11px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text-2); }
+  .chip.on { background: var(--pink); border-color: var(--pink); color: #fff; }
+  .chip .n { opacity: .75; margin-left: 4px; }
+  .icards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; padding: 4px 20px 20px; }
+  .icard { display: block; text-decoration: none; color: inherit; border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; background: rgba(255,255,255,.55); transition: transform .12s, box-shadow .12s; }
+  .icard:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.08); }
+  .icard .top { display: flex; gap: 12px; align-items: center; }
+  .icard .av { width: 38px; height: 38px; border-radius: 50%; background: var(--pink-bg); color: var(--pink-dark); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex: none; }
+  .icard .nm { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .icard .sub { font-size: 12px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .icard .meta { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; font-size: 12.5px; margin-top: 12px; }
+  .icard .meta > span:nth-child(odd) { color: var(--text-3); }
+  .icard .meta > span:nth-child(even) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .icard .lgd { display: flex; gap: 10px; font-size: 11.5px; color: var(--text-3); margin-top: 6px; flex-wrap: wrap; }
+  .late-t { color: var(--red); font-weight: 600; }
+  @media (max-width: 1100px) { .charts3 { grid-template-columns: 1fr 1fr; } .charts3 > :last-child { grid-column: 1 / -1; } }
   .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
   .rem { display: flex; justify-content: space-between; gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--border); align-items: flex-start; }
   .rem:last-child { border-bottom: none; }
   .rem ul { margin: 6px 0 0; padding-left: 18px; font-size: 12.5px; color: var(--text-2); }
   .rem-btns { display: flex; gap: 6px; flex-shrink: 0; }
   .btn { white-space: nowrap; }
-  @media (max-width: 900px) { .kpi-row { grid-template-columns: repeat(2,1fr); } .hav-wrap { grid-template-columns: 1fr; } .two { grid-template-columns: 1fr; } }
+  @media (max-width: 900px) { .kpi-row { grid-template-columns: repeat(2,1fr); } .hav-wrap { grid-template-columns: 1fr; } .two { grid-template-columns: 1fr; } .charts3 { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -203,24 +233,29 @@
         <div class="kpi"><div class="n" id="kDone">-</div><div class="l">Activities Done</div><div class="s" id="kDoneSub"></div></div>
         <div class="kpi"><div class="n" id="kLate">-</div><div class="l">Overdue Activities</div><div class="s" id="kLateSub"></div></div>
       </div>
-      <div class="panel" style="margin:0;">
-        <div class="panel-head"><h3 class="text-h2" style="margin:0;">By Division</h3></div>
-        <div style="overflow-x:auto;">
-        <table class="data-table">
-          <thead><tr><th>Division</th><th>IDPs</th><th>Draft</th><th>Pending</th><th>Revision</th><th>Approved</th><th>Agreed by Employee</th><th>Activities Done</th><th>Overdue</th></tr></thead>
-          <tbody id="divBody"></tbody>
-        </table>
+      <div class="charts3">
+        <div class="panel" style="margin:0;">
+          <div class="panel-head"><h3 class="text-h2" style="margin:0;">IDP Status</h3></div>
+          <div class="chart-box" id="chStatus"></div>
+        </div>
+        <div class="panel" style="margin:0;">
+          <div class="panel-head"><h3 class="text-h2" style="margin:0;">Activity Progress</h3><span class="text-meta">approved IDPs</span></div>
+          <div class="chart-box" id="chAct"></div>
+        </div>
+        <div class="panel" style="margin:0;">
+          <div class="panel-head"><h3 class="text-h2" style="margin:0;">Progress By Division</h3><span class="text-meta">% activities done</span></div>
+          <div id="chDiv" style="padding:6px 20px 18px;"></div>
         </div>
       </div>
-      <div class="two">
-        <div class="panel" style="margin:0;">
-          <div class="panel-head"><h3 class="text-h2" style="margin:0;">Waiting HR/OD Validation</h3><span class="text-meta" id="pendCount"></span></div>
-          <div id="pendList"></div>
+      <div class="panel" style="margin-top:16px;">
+        <div class="panel-head" style="flex-wrap:wrap; gap:10px;">
+          <div><h3 class="text-h2" style="margin:0;">All IDPs</h3><div class="text-meta" id="idpCount"></div></div>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <div class="chips" id="idpChips"></div>
+            <input type="text" id="idpSearch" placeholder="Search name or mentor" style="margin:0; width:200px;">
+          </div>
         </div>
-        <div class="panel" style="margin:0;">
-          <div class="panel-head"><h3 class="text-h2" style="margin:0;">Overdue Activities</h3><span class="text-meta" id="lateCount"></span></div>
-          <div id="lateList"></div>
-        </div>
+        <div class="icards" id="idpCards"></div>
       </div>
       <div class="panel" style="margin-top:16px;">
         <div class="panel-head">
@@ -301,6 +336,7 @@
     F('periodeSelect').addEventListener('change', e => { periode = e.target.value; F('divSelect').value = ''; renderIdp(); });
     F('divSelect').addEventListener('change', renderIdp);
     F('remDate').addEventListener('change', renderIdp);
+    F('idpSearch').addEventListener('input', renderCards);
     F('copyAllBtn').addEventListener('click', () => {
       if(!reminders.length) return showToast('No reminders for this date.');
       copy(reminders.map(r => { const m = reminderEmail(r, tmsUrl); return `To: ${r.email || '(no email) ' + r.nama}\nSubject: ${m.subject}\n\n${m.body}`; }).join('\n\n----------\n\n'));
@@ -335,38 +371,96 @@
     F('kLate').textContent = late.length;
     F('kLateSub').textContent = (n => `${n} employee${n === 1 ? '' : 's'} affected`)(new Set(late.map(x => x.p.nik)).size);
 
-    // per divisi
+    // ===== chart: status IDP =====
+    const ST = [
+      { k: 'approved', label: 'Approved', color: '#16A34A' },
+      { k: 'pending', label: 'Waiting HR/OD', color: '#8b5cf6' },
+      { k: 'revision', label: 'Returned to Mentor', color: '#DC2626' },
+      { k: 'draft', label: 'Draft (Mentor)', color: '#94a3b8' },
+    ];
+    const stCount = k => facts.filter(f => f.appr.status === k).length;
+    F('chStatus').innerHTML = facts.length
+      ? donutSvg(ST.map(x => ({ v: stCount(x.k), color: x.color })), `<b>${facts.length}</b><span class="text-meta">IDPs</span>`) +
+        `<div class="lg">${ST.map(x => `<div><i style="background:${x.color}"></i>${x.label}<b>${stCount(x.k)}</b></div>`).join('')}</div>`
+      : '<div class="text-meta">No IDPs for this period.</div>';
+
+    // ===== chart: progres aktivitas (IDP approved) =====
+    const allActs = approved.flatMap(f => f.items);
+    const nDone = allActs.filter(x => x.s === 'selesai').length, nProg = allActs.filter(x => x.s === 'berjalan').length;
+    const nLate = allActs.filter(x => x.s !== 'selesai' && isOverdue(x.it, x.s)).length;
+    const nPlan = allActs.length - nDone - nProg;
+    F('chAct').innerHTML = allActs.length
+      ? donutSvg([{ v: nDone, color: '#16A34A' }, { v: nProg, color: '#8b5cf6' }, { v: nPlan, color: 'rgba(120,120,128,.28)' }], `<b>${pct(nDone, allActs.length)}</b><span class="text-meta">done</span>`) +
+        `<div class="lg"><div><i style="background:#16A34A"></i>Done<b>${nDone}</b></div><div><i style="background:#8b5cf6"></i>In progress<b>${nProg}</b></div>
+          <div><i style="background:rgba(120,120,128,.28)"></i>Planned<b>${nPlan}</b></div><div><i style="background:transparent; box-shadow:inset 0 0 0 2px var(--red)"></i>Overdue<b class="${nLate ? 'late-t' : ''}">${nLate}</b></div></div>`
+      : '<div class="text-meta">No approved IDPs yet.</div>';
+
+    // ===== chart: per divisi (stacked bar done / in progress / planned) =====
     const byDiv = new Map();
-    facts.forEach(f => { const d = divOf(f.p); if(!byDiv.has(d)) byDiv.set(d, []); byDiv.get(d).push(f); });
-    F('divBody').innerHTML = [...byDiv.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([d, fs]) => {
-      const c = st => fs.filter(f => f.appr.status === st).length;
-      const ap = fs.filter(f => f.appr.status === 'approved');
-      const tot = ap.reduce((n, f) => n + f.items.length, 0), dn = ap.reduce((n, f) => n + f.done, 0), lt = ap.reduce((n, f) => n + f.late.length, 0);
-      return `<tr><td><strong>${escapeHtml(d)}</strong></td><td>${fs.length}</td><td>${c('draft') || '-'}</td><td>${c('pending') ? `<span class="badge badge-amber">${c('pending')}</span>` : '-'}</td>
-        <td>${c('revision') ? `<span class="badge badge-red">${c('revision')}</span>` : '-'}</td><td>${ap.length}</td><td>${ap.filter(f => f.p.ack?.at || f.appr.legacy).length}/${ap.length}</td>
-        <td>${tot ? `${dn}/${tot} <span class="text-meta">(${pct(dn, tot)})</span>` : '-'}</td><td>${lt ? `<span class="badge badge-red">${lt}</span>` : '-'}</td></tr>`;
-    }).join('') || '<tr><td colspan="9"><div class="empty-state"><p>No IDPs for this period.</p></div></td></tr>';
+    approved.forEach(f => { const d = divOf(f.p); if(!byDiv.has(d)) byDiv.set(d, []); byDiv.get(d).push(...f.items); });
+    const divRows = [...byDiv.entries()].map(([d, it]) => ({ d, n: it.length, done: it.filter(x => x.s === 'selesai').length, prog: it.filter(x => x.s === 'berjalan').length }))
+      .sort((x, y) => (y.done / (y.n || 1)) - (x.done / (x.n || 1)) || x.d.localeCompare(y.d));
+    F('chDiv').innerHTML = divRows.map(r => `<div class="dbar"><div class="t"><span>${escapeHtml(r.d)}</span><span class="text-meta"><b style="color:var(--text)">${pct(r.done, r.n)}</b> · ${r.done}/${r.n}</span></div>
+      <div class="stk"><span style="width:${r.n ? r.done / r.n * 100 : 0}%; background:#16A34A"></span><span style="width:${r.n ? r.prog / r.n * 100 : 0}%; background:#8b5cf6"></span></div></div>`).join('')
+      || '<div class="text-meta" style="padding-top:8px;">No approved IDPs yet.</div>';
 
-    // pending approval, paling lama di atas
-    const pendSorted = pend.map(f => ({ ...f, days: f.appr.submittedAt ? -daysUntil(f.appr.submittedAt) : null })).sort((a, b) => (b.days ?? 0) - (a.days ?? 0));
-    F('pendCount').textContent = pendSorted.length ? `${pendSorted.length} IDP${pendSorted.length === 1 ? '' : 's'}` : '';
-    F('pendList').innerHTML = pendSorted.map(f => `<div class="rem">
-      <div><a href="idp.html?nik=${encodeURIComponent(f.p.nik)}&periode=${encodeURIComponent(f.p.periode)}" style="font-weight:600; color:var(--text);">${escapeHtml(f.p.nama)}</a>
-        <div class="text-meta">Mentor: ${escapeHtml(f.p.mentorNama || '-')}${f.p.mentorEmail ? '' : ' · <span style="color:var(--red);">no mentor set</span>'}</div></div>
-      <span class="badge ${f.days >= 7 ? 'badge-red' : f.days >= 3 ? 'badge-amber' : 'badge-gray'}">${f.days == null ? '-' : f.days === 0 ? 'today' : f.days + 'd'}</span>
-    </div>`).join('') || `<div class="empty-state">${iconSvg('check',{size:22})}<p style="margin-top:6px;">Nothing waiting for validation.</p></div>`;
-
-    // overdue
-    const lateSorted = late.sort((a, b) => String(a.it.targetTanggal).localeCompare(String(b.it.targetTanggal)));
-    F('lateCount').textContent = lateSorted.length ? `${lateSorted.length} activit${lateSorted.length === 1 ? 'y' : 'ies'}` : '';
-    F('lateList').innerHTML = lateSorted.slice(0, 30).map(x => `<div class="rem">
-      <div style="min-width:0;"><a href="idp.html?nik=${encodeURIComponent(x.p.nik)}&periode=${encodeURIComponent(x.p.periode)}" style="font-weight:600; color:var(--text);">${escapeHtml(x.p.nama)}</a>
-        <div class="text-meta">${escapeHtml(x.it.jenis === 'training' ? (x.it.judul || 'Training') : (x.it.deskripsi || ''))} · ${escapeHtml(IDP_JENIS[x.it.jenis] || x.it.jenis)}${x.it.mentorNama ? ' · ' + escapeHtml(x.it.mentorNama) : ''}</div></div>
-      <span class="badge badge-red">${-daysUntil(x.it.targetTanggal)}d</span>
-    </div>`).join('') + (lateSorted.length > 30 ? `<div class="text-meta" style="padding:10px 20px;">+ ${lateSorted.length - 30} more</div>` : '')
-      || `<div class="empty-state">${iconSvg('check',{size:22})}<p style="margin-top:6px;">No overdue activities.</p></div>`;
-
+    // ===== kartu per IDP =====
+    idpFacts = facts;
+    renderCards();
     renderReminders(rows);
+  }
+
+
+  let idpFacts = [], idpFilter = 'all';
+  const initials = n => String(n || '?').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+  const fmtShort = d => { const x = new Date(d); return isNaN(x) ? '' : x.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }); };
+  function donutSvg(parts, center, size = 132){
+    const R = size / 2 - 10, C = 2 * Math.PI * R, tot = parts.reduce((n, x) => n + x.v, 0) || 1;
+    let off = 0;
+    const segs = parts.filter(x => x.v > 0).map(x => { const len = x.v / tot * C; const el = `<circle cx="${size/2}" cy="${size/2}" r="${R}" fill="none" stroke="${x.color}" stroke-width="16" stroke-dasharray="${len} ${C - len}" stroke-dashoffset="${-off}" transform="rotate(-90 ${size/2} ${size/2})"/>`; off += len; return el; }).join('');
+    return `<div class="dn"><svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><circle cx="${size/2}" cy="${size/2}" r="${R}" fill="none" stroke="rgba(120,120,128,.12)" stroke-width="16"/>${segs}</svg><div class="c">${center}</div></div>`;
+  }
+  function ringSvg(v, color = '#16A34A', size = 50){
+    const R = size / 2 - 5, C = 2 * Math.PI * R;
+    return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="flex:none;"><circle cx="${size/2}" cy="${size/2}" r="${R}" fill="none" stroke="rgba(120,120,128,.15)" stroke-width="5"/>
+      ${v > 0 ? `<circle cx="${size/2}" cy="${size/2}" r="${R}" fill="none" stroke="${color}" stroke-width="5" stroke-linecap="round" stroke-dasharray="${v / 100 * C} ${C}" transform="rotate(-90 ${size/2} ${size/2})"/>` : ''}
+      <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="700" fill="currentColor">${v}%</text></svg>`;
+  }
+  const STATUS_BADGE_H = { approved: ['badge-green', 'Approved'], pending: ['badge-purple', 'Waiting HR/OD'], revision: ['badge-red', 'Returned to Mentor'], draft: ['badge-gray', 'Draft'] };
+  function renderCards(){
+    const q = (F('idpSearch').value || '').trim().toLowerCase();
+    const isLate = f => f.appr.status === 'approved' && f.late.length > 0;
+    const CH = [['all', 'All', () => true], ['pending', 'Waiting HR/OD', f => f.appr.status === 'pending'], ['revision', 'Returned', f => f.appr.status === 'revision'],
+      ['draft', 'Draft', f => f.appr.status === 'draft'], ['approved', 'Approved', f => f.appr.status === 'approved'], ['late', 'Overdue', isLate]];
+    F('idpChips').innerHTML = CH.map(([k, l, fn]) => { const n = idpFacts.filter(fn).length; return (k === 'all' || n) ? `<button type="button" class="chip ${idpFilter === k ? 'on' : ''}" data-chip="${k}">${l}<span class="n">${n}</span></button>` : ''; }).join('');
+    F('idpChips').querySelectorAll('[data-chip]').forEach(b => b.onclick = () => { idpFilter = b.dataset.chip; renderCards(); });
+    const fn = (CH.find(c => c[0] === idpFilter) || CH[0])[2];
+    const order = { pending: 0, revision: 1, draft: 3, approved: 2 };
+    const list = idpFacts.filter(fn).filter(f => !q || `${f.p.nama} ${f.p.mentorNama || ''} ${f.p.jabatan || ''}`.toLowerCase().includes(q))
+      .sort((a, b) => (order[a.appr.status] - order[b.appr.status]) || (b.late.length - a.late.length) || String(a.p.nama).localeCompare(String(b.p.nama)));
+    F('idpCount').textContent = `${list.length} of ${idpFacts.length} IDPs · click a card to open`;
+    F('idpCards').innerHTML = list.map(f => {
+      const p = f.p, st = f.appr.status, [bc, bl] = STATUS_BADGE_H[st] || ['badge-gray', st];
+      const n = f.items.length, prog = f.items.filter(x => x.s === 'berjalan').length;
+      const comps = new Set(f.items.map(x => x.it.kompetensiId || x.it.kompetensiNama)).size;
+      const next = f.items.filter(x => x.s !== 'selesai' && x.it.targetTanggal && daysUntil(x.it.targetTanggal) >= 0).sort((a, b) => a.it.targetTanggal.localeCompare(b.it.targetTanggal))[0];
+      const v = n ? Math.round(f.done / n * 100) : 0;
+      const days = st === 'pending' && f.appr.submittedAt ? -daysUntil(f.appr.submittedAt) : null;
+      return `<a class="icard" href="idp.html?nik=${encodeURIComponent(p.nik)}&periode=${encodeURIComponent(p.periode)}">
+        <div class="top"><div class="av">${escapeHtml(initials(p.nama))}</div>
+          <div style="flex:1; min-width:0;"><div class="nm">${escapeHtml(p.nama || p.nik)}</div><div class="sub">${escapeHtml([p.jabatan, divOf(p)].filter(Boolean).join(' · '))}</div>
+            <span class="badge ${bc}" style="margin-top:5px; display:inline-block;">${bl}${days != null ? ` · ${days === 0 ? 'today' : days + 'd'}` : ''}</span></div>
+          ${st === 'approved' ? ringSvg(v) : ''}</div>
+        ${st === 'approved' && n ? `<div class="stk" style="margin-top:12px;"><span style="width:${f.done / n * 100}%; background:#16A34A"></span><span style="width:${prog / n * 100}%; background:#8b5cf6"></span></div>
+          <div class="lgd"><span>${f.done} done</span><span>${prog} in progress</span><span>${n - f.done - prog} planned</span></div>` : ''}
+        <div class="meta">
+          <span>Mentor</span><span>${p.mentorNama ? escapeHtml(p.mentorNama) : '<span class="late-t">not set</span>'}</span>
+          <span>Plan</span><span>${comps} competenc${comps === 1 ? 'y' : 'ies'} · ${n} activit${n === 1 ? 'y' : 'ies'}</span>
+          ${st === 'approved' ? `<span>Next</span><span>${next ? `${escapeHtml(fmtShort(next.it.targetTanggal))} · ${escapeHtml(next.it.jenis === 'training' ? (next.it.judul || 'Training') : (next.it.deskripsi || ''))}` : '-'}</span>
+          <span>Overdue</span><span class="${f.late.length ? 'late-t' : ''}">${f.late.length ? `${f.late.length} activit${f.late.length === 1 ? 'y' : 'ies'}` : 'None'}</span>` : ''}
+          ${st === 'revision' && f.appr.note ? `<span>HR/OD note</span><span>${escapeHtml(f.appr.note)}</span>` : ''}
+        </div></a>`;
+    }).join('') || '<div class="empty-state" style="grid-column:1/-1;"><p>No IDPs match.</p></div>';
   }
 
   let reminders = [];
