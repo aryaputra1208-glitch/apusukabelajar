@@ -50,21 +50,35 @@
   </div>
 
   <div class="wrap wide">
-    <h1 class="text-h1">Employees</h1>
-
-    <div class="kpi-row">
-      <div class="kpi-card2"><div class="kpi-label2">TOTAL EMPLOYEES</div><div class="kpi-value2" id="kpiTotal">-</div><div class="kpi-sub">In master data</div></div>
-      <div class="kpi-card2" style="--accent:var(--amber)"><div class="kpi-label2">NO EMAIL</div><div class="kpi-value2" id="kpiNoEmail">-</div><div class="kpi-sub">Not linked to a login</div></div>
-      <div class="kpi-card2" style="--accent:var(--red)"><div class="kpi-label2">UNMAPPED LEVEL</div><div class="kpi-value2" id="kpiUnmapped">-</div><div class="kpi-sub">No dictionary column</div></div>
-      <div class="kpi-card2" style="--accent:var(--blue)"><div class="kpi-label2">HAS DIRECT REPORTS</div><div class="kpi-value2" id="kpiManager">-</div><div class="kpi-sub">Manual + auto from Manager NIK</div></div>
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:16px;">
+      <h1 class="text-h1" style="margin:0;">Employees</h1>
+      <select id="divSelect" style="margin:0; max-width:240px;"></select>
     </div>
 
+    <div class="dash-kpis">
+      <div class="dk"><div class="n" id="kpiTotal">-</div><div class="l">Active Employees</div><div class="s" id="kpiTotalSub"></div></div>
+      <div class="dk"><div class="n" id="kpiGender">-</div><div class="l">Gender</div><div class="s" id="kpiGenderSub"></div></div>
+      <div class="dk"><div class="n" id="kpiAge">-</div><div class="l">Average Age</div><div class="s" id="kpiAgeSub"></div></div>
+      <div class="dk"><div class="n" id="kpiTenure">-</div><div class="l">Average Tenure</div><div class="s" id="kpiTenureSub"></div></div>
+    </div>
+    <div class="dash-grid g3">
+      <div class="dash-card"><h3>By Level</h3><div class="hint">Active employees per level</div><div id="chLevel"></div></div>
+      <div class="dash-card"><h3 id="chOrgTitle">By Division</h3><div class="hint" id="chOrgHint">Active employees per division</div><div id="chOrg" style="max-height:330px; overflow-y:auto; padding-right:4px;"></div></div>
+      <div class="dash-card"><h3>By Gender</h3><div class="hint">Active employees</div><div id="chGender"></div></div>
+    </div>
+    <div class="dash-grid g3">
+      <div class="dash-card"><h3>Age Groups</h3><div class="hint" id="chAgeHint">Years old</div><div id="chAge"></div></div>
+      <div class="dash-card"><h3>Tenure</h3><div class="hint" id="chTenureHint">Years at Anteraja</div><div id="chTenure"></div></div>
+      <div class="dash-card"><h3>Data Quality</h3><div class="hint">Click to show those employees below</div><div id="chQuality"></div></div>
+    </div>
+
+    <div class="dash-sec"><h2>Manage Data</h2><span class="text-meta">Upload, edit, and check each employee</span></div>
     <div class="card" style="margin-bottom:16px;">
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
         <h2 class="text-h2" style="margin:0;">Upload Employees via Excel</h2>
         <span class="link-add" id="downloadTemplateBtn"></span>
       </div>
-      <p class="text-sub" style="margin-bottom:12px;">Columns: <strong>NIK, Nama, Email, Jabatan, Level, Punya Bawahan, Atasan NIK, Divisi, Departemen, Job Family, Status</strong>. Required: NIK, Nama. <em>Punya Bawahan</em>: Ya/Tidak (blank = auto from Atasan NIK). Re-uploads update by NIK.</p>
+      <p class="text-sub" style="margin-bottom:12px;">Columns: <strong>NIK, Nama, Email, Jabatan, Level, Punya Bawahan, Atasan NIK, Divisi, Departemen, Job Family, Status, Gender, Tanggal Lahir, Tanggal Masuk</strong>. Required: NIK, Nama. <em>Gender</em>: L/P. Dates: Excel date or DD/MM/YYYY. Blank optional columns keep the existing value. <em>Punya Bawahan</em>: Ya/Tidak (blank = auto from Atasan NIK). Re-uploads update by NIK.</p>
       <div class="dropzone" id="excelDropzone"></div>
       <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" style="display:none">
       <label class="check-label"><input type="checkbox" id="syncApproved" checked> Also register emails for LMS login (Manage Users); roles unchanged</label>
@@ -87,6 +101,9 @@
         <div><label>Department</label><input type="text" id="fDept"></div>
         <div><label>Job Family</label><input type="text" id="fJobFamily" placeholder="e.g. Operasional Hub"></div>
         <div><label>Status</label><select id="fStatus"><option value="Aktif">Active</option><option value="Nonaktif">Inactive</option></select></div>
+        <div><label>Gender</label><select id="fGender"><option value="">-</option><option value="L">Male (L)</option><option value="P">Female (P)</option></select></div>
+        <div><label>Birth Date</label><input type="date" id="fLahir"></div>
+        <div><label>Join Date</label><input type="date" id="fMasuk"></div>
         <div style="display:flex; gap:8px; align-items:flex-end;">
           <button class="btn btn-outline" id="resetFormBtn" style="margin-bottom:14px;">Clear</button>
           <button class="btn btn-primary" id="saveOneBtn" style="margin-bottom:14px; flex:1;">Save</button>
@@ -101,6 +118,9 @@
         <option value="noEmail">No email</option>
         <option value="unmapped">Unmapped level</option>
         <option value="noAtasan">Manager NIK not found</option>
+        <option value="noGender">No gender</option>
+        <option value="noLahir">No birth date</option>
+        <option value="noMasuk">No join date</option>
       </select>
       <span class="text-meta" id="rowCount"></span>
     </div>
@@ -125,11 +145,32 @@
   import { db, onAuth, ensureUserProfile } from '../firebase-shared.js';
   import { iconSvg } from '../lms-icons.js';
   import { levelKeyFor, levelLabel, escapeHtml } from '../competency-shared.js?v=20261111d';
+  import { donut, hbars, vbars, PALETTE } from './mini-charts.js?v=20261113a';
   import { collection, getDocs, doc, setDoc, updateDoc, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   // Sama dengan pilihan level di Kelola User & Buat Modul.
   const LEVEL_OPTIONS = ['','Admin','Leader','Coordinator','Staff','Supervisor','Section Head','Department Head','AVP','VP','SVP'];
-  const COLS = ['NIK','Nama','Email','Jabatan','Level','Punya Bawahan','Atasan NIK','Divisi','Departemen','Job Family','Status'];
+  const COLS = ['NIK','Nama','Email','Jabatan','Level','Punya Bawahan','Atasan NIK','Divisi','Departemen','Job Family','Status','Gender','Tanggal Lahir','Tanggal Masuk'];
+
+  /** L/P dari berbagai penulisan (Laki-laki, Male, Pria, M / Perempuan, Female, Wanita, F). */
+  function normGender(v){
+    const s = String(v ?? '').trim().toLowerCase();
+    if(!s) return '';
+    if(['l','lk','laki','laki-laki','laki laki','pria','male','m'].includes(s)) return 'L';
+    if(['p','pr','perempuan','wanita','female','f','w'].includes(s)) return 'P';
+    return null; // tidak dikenali
+  }
+  /** Tanggal → 'YYYY-MM-DD'. Terima tanggal Excel (sudah diformat yyyy-mm-dd saat dibaca), DD/MM/YYYY, DD-MM-YYYY. */
+  function normDate(v){
+    const s = String(v ?? '').trim();
+    if(!s) return '';
+    let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if(m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+    m = s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/);
+    if(m){ let y = +m[3]; if(y < 100) y += y > 30 ? 1900 : 2000; const d = +m[1], mo = +m[2]; if(mo >= 1 && mo <= 12 && d >= 1 && d <= 31) return `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+    return null; // tidak dikenali
+  }
+  const yearsSince = d => { if(!d) return null; const x = new Date(d + 'T00:00:00'); if(isNaN(x)) return null; return (Date.now() - x) / (365.25 * 864e5); };
 
   let employees = [];          // dari Firestore
   let pending = null;          // hasil parse upload, menunggu konfirmasi
@@ -185,17 +226,21 @@
 
   function render(){
     const byNik = new Set(employees.map(e => e.nik));
-    document.getElementById('kpiTotal').textContent = employees.length;
-    document.getElementById('kpiNoEmail').textContent = employees.filter(e => !e.email).length;
-    document.getElementById('kpiUnmapped').textContent = employees.filter(e => !e.levelKey).length;
-    document.getElementById('kpiManager').textContent = employees.filter(e => e.punyaBawahan).length;
+    const div = F('divSelect').value;
+    const divs = [...new Set(employees.map(e => e.divisi || '(No division)'))].sort();
+    F('divSelect').innerHTML = '<option value="">All divisions</option>' + divs.map(d => `<option ${d === div ? 'selected' : ''}>${escapeHtml(d)}</option>`).join('');
+    const inDiv = employees.filter(e => !div || (e.divisi || '(No division)') === div);
+    renderDash(inDiv, div);
 
     const q = (document.getElementById('searchBox').value || '').toLowerCase();
     const flag = document.getElementById('filterFlag').value;
-    let rows = employees.filter(e => [e.nik, e.nama, e.email, e.jabatan].some(v => String(v || '').toLowerCase().includes(q)));
+    let rows = inDiv.filter(e => [e.nik, e.nama, e.email, e.jabatan].some(v => String(v || '').toLowerCase().includes(q)));
     if(flag === 'noEmail') rows = rows.filter(e => !e.email);
     if(flag === 'unmapped') rows = rows.filter(e => !e.levelKey);
     if(flag === 'noAtasan') rows = rows.filter(e => e.atasanNik && !byNik.has(e.atasanNik));
+    if(flag === 'noGender') rows = rows.filter(e => !e.gender);
+    if(flag === 'noLahir') rows = rows.filter(e => !e.tanggalLahir);
+    if(flag === 'noMasuk') rows = rows.filter(e => !e.tanggalMasuk);
 
     const shown = rows.slice(0, 300);
     document.getElementById('rowCount').textContent = rows.length > 300 ? `Showing 300 of ${rows.length}. Narrow your search.` : `${rows.length} employees`;
@@ -218,8 +263,58 @@
     document.querySelectorAll('#empTableBody [data-nik]').forEach(btn => btn.addEventListener('click', () => fillForm(employees.find(x => x.nik === btn.dataset.nik))));
   }
 
+  /* ===== Dashboard karyawan (status Aktif) ===== */
+  const LEVEL_ORDER = ['SVP','VP','AVP','Department Head','Section Head','Supervisor','Coordinator','Leader','Staff','Admin'];
+  function renderDash(list, div){
+    const act = list.filter(e => (e.status || 'Aktif') === 'Aktif');
+    const n = act.length, pctOf = (x, t = n) => t ? Math.round(x / t * 100) + '%' : '-';
+    F('kpiTotal').textContent = n;
+    F('kpiTotalSub').textContent = `${list.length - n} inactive · ${list.length} in master data`;
+    // gender
+    const nL = act.filter(e => e.gender === 'L').length, nP = act.filter(e => e.gender === 'P').length, nG = nL + nP;
+    F('kpiGender').textContent = nG ? (nL >= nP ? `${pctOf(nL, nG)} Male` : `${pctOf(nP, nG)} Female`) : '-';
+    F('kpiGenderSub').textContent = nG ? `${nL} male · ${nP} female${n - nG ? ` · ${n - nG} not filled` : ''}` : 'Gender not filled yet';
+    F('chGender').innerHTML = donut([{ label: 'Male', v: nL, color: '#3B82F6' }, { label: 'Female', v: nP, color: '#E6007A' }, { label: 'Not filled', v: n - nG, color: 'rgba(120,120,128,.3)' }], `<b>${n}</b>people`, 116);
+    // umur
+    const ages = act.map(e => yearsSince(e.tanggalLahir)).filter(x => x != null && x > 10 && x < 80);
+    const avgN = arr => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
+    const aAge = avgN(ages);
+    F('kpiAge').textContent = aAge != null ? `${Math.round(aAge)} yrs` : '-';
+    F('kpiAgeSub').textContent = ages.length ? `youngest ${Math.floor(Math.min(...ages))} · oldest ${Math.floor(Math.max(...ages))}${n - ages.length ? ` · ${n - ages.length} no birth date` : ''}` : 'Birth date not filled yet';
+    const AB = [['< 25', 0, 25], ['25–29', 25, 30], ['30–34', 30, 35], ['35–39', 35, 40], ['40–44', 40, 45], ['45+', 45, 200]];
+    F('chAge').innerHTML = vbars(AB.map(([l, lo, hi], i) => ({ label: l, v: ages.filter(a => a >= lo && a < hi).length, color: ['#93C5FD','#60A5FA','#3B82F6','#2563EB','#1D4ED8','#1E3A8A'][i] })));
+    F('chAgeHint').textContent = ages.length < n ? `Years old · ${n - ages.length} without birth date` : 'Years old';
+    // masa kerja
+    const ten = act.map(e => yearsSince(e.tanggalMasuk)).filter(x => x != null && x >= 0 && x < 60);
+    const aTen = avgN(ten);
+    F('kpiTenure').textContent = aTen != null ? `${aTen.toFixed(1).replace('.', ',')} yrs` : '-';
+    F('kpiTenureSub').textContent = ten.length ? `${ten.filter(t => t < 1).length} joined in the last 12 months${n - ten.length ? ` · ${n - ten.length} no join date` : ''}` : 'Join date not filled yet';
+    const TB = [['< 1', 0, 1], ['1–2', 1, 3], ['3–5', 3, 6], ['6–10', 6, 11], ['11+', 11, 100]];
+    F('chTenure').innerHTML = vbars(TB.map(([l, lo, hi], i) => ({ label: l + ' yr', v: ten.filter(t => t >= lo && t < hi).length, color: ['#BBF7D0','#86EFAC','#4ADE80','#16A34A','#166534'][i] })));
+    F('chTenureHint').textContent = ten.length < n ? `Years at Anteraja · ${n - ten.length} without join date` : 'Years at Anteraja';
+    // level
+    const cnt = (arr, key) => { const m = new Map(); arr.forEach(e => { const k = key(e); m.set(k, (m.get(k) || 0) + 1); }); return [...m.entries()]; };
+    const lv = cnt(act, e => e.level || '(No level)').sort((a, b) => { const ia = LEVEL_ORDER.indexOf(a[0]), ib = LEVEL_ORDER.indexOf(b[0]); return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib); });
+    F('chLevel').innerHTML = hbars(lv.map(([l, v]) => ({ label: l, value: v, color: '#8B5CF6', right: `<b>${v}</b> · ${pctOf(v)}` })));
+    // divisi → kalau 1 divisi dipilih, tampilkan per departemen
+    const byDept = !!div;
+    F('chOrgTitle').textContent = byDept ? 'By Department' : 'By Division';
+    F('chOrgHint').textContent = byDept ? `Active employees per department in ${div}` : 'Active employees per division';
+    const org = cnt(act, e => (byDept ? e.departemen : e.divisi) || (byDept ? '(No department)' : '(No division)')).sort((a, b) => b[1] - a[1]);
+    F('chOrg').innerHTML = hbars(org.map(([l, v]) => ({ label: l, value: v, color: '#E6007A', right: `<b>${v}</b> · ${pctOf(v)}` })));
+    // kualitas data
+    const byNik = new Set(employees.map(e => e.nik));
+    const Q = [['noEmail', 'No email (cannot log in)', list.filter(e => !e.email).length], ['unmapped', 'Unmapped level', list.filter(e => !e.levelKey).length],
+      ['noAtasan', 'Manager NIK not found', list.filter(e => e.atasanNik && !byNik.has(e.atasanNik)).length], ['noGender', 'No gender', act.filter(e => !e.gender).length],
+      ['noLahir', 'No birth date', act.filter(e => !e.tanggalLahir).length], ['noMasuk', 'No join date', act.filter(e => !e.tanggalMasuk).length]];
+    F('chQuality').innerHTML = `<div style="display:grid; gap:4px;">${Q.map(([k, l, v]) => `<button type="button" data-q="${k}" style="all:unset; cursor:pointer; display:flex; justify-content:space-between; padding:7px 10px; border-radius:8px; font-size:13px; background:${v ? 'rgba(245,158,11,.10)' : 'rgba(22,163,74,.08)'};">
+      <span>${l}</span><b style="color:${v ? '#B45309' : '#16A34A'}">${v || '✓'}</b></button>`).join('')}</div>`;
+    F('chQuality').querySelectorAll('[data-q]').forEach(b => b.onclick = () => { F('filterFlag').value = b.dataset.q; render(); F('filterFlag').scrollIntoView({ behavior: 'smooth', block: 'center' }); });
+  }
+
   document.getElementById('searchBox').addEventListener('input', render);
   document.getElementById('filterFlag').addEventListener('change', render);
+  document.getElementById('divSelect').addEventListener('change', render);
 
   /* ===== Form 1 orang ===== */
   const F = id => document.getElementById(id);
@@ -230,11 +325,12 @@
     F('fBawahan').value = e.punyaBawahanSumber === 'manual' ? (e.punyaBawahan ? 'ya' : 'tidak') : '';
     F('fAtasan').value = e.atasanNik || ''; F('fDivisi').value = e.divisi || ''; F('fDept').value = e.departemen || '';
     F('fJobFamily').value = e.jobFamily || ''; F('fStatus').value = e.status || 'Aktif';
+    F('fGender').value = e.gender || ''; F('fLahir').value = e.tanggalLahir || ''; F('fMasuk').value = e.tanggalMasuk || '';
     F('formTitle').textContent = 'Edit Employee: ' + (e.nama || e.nik);
     window.scrollTo({ top: document.getElementById('formTitle').offsetTop - 80, behavior: 'smooth' });
   }
   function resetForm(){
-    ['fNik','fNama','fEmail','fJabatan','fAtasan','fDivisi','fDept','fJobFamily'].forEach(id => F(id).value = '');
+    ['fNik','fNama','fEmail','fJabatan','fAtasan','fDivisi','fDept','fJobFamily','fGender','fLahir','fMasuk'].forEach(id => F(id).value = '');
     F('fLevel').value = ''; F('fBawahan').value = ''; F('fStatus').value = 'Aktif';
     F('formTitle').textContent = 'Add / Edit Employee';
   }
@@ -245,7 +341,10 @@
       'NIK': F('fNik').value, 'Nama': F('fNama').value, 'Email': F('fEmail').value, 'Jabatan': F('fJabatan').value,
       'Level': F('fLevel').value, 'Punya Bawahan': F('fBawahan').value, 'Atasan NIK': F('fAtasan').value,
       'Divisi': F('fDivisi').value, 'Departemen': F('fDept').value, 'Job Family': F('fJobFamily').value, 'Status': F('fStatus').value,
+      'Gender': F('fGender').value, 'Tanggal Lahir': F('fLahir').value, 'Tanggal Masuk': F('fMasuk').value,
     });
+    // dari form: kolom yang dikosongkan memang dihapus
+    rec.gender = rec.gender || ''; rec.tanggalLahir = rec.tanggalLahir || ''; rec.tanggalMasuk = rec.tanggalMasuk || '';
     if(!rec.nik || !rec.nama){ showToast('NIK and Name are required.'); return; }
     await commitRecords([rec], F('syncApproved').checked);
     resetForm();
@@ -274,16 +373,27 @@
       punyaBawahan: manual, punyaBawahanSumber: manual === null ? 'otomatis' : 'manual',
       atasanNik: pick(row, 'Atasan NIK'), divisi: pick(row, 'Divisi'), departemen: pick(row, 'Departemen'),
       jobFamily: pick(row, 'Job Family'), status: pick(row, 'Status') || 'Aktif',
+      // kolom opsional: hanya ikut kalau diisi, supaya upload tanpa kolom ini tidak menghapus data lama
+      ...opt('gender', normGender(pick(row, 'Gender') || pick(row, 'Jenis Kelamin'))),
+      ...opt('tanggalLahir', normDate(pick(row, 'Tanggal Lahir'))),
+      ...opt('tanggalMasuk', normDate(pick(row, 'Tanggal Masuk') || pick(row, 'Join Date'))),
+      _raw: { gender: pick(row, 'Gender') || pick(row, 'Jenis Kelamin'), lahir: pick(row, 'Tanggal Lahir'), masuk: pick(row, 'Tanggal Masuk') || pick(row, 'Join Date') },
     };
   }
+  const opt = (k, v) => v ? { [k]: v } : {};
 
   function handleFile(file){
     const reader = new FileReader();
     reader.onload = (e) => {
       try{
-        const wb = XLSX.read(e.target.result, { type: 'binary' });
-        // raw:false supaya NIK berawalan 0 tetap terbaca sebagai teks
-        const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '', raw: false });
+        const wb = XLSX.read(e.target.result, { type: 'binary', cellDates: true });
+        // raw:false supaya NIK berawalan 0 tetap terbaca sebagai teks; tanggal Excel jadi yyyy-mm-dd
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        // sel bertipe tanggal: pakai nilai aslinya (bukan tampilan Excel yang bisa m/d/yy) → yyyy-mm-dd
+        Object.keys(sheet).forEach(k => { const c = sheet[k]; if(k[0] !== '!' && c && c.t === 'd' && c.v instanceof Date && !isNaN(c.v)){
+          const d = new Date(c.v.getTime() + 12 * 3600e3); // geser setengah hari supaya aman dari pembulatan zona waktu
+          c.w = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`; } });
+        const rows = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false });
         const records = [], warnings = [];
         const seen = new Set(), seenEmail = {};
         rows.forEach((row, i) => {
@@ -294,6 +404,10 @@
           if(r.email && seenEmail[r.email] && seenEmail[r.email] !== r.nik) warnings.push(`Row ${line}: email ${r.email} is also used by NIK ${seenEmail[r.email]}.`);
           if(r.email) seenEmail[r.email] = r.nik;
           if(r.level && !LEVEL_OPTIONS.includes(r.level)) warnings.push(`Row ${line}: unknown level "${r.level}".`);
+          if(r._raw.gender && !r.gender) warnings.push(`Row ${line}: gender "${r._raw.gender}" not recognised (use L/P), left empty.`);
+          if(r._raw.lahir && !r.tanggalLahir) warnings.push(`Row ${line}: birth date "${r._raw.lahir}" not recognised (use DD/MM/YYYY), left empty.`);
+          if(r._raw.masuk && !r.tanggalMasuk) warnings.push(`Row ${line}: join date "${r._raw.masuk}" not recognised (use DD/MM/YYYY), left empty.`);
+          delete r._raw;
           seen.add(r.nik);
           const idx = records.findIndex(x => x.nik === r.nik);
           if(idx >= 0) records[idx] = r; else records.push(r);
@@ -372,6 +486,7 @@
             punyaBawahan: !!e.punyaBawahan, punyaBawahanSumber: e.punyaBawahanSumber, levelKey: e.levelKey || null,
             atasanNik: e.atasanNik || '', divisi: e.divisi || '', departemen: e.departemen || '',
             jobFamily: e.jobFamily || '', status: e.status || 'Aktif',
+            gender: e.gender || '', tanggalLahir: e.tanggalLahir || '', tanggalMasuk: e.tanggalMasuk || '',
             updatedAt: serverTimestamp(), updatedBy: currentProfile.email,
           }, { merge: true });
           if(syncApproved && e.email && uploadedNik.has(e.nik)){
@@ -409,13 +524,17 @@
   }
 
   /* ===== Template ===== */
-  F('downloadTemplateBtn').innerHTML = iconSvg('file-text', {size:13}) + ' Download Excel Template';
+  F('downloadTemplateBtn').innerHTML = iconSvg('file-text', {size:13}) + ' Download Template (current employees)';
   F('downloadTemplateBtn').addEventListener('click', () => {
     const contoh = [
-      ['12345', 'Contoh Supervisor', 'contoh.spv@anteraja.id', 'Hub Supervisor', 'Supervisor', '', '11111', 'OPERATION', 'Hub Operation', 'Operasional Hub', 'Aktif'],
-      ['23456', 'Contoh Staff', 'contoh.staff@anteraja.id', 'Hub Staff', 'Staff', 'Tidak', '12345', 'OPERATION', 'Hub Operation', 'Operasional Hub', 'Aktif'],
+      ['12345', 'Contoh Supervisor', 'contoh.spv@anteraja.id', 'Hub Supervisor', 'Supervisor', '', '11111', 'OPERATION', 'Hub Operation', 'Operasional Hub', 'Aktif', 'L', '15/04/1990', '01/02/2019'],
+      ['23456', 'Contoh Staff', 'contoh.staff@anteraja.id', 'Hub Staff', 'Staff', 'Tidak', '12345', 'OPERATION', 'Hub Operation', 'Operasional Hub', 'Aktif', 'P', '03/11/1998', '10/07/2023'],
     ];
-    const ws = XLSX.utils.aoa_to_sheet([COLS, ...contoh]);
+    // sudah ada data → template berisi semua karyawan saat ini (tinggal lengkapi kolom yang kosong, mis. Gender/Tanggal)
+    const dmy = d => d ? d.split('-').reverse().join('/') : '';
+    const cur = employees.map(e => [e.nik, e.nama || '', e.email || '', e.jabatan || '', e.level || '', e.punyaBawahanSumber === 'manual' ? (e.punyaBawahan ? 'Ya' : 'Tidak') : '',
+      e.atasanNik || '', e.divisi || '', e.departemen || '', e.jobFamily || '', e.status || 'Aktif', e.gender || '', dmy(e.tanggalLahir), dmy(e.tanggalMasuk)]);
+    const ws = XLSX.utils.aoa_to_sheet([COLS, ...(cur.length ? cur : contoh)]);
     ws['!cols'] = COLS.map(c => ({ wch: Math.max(12, c.length + 4) }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Karyawan');
