@@ -53,11 +53,31 @@
   </div>
 
   <div class="wrap wide">
-    <h1 class="text-h1">Competency Profile</h1>
-    <p class="text-sub" style="margin-bottom:20px;" id="pageSub">Confidential: scores are visible to admins and Department Head+ managers only.</p>
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:4px;">
+      <h1 class="text-h1" style="margin:0;">Competency Profile</h1>
+      <div style="display:flex; gap:8px;">
+        <select id="periodeSelect" style="margin:0; min-width:170px;"></select>
+        <select id="divSelect" style="margin:0; max-width:220px;"></select>
+      </div>
+    </div>
+    <p class="text-sub" style="margin-bottom:16px;" id="pageSub">Confidential: scores are visible to admins and Department Head+ managers only.</p>
 
+    <div class="dash-kpis">
+      <div class="dk"><div class="n" id="kAss">-</div><div class="l">Assessed</div><div class="s" id="kAssSub"></div></div>
+      <div class="dk"><div class="n" id="kAvg">-</div><div class="l">Average Competency Score</div><div class="s" id="kAvgSub"></div></div>
+      <div class="dk"><div class="n" id="kGap">-</div><div class="l">Have Gaps</div><div class="s" id="kGapSub"></div></div>
+      <div class="dk"><div class="n" id="kTop" style="font-size:17px; padding-top:6px;">-</div><div class="l">Most Common Gap</div><div class="s" id="kTopSub"></div></div>
+    </div>
+    <div class="dash-grid g2">
+      <div class="dash-card"><h3>Average Score By Competency</h3><div class="hint" id="chCompHint">Lowest first · marker = standard</div><div id="chComp"></div></div>
+      <div style="display:grid; gap:16px; align-content:start; min-width:0;">
+        <div class="dash-card"><h3>Employees By Number Of Gaps</h3><div class="hint">Competencies below standard per person</div><div id="chGapN"></div></div>
+        <div class="dash-card"><h3>Average Competency Score By Division</h3><div class="hint">Scale 1–5 · marker = standard</div><div id="chDiv"></div></div>
+      </div>
+    </div>
+
+    <div class="dash-sec"><h2>Employees</h2><span class="text-meta">Click a name to see the full profile</span></div>
     <div class="filter-row">
-      <select id="periodeSelect" style="max-width:220px;"></select>
       <input type="text" id="searchBox" placeholder="Search name / NIK / position..." style="max-width:280px;">
       <select id="gapFilter" style="max-width:200px;">
         <option value="">All</option>
@@ -90,6 +110,7 @@
     KATEGORI_ORDER, DEFAULT_SCALE, escapeHtml, levelLabel, periodeRank, periodeLabel, scoreLabel, round2, gapsFor, recommendModules,
     PASSING_SCORE, isPassed, gapStatuses, IDP_JENIS, IDP_STATUS, idpItemStatus, itemProgress, planApproval, APPROVAL_STATUS, APPROVAL_BADGE,
   } from '../competency-shared.js?v=20261111d';
+  import { donut, hbars, avg, f2 } from './mini-charts.js?v=20261113a';
   import { collection, getDocs, doc, getDoc, query, where } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const F = id => document.getElementById(id);
@@ -136,7 +157,13 @@
   function renderList(){
     const q = (F('searchBox').value || '').toLowerCase();
     const gf = F('gapFilter').value;
-    let rows = assessments.filter(a => a.periode === selectedPeriode)
+    const divOf = a => a.divisi || '(No division)';
+    const div = F('divSelect').value;
+    const perRows = assessments.filter(a => a.periode === selectedPeriode);
+    F('divSelect').innerHTML = '<option value="">All divisions</option>' + [...new Set(perRows.map(divOf))].sort().map(d => `<option ${d === div ? 'selected' : ''}>${escapeHtml(d)}</option>`).join('');
+    const base = perRows.filter(a => !div || divOf(a) === div);
+    renderDash(base, divOf);
+    let rows = base
       .filter(a => [a.nama, a.nik, a.jabatan].some(v => String(v||'').toLowerCase().includes(q)));
     if(gf === 'gap') rows = rows.filter(a => gapsFor(a.kompetensi, standar()).length);
     if(gf === 'noGap') rows = rows.filter(a => !gapsFor(a.kompetensi, standar()).length);
@@ -162,7 +189,43 @@
       F('detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }));
   }
+  /* ===== Dashboard kompetensi ===== */
+  function renderDash(rows, divOf){
+    const std = standar();
+    const withComp = rows.filter(a => Object.keys(a.kompetensi || {}).length);
+    const allScores = withComp.flatMap(a => Object.values(a.kompetensi || {}));
+    const nGap = a => gapsFor(a.kompetensi, std).length;
+    const gapped = withComp.filter(a => nGap(a) > 0);
+    F('kAss').textContent = withComp.length;
+    F('kAssSub').textContent = rows.length > withComp.length ? `${rows.length - withComp.length} without competency scores` : 'with competency scores';
+    const aAll = avg(allScores);
+    F('kAvg').textContent = f2(aAll);
+    F('kAvgSub').textContent = withComp.length ? `${scoreLabel(aAll, scale) || ''} · standard ${std}` : '';
+    F('kGap').textContent = gapped.length;
+    F('kGapSub').textContent = withComp.length ? `${Math.round(gapped.length / withComp.length * 100)}% of assessed` : '';
+    // per kompetensi
+    const nameOf = id => competencies.find(c => c.id === id)?.nama || id;
+    const ids = [...new Set(withComp.flatMap(a => Object.keys(a.kompetensi || {})))];
+    const per = ids.map(id => { const sc = withComp.map(a => a.kompetensi?.[id]).filter(v => v != null && !isNaN(v)); return { id, nama: nameOf(id), avg: avg(sc), n: sc.length, below: sc.filter(v => v < std).length }; })
+      .sort((x, y) => (x.avg ?? 9) - (y.avg ?? 9));
+    const top = [...per].sort((x, y) => y.below - x.below)[0];
+    F('kTop').textContent = top && top.below ? top.nama : '-';
+    F('kTopSub').textContent = top && top.below ? `${top.below} employee${top.below === 1 ? '' : 's'} below standard` : 'No gaps';
+    F('chComp').innerHTML = hbars(per.map(c => ({ label: c.nama, value: c.avg || 0, color: c.avg != null && c.avg < std ? '#F59E0B' : '#16A34A',
+      right: `<b>${f2(c.avg)}</b>${c.below ? ` · <span style="color:var(--red)">${c.below} below</span>` : ''}` })), { max: 5, marker: std });
+    // jumlah gap per orang
+    const bucket = k => withComp.filter(a => k === 3 ? nGap(a) >= 3 : nGap(a) === k).length;
+    F('chGapN').innerHTML = donut([
+      { label: 'No gaps', v: bucket(0), color: '#16A34A' }, { label: '1 gap', v: bucket(1), color: '#F59E0B' },
+      { label: '2 gaps', v: bucket(2), color: '#F97316' }, { label: '3+ gaps', v: bucket(3), color: '#DC2626' },
+    ], `<b>${withComp.length}</b>people`, 116);
+    // per divisi
+    const byDiv = new Map(); withComp.forEach(a => { const d = divOf(a); if(!byDiv.has(d)) byDiv.set(d, []); byDiv.get(d).push(...Object.values(a.kompetensi || {})); });
+    F('chDiv').innerHTML = hbars([...byDiv.entries()].map(([d, sc]) => { const v = avg(sc); return { label: d, value: v || 0, color: v != null && v < std ? '#F59E0B' : '#16A34A', right: `<b>${f2(v)}</b>` }; })
+      .sort((x, y) => y.value - x.value), { max: 5, marker: std });
+  }
   F('periodeSelect').addEventListener('change', e => { selectedPeriode = e.target.value; renderList(); if(selectedNik) renderDetail(); });
+  F('divSelect').addEventListener('change', renderList);
   F('searchBox').addEventListener('input', renderList);
   F('gapFilter').addEventListener('change', renderList);
 

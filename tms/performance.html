@@ -55,15 +55,27 @@
   </div>
 
   <div class="wrap wide">
-    <h1 class="text-h1">Performance Data</h1>
-
-    <div class="kpi-row">
-      <div class="kpi-card2"><div class="kpi-label2">EMPLOYEES ASSESSED</div><div class="kpi-value2" id="kpiDinilai">-</div><div class="kpi-sub" id="kpiDinilaiSub">Selected period</div></div>
-      <div class="kpi-card2" style="--accent:var(--blue)"><div class="kpi-label2">HAVE KPI SCORE</div><div class="kpi-value2" id="kpiKpi">-</div><div class="kpi-sub">Others PA only</div></div>
-      <div class="kpi-card2" style="--accent:var(--amber)"><div class="kpi-label2">HAVE GAPS</div><div class="kpi-value2" id="kpiGap">-</div><div class="kpi-sub">≥1 competency below standard</div></div>
-      <div class="kpi-card2" style="--accent:var(--red)"><div class="kpi-label2">NO DH+ MANAGER</div><div class="kpi-value2" id="kpiNoViewer">-</div><div class="kpi-sub">Scores visible to admins only</div></div>
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:16px;">
+      <h1 class="text-h1" style="margin:0;">Performance Data</h1>
+      <div style="display:flex; gap:8px;">
+        <select id="periodeSelect" style="margin:0; min-width:170px;"></select>
+        <select id="divSelect" style="margin:0; max-width:220px;"></select>
+      </div>
     </div>
 
+    <div class="dash-kpis">
+      <div class="dk"><div class="n" id="kpiDinilai">-</div><div class="l">Employees Assessed</div><div class="s" id="kpiDinilaiSub"></div></div>
+      <div class="dk"><div class="n" id="kpiAvg">-</div><div class="l">Average Final Score</div><div class="s" id="kpiAvgSub"></div></div>
+      <div class="dk"><div class="n" id="kpiGap">-</div><div class="l">Have Competency Gaps</div><div class="s">≥1 competency below standard</div></div>
+      <div class="dk"><div class="n" id="kpiNoViewer">-</div><div class="l">No DH+ Manager</div><div class="s">Scores visible to admins only</div></div>
+    </div>
+    <div class="dash-grid g3">
+      <div class="dash-card"><h3>Final Score Distribution</h3><div class="hint">Employees per rating</div><div id="chDist"></div></div>
+      <div class="dash-card"><h3>Average Final Score By Division</h3><div class="hint">Scale 1–5 · marker = standard</div><div id="chDivAvg"></div></div>
+      <div class="dash-card"><h3>Data Coverage By Division</h3><div class="hint">Assessed vs active employees</div><div id="chCov"></div></div>
+    </div>
+
+    <div class="dash-sec"><h2>Input &amp; Data</h2><span class="text-meta">Import results, set weights, and check each employee</span></div>
     <div class="card" style="margin-bottom:16px;">
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
         <h2 class="text-h2" style="margin:0;">Import PA &amp; KPI Results via Excel</h2>
@@ -88,7 +100,6 @@
     </details>
 
     <div class="filter-row">
-      <select id="periodeSelect" style="max-width:220px;"></select>
       <input type="text" id="searchBox" placeholder="Search NIK / name..." style="max-width:260px;">
       <span class="text-meta" id="rowCount"></span>
       <span style="flex:1;"></span>
@@ -119,6 +130,7 @@
     LEVEL_COLUMNS, KATEGORI_ORDER, DEFAULT_SCALE, DEFAULT_WEIGHTS, slugify, escapeHtml, levelLabel,
     normalizePeriode, periodeRank, periodeLabel, scoreLabel, round2, computeFinal, viewerEmailsFor, gapsFor,
   } from '../competency-shared.js?v=20261111d';
+  import { donut, hbars, vbars, avg, f2, PALETTE } from './mini-charts.js?v=20261113a';
   import { collection, getDocs, doc, getDoc, setDoc, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const F = id => document.getElementById(id);
@@ -170,13 +182,16 @@
   /* ===== Tabel per periode ===== */
   function renderTable(){
     const q = (F('searchBox').value || '').toLowerCase();
-    const inPeriode = assessments.filter(a => a.periode === selectedPeriode);
+    const divOf = a => a.divisi || employeesByNik[a.nik]?.divisi || '(No division)';
+    const div = F('divSelect').value;
+    const allPer = assessments.filter(a => a.periode === selectedPeriode);
+    const divs = [...new Set([...allPer.map(divOf), ...employees.filter(e => (e.status || 'Aktif') === 'Aktif').map(e => e.divisi || '(No division)')])].sort();
+    F('divSelect').innerHTML = '<option value="">All divisions</option>' + divs.map(d => `<option ${d === div ? 'selected' : ''}>${escapeHtml(d)}</option>`).join('');
+    const inPeriode = allPer.filter(a => !div || divOf(a) === div);
+    renderDash(inPeriode, divOf, div);
     const rows = inPeriode.filter(a => [a.nik, a.nama].some(v => String(v||'').toLowerCase().includes(q)))
       .sort((a,b) => (a.nama||'').localeCompare(b.nama||''));
     const standar = scale.standar || 3;
-    F('kpiDinilai').textContent = inPeriode.length;
-    F('kpiDinilaiSub').textContent = selectedPeriode ? periodeLabel(selectedPeriode) : 'No data yet';
-    F('kpiKpi').textContent = inPeriode.filter(a => a.skorKPI != null).length;
     F('kpiGap').textContent = inPeriode.filter(a => gapsFor(a.kompetensi, standar).length).length;
     F('kpiNoViewer').textContent = inPeriode.filter(a => !(a.viewerEmails||[]).length).length;
     F('rowCount').textContent = `${rows.length} employees`;
@@ -200,7 +215,29 @@
     empty.style.display = rows.length ? 'none' : 'block';
     empty.innerHTML = iconSvg('inbox',{size:24}) + `<p style="margin-top:8px;">${assessments.length ? 'Tidak ada data yang cocok.' : 'Belum ada data performa. Download template, isi dari hasil PA, lalu upload.'}</p>`;
   }
+  /* ===== Dashboard performa ===== */
+  function renderDash(rows, divOf, div){
+    const standar = scale.standar || 3;
+    const active = employees.filter(e => (e.status || 'Aktif') === 'Aktif' && (!div || (e.divisi || '(No division)') === div));
+    F('kpiDinilai').textContent = rows.length;
+    F('kpiDinilaiSub').textContent = active.length ? `of ${active.length} active employees (${Math.round(rows.length / active.length * 100)}%)` : (selectedPeriode ? periodeLabel(selectedPeriode) : 'No data yet');
+    const aF = avg(rows.map(a => a.skorFinal));
+    F('kpiAvg').textContent = f2(aF);
+    F('kpiAvgSub').textContent = rows.length ? `${scoreLabel(aF, scale) || ''} · PA ${f2(avg(rows.map(a => a.skorPA)))} · KPI ${f2(avg(rows.map(a => a.skorKPI)))}` : '';
+    // distribusi rating (urutan skala)
+    const labels = (scale.skala || []).map(x => x.label);
+    F('chDist').innerHTML = vbars(labels.map((l, i) => ({ label: l, v: rows.filter(a => scoreLabel(a.skorFinal, scale) === l).length, color: PALETTE[i % PALETTE.length] })));
+    // rata-rata per divisi
+    const byDiv = new Map(); rows.forEach(a => { const d = divOf(a); if(!byDiv.has(d)) byDiv.set(d, []); byDiv.get(d).push(a); });
+    F('chDivAvg').innerHTML = hbars([...byDiv.entries()].map(([d, list]) => { const v = avg(list.map(a => a.skorFinal)); return { label: d, value: v || 0, color: v != null && v < standar ? '#F59E0B' : '#16A34A', right: `<b>${f2(v)}</b> · ${list.length}` }; })
+      .sort((x, y) => y.value - x.value), { max: 5, marker: standar });
+    // cakupan data per divisi
+    const actByDiv = new Map(); active.forEach(e => { const d = e.divisi || '(No division)'; actByDiv.set(d, (actByDiv.get(d) || 0) + 1); });
+    F('chCov').innerHTML = hbars([...actByDiv.entries()].map(([d, n]) => { const got = (byDiv.get(d) || []).length; return { label: d, value: got, max: n, color: got >= n ? '#16A34A' : '#3B82F6', right: `<b>${got}</b>/${n}`, pct: n ? got / n : 0 }; })
+      .sort((x, y) => x.pct - y.pct).map(r => ({ ...r, value: r.pct * 100 })), { max: 100 });
+  }
   F('periodeSelect').addEventListener('change', e => { selectedPeriode = e.target.value; renderTable(); });
+  F('divSelect').addEventListener('change', renderTable);
   F('searchBox').addEventListener('input', renderTable);
 
   /* ===== Bobot ===== */
