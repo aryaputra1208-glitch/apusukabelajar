@@ -78,16 +78,17 @@ onAuth(async (user) => {
     if (seq !== authSeq) return; // sudah ganti akun selagi menunggu
 
     const nav = [
-      { group: 'General', items: isAdmin ? [{ href: 'index.html', icon: 'home', label: 'Home', badge: nPendingAll || '' }] : [] },
-      { group: 'Employee Development', items: isAdmin ? [
+      // urutan mengikuti alur proses: data karyawan → data performa → profil kompetensi → IDP
+      { group: 'General', items: isAdmin ? [{ href: 'index.html', icon: 'home', label: 'Dashboard', badge: nPendingAll || '' }] : [] },
+      { group: 'Talent Process', items: isAdmin ? [
+        { href: 'employees.html', icon: 'users', label: 'Employees' },
+        { href: 'performance.html', icon: 'chart-bar', label: 'Performance Data' },
         { href: 'profile.html', icon: 'user-check', label: 'Competency Profile' },
         { href: 'idp.html', icon: 'check', label: 'IDP' },
       ] : [] },
-      { group: 'Master Data', items: isAdmin ? [
-        { href: 'employees.html', icon: 'users', label: 'Employees' },
+      { group: 'Settings', items: isAdmin ? [
         { href: 'competencies.html', icon: 'layout-grid', label: 'Competency Dictionary' },
-        { href: 'performance.html', icon: 'chart-bar', label: 'Performance Data' },
-        { href: 'hav-setup.html', icon: 'layout-grid', label: 'HAV Map Setup' },
+        { href: 'hav-setup.html', icon: 'settings', label: 'HAV Map Setup' },
       ] : [] },
       { group: 'Mentoring', items: nMentor ? [{ href: 'mentor-idp.html', icon: 'users', label: isAdmin ? 'My Mentees' : 'IDP', badge: nPendingMine || '' }] : [] },
       { group: 'For You', items: nIdp ? [{ href: 'my-idp.html', icon: 'file-text', label: 'IDP Saya' }] : [] },
