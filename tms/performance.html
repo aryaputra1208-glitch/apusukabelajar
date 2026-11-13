@@ -275,7 +275,7 @@
     const iNik = col('nik'), iPer = col('periode'), iKpi = col('skor-kpi'), iPa = col('skor-pa'), iFin = col('skor-final'), iPot = col('skor-potensi');
     const compCols = competencies.map(c => ({ id: c.id, nama: c.nama, i: header.indexOf(slugify(c.nama)) }));
     const missingComps = compCols.filter(c => c.i === -1).map(c => c.nama);
-    const warnings = [], records = [];
+    const warnings = [], records = []; let blankRows = 0;
     if(iPer === -1) warnings.push('No Periode column; all rows will be skipped.');
     if(missingComps.length) warnings.push(`Competency columns not found (scores treated as empty): ${missingComps.join(', ')}.`);
 
@@ -283,6 +283,8 @@
       const line = headerIdx + idx + 2;
       const nik = String(r[iNik] ?? '').trim();
       if(!nik) return;
+      const scoreCells = [iKpi, iPa, iFin, iPot, ...compCols.map(c => c.i)].filter(i => i >= 0).map(i => String(r[i] ?? '').trim());
+      if(scoreCells.every(x => x === '')){ blankRows++; return; } // karyawan yang tidak diisi → dilewati, data lamanya tetap aman
       const periode = iPer >= 0 ? normalizePeriode(r[iPer]) : null;
       if(!periode){ warnings.push(`Row ${line} (NIK ${nik}): empty/unknown period, skipped.`); return; }
       const emp = employeesByNik[nik];
@@ -313,7 +315,7 @@
     });
     // NIK+periode dobel → yang terakhir dipakai
     const map = {}; records.forEach(r => map[`${r.periode}_${r.nik}`] = r);
-    return { records: Object.values(map), warnings, missingComps };
+    return { records: Object.values(map), warnings, missingComps, blankRows };
   }
 
   function renderPreview(){
@@ -326,6 +328,7 @@
     box.innerHTML = `
       <div style="font-weight:700; margin-bottom:6px;">Preview: ${records.length} assessments ready to save</div>
       <div class="text-sub">${Object.entries(perPeriode).map(([p, n]) => `${escapeHtml(periodeLabel(p))}: ${n} people`).join(' · ') || '-'}</div>
+      ${pending.blankRows ? `<div class="text-sub">${pending.blankRows} employees left empty in the file are skipped; their existing data is not changed.</div>` : ''}
       <div class="text-sub">${records.filter(r => r.skorKPI != null).length} with KPI, ${records.filter(r => r.skorKPI == null).length} PA only. ${nTimpa ? `${nTimpa} overwrite existing data for the same period.` : ''}</div>
       ${warnings.length ? `<ul class="warn-list">${warnings.slice(0, 60).map(w => `<li>${escapeHtml(w)}</li>`).join('')}${warnings.length > 60 ? `<li>… and ${warnings.length - 60} more</li>` : ''}</ul>` : ''}
       <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
@@ -422,17 +425,23 @@
   });
 
   /* ===== Template: berisi daftar karyawan aktif + kolom kompetensi ===== */
-  F('downloadTemplateBtn').innerHTML = iconSvg('file-text', {size:13}) + ' Download Template (with employee list)';
+  F('downloadTemplateBtn').innerHTML = iconSvg('file-text', {size:13}) + ' Download Template (employee list + saved scores)';
   F('downloadTemplateBtn').addEventListener('click', () => {
     if(!competencies.length){ showToast('The competency dictionary is empty.'); return; }
     const header = ['NIK', 'Nama', 'Level', 'Periode', 'Skor KPI', 'Skor PA', 'Skor Final', 'Skor Potensi', ...competencies.map(c => c.nama)];
+    // Data yang sudah tersimpan untuk periode yang sedang dipilih ikut terisi, supaya tidak perlu diketik ulang.
+    const per = selectedPeriode || '';
+    const have = {}; assessments.filter(a => a.periode === per).forEach(a => have[a.nik] = a);
+    const v = x => (x === null || x === undefined || x === '') ? '' : x;
     const body = employees.filter(e => (e.status || 'Aktif') === 'Aktif').sort((a,b) => (a.nama||'').localeCompare(b.nama||''))
-      .map(e => [e.nik, e.nama || '', e.level || '', '', '', '', '', '', ...competencies.map(() => '')]);
+      .map(e => { const a = have[e.nik];
+        return a ? [e.nik, e.nama || '', e.level || '', per, v(a.skorKPI), v(a.skorPA), a.skorFinalSumber === 'import' ? v(a.skorFinal) : '', v(a.skorPotensi), ...competencies.map(c => v(a.kompetensi?.[c.id]))]
+                 : [e.nik, e.nama || '', e.level || '', per, '', '', '', '', ...competencies.map(() => '')]; });
     const ws = XLSX.utils.aoa_to_sheet([header, ...body]);
     ws['!cols'] = header.map((h, i) => ({ wch: i < 2 ? 22 : Math.max(10, Math.min(28, h.length + 2)) }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Performa');
-    XLSX.writeFile(wb, 'template-data-performa.xlsx');
+    XLSX.writeFile(wb, `template-data-performa${per ? '-' + per : ''}.xlsx`);
   });
 
   onAuth(async (user) => {
