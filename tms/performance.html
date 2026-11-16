@@ -70,8 +70,8 @@
       <div class="dk"><div class="n" id="kpiGap">-</div><div class="l">Have Competency Gaps</div><div class="s">≥1 competency below standard</div></div>
       <div class="dk"><div class="n" id="kpiNoViewer">-</div><div class="l">No DH+ Manager</div><div class="s">Scores visible to admins only</div></div>
     </div>
-    <div class="dash-grid g3">
-      <div class="dash-card"><h3>Final Score Distribution</h3><div class="hint">Employees per rating</div><div id="chDist"></div></div>
+    <div class="dash-card" style="margin-bottom:16px;"><h3>Final Score Distribution</h3><div class="hint">Histogram of Skor Final with the normal (bell) curve fitted to the same data · shaded zones = rating</div><div id="chDist"></div></div>
+    <div class="dash-grid" style="grid-template-columns:1fr 1fr;">
       <div class="dash-card"><h3>Average Final Score By Division</h3><div class="hint">Scale 1–5 · marker = standard</div><div id="chDivAvg" style="max-height:300px; overflow-y:auto; padding-right:4px;"></div></div>
       <div class="dash-card"><h3>Data Coverage By Division</h3><div class="hint">Assessed vs active employees</div><div id="chCov" style="max-height:300px; overflow-y:auto; padding-right:4px;"></div></div>
     </div>
@@ -131,7 +131,7 @@
     LEVEL_COLUMNS, KATEGORI_ORDER, DEFAULT_SCALE, DEFAULT_WEIGHTS, slugify, escapeHtml, levelLabel,
     normalizePeriode, periodeRank, periodeLabel, scoreLabel, round2, computeFinal, viewerEmailsFor, gapsFor,
   } from '../competency-shared.js?v=20261111d';
-  import { donut, hbars, vbars, avg, f2, PALETTE } from './mini-charts.js?v=20261116b';
+  import { donut, hbars, vbars, bellCurve, avg, f2, PALETTE } from './mini-charts.js?v=20261116c';
   import { fillLevelSelect, bindLevelSelect, matchLevel } from './level-filter.js?v=20261116a';
   import { collection, getDocs, doc, getDoc, setDoc, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
@@ -232,10 +232,11 @@
     // distribusi rating (urutan skala)
     const labels = (scale.skala || []).map(x => x.label);
     const tc = l => String(l).toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
-    // satu baris per rating, dari tertinggi ke terendah
-    const nDist = labels.map(l => rows.filter(a => scoreLabel(a.skorFinal, scale) === l).length);
-    const totDist = nDist.reduce((a, b) => a + b, 0);
-    F('chDist').innerHTML = totDist ? hbars(labels.map((l, i) => ({ label: tc(l), value: nDist[i], color: PALETTE[i % PALETTE.length], right: `<b>${nDist[i]}</b> · ${Math.round(nDist[i] / totDist * 100)}%` })).reverse(), { max: Math.max(...nDist) }) : '<div class="mc-empty">No data for this filter.</div>';
+    // kurva normal: batas bawah tiap zona rating diambil dari 'rentang' di skala
+    const ZC = ['#DC2626', '#F59E0B', '#3B82F6', '#16A34A', '#8B5CF6'];
+    const bands = (scale.skala || []).map((x, i) => ({ label: tc(x.label), min: parseFloat(String((String(x.rentang).match(/\d+(?:[.,]\d+)?/) || [x.skor])[0]).replace(',', '.')), color: ZC[i % ZC.length] }))
+      .filter(b => !isNaN(b.min)).sort((x, y) => x.min - y.min);
+    F('chDist').innerHTML = bellCurve(rows.map(a => a.skorFinal), bands);
     // rata-rata per divisi
     const byDiv = new Map(); rows.forEach(a => { const d = divOf(a); if(!byDiv.has(d)) byDiv.set(d, []); byDiv.get(d).push(a); });
     F('chDivAvg').innerHTML = hbars([...byDiv.entries()].map(([d, list]) => { const v = avg(list.map(a => a.skorFinal)); return { label: d, value: v || 0, color: v != null && v < standar ? '#F59E0B' : '#16A34A', right: `<b>${f2(v)}</b> · ${list.length}` }; })
