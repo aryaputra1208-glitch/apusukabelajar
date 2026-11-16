@@ -65,6 +65,7 @@
     <div class="filter-row">
       <select id="periodeSelect" style="max-width:220px;"></select>
       <input type="text" id="searchBox" placeholder="Search name / NIK / position..." style="max-width:280px;">
+      <select id="lvlSelect" style="max-width:200px;"></select>
       <select id="idpFilter" style="max-width:220px;">
         <option value="">All</option>
         <option value="needIdp">Has gaps, no IDP</option>
@@ -100,6 +101,7 @@
     viewerEmailsFor, gapStatuses, PASSING_SCORE, IDP_JENIS, IDP_STATUS, idpItemStatus,
     APPROVAL_STATUS, APPROVAL_BADGE, planApproval, planContentSignature, itemProgress, isMentorEligible, defaultMentorFor,
   } from '../competency-shared.js?v=20261111d';
+  import { fillLevelSelect, bindLevelSelect, matchLevel } from './level-filter.js?v=20261116a';
   import { collection, getDocs, doc, getDoc, setDoc, query, where, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const F = id => document.getElementById(id);
@@ -160,7 +162,9 @@
   function renderList(){
     const q = (F('searchBox').value || '').toLowerCase();
     const flt = F('idpFilter').value;
-    let rows = assessments.filter(a => a.periode === selectedPeriode)
+    const perRows = assessments.filter(a => a.periode === selectedPeriode);
+    const lvl = fillLevelSelect(F('lvlSelect'), perRows.map(a => a.level));
+    let rows = perRows.filter(a => matchLevel(a.level, lvl))
       .filter(a => [a.nama, a.nik, a.jabatan].some(v => String(v||'').toLowerCase().includes(q)));
     const planOf = a => plans[`${a.periode}_${a.nik}`];
     if(flt === 'needIdp') rows = rows.filter(a => gapsFor(a.kompetensi, standar()).length && !(planOf(a)?.items || []).length);
@@ -194,6 +198,7 @@
   F('periodeSelect').addEventListener('change', e => { selectedPeriode = e.target.value; selectedNik = ''; draft = null; F('editor').style.display = 'none'; renderList(); });
   F('searchBox').addEventListener('input', renderList);
   F('idpFilter').addEventListener('change', renderList);
+  bindLevelSelect(F('lvlSelect'), renderList);
 
   async function loadAttempts(a){
     const out = [];

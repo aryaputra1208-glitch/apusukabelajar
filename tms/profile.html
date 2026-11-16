@@ -58,6 +58,7 @@
       <div style="display:flex; gap:8px;">
         <select id="periodeSelect" style="margin:0; min-width:170px;"></select>
         <select id="divSelect" style="margin:0; max-width:220px;"></select>
+        <select id="lvlSelect" style="margin:0; max-width:200px;"></select>
       </div>
     </div>
     <p class="text-sub" style="margin-bottom:16px;" id="pageSub">Confidential: scores are visible to admins and Department Head+ managers only.</p>
@@ -111,6 +112,7 @@
     PASSING_SCORE, isPassed, gapStatuses, IDP_JENIS, IDP_STATUS, idpItemStatus, itemProgress, planApproval, APPROVAL_STATUS, APPROVAL_BADGE,
   } from '../competency-shared.js?v=20261111d';
   import { donut, hbars, avg, f2 } from './mini-charts.js?v=20261113a';
+  import { fillLevelSelect, bindLevelSelect, matchLevel } from './level-filter.js?v=20261116a';
   import { collection, getDocs, doc, getDoc, query, where } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const F = id => document.getElementById(id);
@@ -161,7 +163,8 @@
     const div = F('divSelect').value;
     const perRows = assessments.filter(a => a.periode === selectedPeriode);
     F('divSelect').innerHTML = '<option value="">All divisions</option>' + [...new Set(perRows.map(divOf))].sort().map(d => `<option ${d === div ? 'selected' : ''}>${escapeHtml(d)}</option>`).join('');
-    const base = perRows.filter(a => !div || divOf(a) === div);
+    const lvl = fillLevelSelect(F('lvlSelect'), perRows.map(a => a.level));
+    const base = perRows.filter(a => (!div || divOf(a) === div) && matchLevel(a.level, lvl));
     renderDash(base, divOf);
     let rows = base
       .filter(a => [a.nama, a.nik, a.jabatan].some(v => String(v||'').toLowerCase().includes(q)));
@@ -226,6 +229,7 @@
   }
   F('periodeSelect').addEventListener('change', e => { selectedPeriode = e.target.value; renderList(); if(selectedNik) renderDetail(); });
   F('divSelect').addEventListener('change', renderList);
+  bindLevelSelect(F('lvlSelect'), renderList);
   F('searchBox').addEventListener('input', renderList);
   F('gapFilter').addEventListener('change', renderList);
 

@@ -113,6 +113,7 @@
   import { iconSvg } from '../lms-icons.js';
   import { itemProgress, planIdOf, havNormalize, havPlace, HAV_ZONES, HAV_PERF_SOURCES, HAV_POT_SOURCES, escapeHtml, periodeLabel, periodeRank, IDP_JENIS, planApproval, daysUntil, computeReminders, reminderEmail } from '../competency-shared.js?v=20261111d';
   import { fmtDate, isOverdue } from './idp-ui.js?v=20261111e';
+  import { fillLevelSelect, bindLevelSelect, matchLevel } from './level-filter.js?v=20261116a';
   import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
   import { collection, getDocs, query, where, limit } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
@@ -225,6 +226,7 @@
         <div style="display:flex; gap:8px;">
           <select id="periodeSelect" style="min-width:170px;"></select>
           <select id="divSelect" style="max-width:220px;"></select>
+          <select id="lvlSelect" style="max-width:200px;"></select>
         </div>
       </div>
       <div class="kpi-row" style="margin-top:0;">
@@ -280,14 +282,16 @@
     havCfg = havNormalize(cs?.exists() ? cs.data() : {}); havComps = comps;
     havRows = havAssess.map(a => ({ a, p: havPlace(a, havCfg, havComps) }));
     const opts = (k, all) => `<option value="">${all}</option>` + [...new Set(havAssess.map(a => a[k]).filter(Boolean))].sort().map(v => `<option>${escapeHtml(v)}</option>`).join('');
-    F('havDiv').innerHTML = opts('divisi', 'All divisions'); F('havLvl').innerHTML = opts('level', 'All levels');
-    F('havDiv').addEventListener('change', drawHav); F('havLvl').addEventListener('change', drawHav);
+    F('havDiv').innerHTML = opts('divisi', 'All divisions');
+    F('havDiv').addEventListener('change', drawHav);
+    // filter level dipakai bersama (HAV Map, IDP Overview, dan menu TMS lain)
+    bindLevelSelect(F('havLvl'), () => { drawHav(); if(typeof renderIdp === 'function' && F('lvlSelect')) renderIdp(); });
     F('havSub').textContent = `${HAV_PERF_SOURCES[havCfg.perfSource]} × ${HAV_POT_SOURCES[havCfg.potSource].replace(/ \(.*\)$/, '')}${havPeriod ? ' · ' + periodeLabel(havPeriod) : ''}`;
     drawHav();
   }
   function drawHav(){
-    const n = havCfg.size, div = F('havDiv').value, lvl = F('havLvl').value;
-    const rows = havRows.filter(({ a }) => (!div || a.divisi === div) && (!lvl || a.level === lvl));
+    const n = havCfg.size, div = F('havDiv').value, lvl = fillLevelSelect(F('havLvl'), havAssess.map(a => a.level));
+    const rows = havRows.filter(({ a }) => (!div || a.divisi === div) && matchLevel(a.level, lvl));
     const placed = rows.filter(r => r.p), by = {};
     placed.forEach(r => (by[r.p.row + '-' + r.p.col] = by[r.p.row + '-' + r.p.col] || []).push(r));
     const pct = x => placed.length ? Math.round(x / placed.length * 100) : 0;
@@ -335,6 +339,7 @@
     F('remDate').value = todayStr();
     F('periodeSelect').addEventListener('change', e => { periode = e.target.value; F('divSelect').value = ''; renderIdp(); });
     F('divSelect').addEventListener('change', renderIdp);
+    bindLevelSelect(F('lvlSelect'), () => { renderIdp(); if(F('havLvl') && havCfg) drawHav(); });
     F('remDate').addEventListener('change', renderIdp);
     F('idpSearch').addEventListener('input', renderCards);
     F('copyAllBtn').addEventListener('click', () => {
@@ -348,7 +353,9 @@
     const inPeriod = idpPlans.filter(p => p.periode === periode);
     const divs = [...new Set(inPeriod.map(divOf))].sort();
     F('divSelect').innerHTML = `<option value="">All divisions</option>` + divs.map(d => `<option ${d === div ? 'selected' : ''}>${escapeHtml(d)}</option>`).join('');
-    const rows = inPeriod.filter(p => !div || divOf(p) === div);
+    const lvOf = p => idpEmp[p.nik]?.level || p.level;
+    const lvl = fillLevelSelect(F('lvlSelect'), inPeriod.map(lvOf));
+    const rows = inPeriod.filter(p => (!div || divOf(p) === div) && matchLevel(lvOf(p), lvl));
 
     // per IDP
     const facts = rows.map(p => {

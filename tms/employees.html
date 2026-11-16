@@ -165,6 +165,7 @@
   import { iconSvg } from '../lms-icons.js';
   import { levelKeyFor, levelLabel, escapeHtml } from '../competency-shared.js?v=20261111d';
   import { donut, hbars, vbars, PALETTE } from './mini-charts.js?v=20261113a';
+  import { fillLevelSelect, bindLevelSelect, matchLevel } from './level-filter.js?v=20261116a';
   import { collection, getDocs, doc, setDoc, updateDoc, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   // Sama dengan pilihan level di Kelola User & Buat Modul.
@@ -278,10 +279,8 @@
     F('divSelect').innerHTML = '<option value="">All divisions</option>' + divs.map(d => `<option ${d === div ? 'selected' : ''}>${escapeHtml(d)}</option>`).join('');
     const locs = [...new Set(employees.map(e => e.locationGroup || '(No location group)'))].sort();
     F('locSelect').innerHTML = '<option value="">All location groups</option>' + locs.map(d => `<option ${d === loc ? 'selected' : ''}>${escapeHtml(d)}</option>`).join('');
-    const lvlSel = F('lvlSelect').value;
-    const lvls = [...new Set(employees.map(e => e.level || '(No level)'))].sort((a, b) => { const ia = LEVEL_ORDER.indexOf(a), ib = LEVEL_ORDER.indexOf(b); return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || a.localeCompare(b); });
-    F('lvlSelect').innerHTML = '<option value="">All levels</option>' + lvls.map(d => `<option ${d === lvlSel ? 'selected' : ''}>${escapeHtml(d)}</option>`).join('');
-    const inDiv = employees.filter(e => (!div || (e.divisi || '(No division)') === div) && (!loc || (e.locationGroup || '(No location group)') === loc) && (!lvlSel || (e.level || '(No level)') === lvlSel));
+    const lvlSel = fillLevelSelect(F('lvlSelect'), employees.map(e => e.level));
+    const inDiv = employees.filter(e => (!div || (e.divisi || '(No division)') === div) && (!loc || (e.locationGroup || '(No location group)') === loc) && matchLevel(e.level, lvlSel));
     renderDash(inDiv, div, loc);
 
     const q = (document.getElementById('searchBox').value || '').toLowerCase();
@@ -429,7 +428,7 @@
   document.getElementById('filterFlag').addEventListener('change', render);
   document.getElementById('divSelect').addEventListener('change', render);
   document.getElementById('locSelect').addEventListener('change', render);
-  document.getElementById('lvlSelect').addEventListener('change', render);
+  bindLevelSelect(document.getElementById('lvlSelect'), render);
 
   /* ===== Form 1 orang ===== */
   const F = id => document.getElementById(id);
