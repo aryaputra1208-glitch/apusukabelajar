@@ -167,7 +167,17 @@
   import { collection, getDocs, doc, setDoc, updateDoc, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   // Sama dengan pilihan level di Kelola User & Buat Modul.
-  const LEVEL_OPTIONS = ['','Admin','Leader','Coordinator','Staff','Supervisor','Section Head','Department Head','AVP','VP','SVP'];
+  const LEVEL_OPTIONS = ['','Admin','Leader','Coordinator','Staff','Supervisor','Section Head','Department Head','Division Head','AVP','VP','SVP'];
+  // Penulisan level di report HR → nama level baku (dicocokkan tanpa spasi/titik/huruf besar-kecil)
+  const LEVEL_ALIAS = {
+    'secthead': 'Section Head', 'sectionhead': 'Section Head', 'sechead': 'Section Head', 'secthd': 'Section Head', 'sh': 'Section Head',
+    'depthead': 'Department Head', 'departmenthead': 'Department Head', 'depthd': 'Department Head', 'dept': 'Department Head', 'dh': 'Department Head',
+    'divhead': 'Division Head', 'divisionhead': 'Division Head', 'divhd': 'Division Head',
+    'spv': 'Supervisor', 'supervisor': 'Supervisor', 'superviser': 'Supervisor',
+    'coord': 'Coordinator', 'coordinator': 'Coordinator', 'koordinator': 'Coordinator', 'koord': 'Coordinator',
+    'staff': 'Staff', 'staf': 'Staff', 'leader': 'Leader', 'teamleader': 'Leader', 'admin': 'Admin', 'administrator': 'Admin',
+    'avp': 'AVP', 'assistantvicepresident': 'AVP', 'asstvicepresident': 'AVP', 'vp': 'VP', 'vicepresident': 'VP', 'svp': 'SVP', 'seniorvicepresident': 'SVP',
+  };
   // Kolom report karyawan (urutan sama dengan report HR) + kolom tambahan untuk TMS.
   // Tiap field menerima beberapa nama kolom; dicocokkan tanpa beda huruf besar/kecil/spasi.
   const FIELDS = [
@@ -228,7 +238,7 @@
   /** Samakan kapitalisasi level dengan pilihan yang ada (mis. "section head" → "Section Head"). */
   function normalizeLevel(v){
     const s = String(v || '').trim();
-    return LEVEL_OPTIONS.find(l => l.toLowerCase() === s.toLowerCase()) || s;
+    return LEVEL_OPTIONS.find(l => l && l.toLowerCase() === s.toLowerCase()) || LEVEL_ALIAS[s.toLowerCase().replace(/[^a-z]/g, '')] || s;
   }
 
   /**
@@ -303,7 +313,7 @@
   }
 
   /* ===== Dashboard karyawan (status Aktif) ===== */
-  const LEVEL_ORDER = ['SVP','VP','AVP','Department Head','Section Head','Supervisor','Coordinator','Leader','Staff','Admin'];
+  const LEVEL_ORDER = ['SVP','VP','Division Head','AVP','Department Head','Section Head','Supervisor','Coordinator','Leader','Staff','Admin'];
   function renderDash(list, div, loc){
     const today = todayStr(), year = today.slice(0, 4), jan1 = `${year}-01-01`;
     const isActive = e => (e.status || 'Aktif') === 'Aktif' && !(e.tanggalResign && e.tanggalResign <= today);
@@ -506,7 +516,7 @@
           const d = new Date(c.v.getTime() + 12 * 3600e3); // geser setengah hari supaya aman dari pembulatan zona waktu
           c.w = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`; } });
         const rows = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false });
-        const records = [], warnings = [];
+        const records = [], warnings = [], unknownLv = {};
         const seen = new Set(), seenEmail = {};
         rows.forEach((row, i) => {
           const { rec: r, bad } = buildRecord(row);
@@ -515,7 +525,7 @@
           if(seen.has(r.nik)){ warnings.push(`Row ${line}: NIK ${r.nik} duplicated in file; last row used.`); }
           if(r.email && seenEmail[r.email] && seenEmail[r.email] !== r.nik) warnings.push(`Row ${line}: email ${r.email} is also used by NIK ${seenEmail[r.email]}.`);
           if(r.email) seenEmail[r.email] = r.nik;
-          if(r.level && !LEVEL_OPTIONS.includes(r.level)) warnings.push(`Row ${line}: unknown level "${r.level}".`);
+          if(r.level && !LEVEL_OPTIONS.includes(r.level)) unknownLv[r.level] = (unknownLv[r.level] || 0) + 1;
           bad.forEach(b => warnings.push(`Row ${line}: ${b}; saved value kept.`));
           seen.add(r.nik);
           const idx = records.findIndex(x => x.nik === r.nik);
@@ -527,6 +537,8 @@
         if(has('Nama Pegawai') || has('NIP')) info.push('Format: employee report.');
         if(!has('Email')) info.push('No Email column: saved emails are kept.');
         if(!has('Atasan NIK') && !has('NIK Atasan') && !has('NIP Atasan')) info.push('No Atasan NIK column: saved managers are kept.');
+        // level yang tidak dikenali: satu baris per nilai (bukan per baris file)
+        Object.entries(unknownLv).sort((a, b) => b[1] - a[1]).forEach(([lv, n]) => warnings.unshift(`Unknown level "${lv}" in ${n} row${n === 1 ? '' : 's'}: saved as written, not linked to the competency dictionary.`));
         pending = { records, warnings, info };
         renderPreview();
       } catch(err){
