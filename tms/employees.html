@@ -55,6 +55,7 @@
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
         <select id="divSelect" style="margin:0; width:auto; min-width:180px; max-width:240px;"></select>
         <select id="locSelect" style="margin:0; width:auto; min-width:180px; max-width:240px;"></select>
+        <select id="lvlSelect" style="margin:0; width:auto; min-width:150px; max-width:220px;"></select>
       </div>
     </div>
 
@@ -277,7 +278,10 @@
     F('divSelect').innerHTML = '<option value="">All divisions</option>' + divs.map(d => `<option ${d === div ? 'selected' : ''}>${escapeHtml(d)}</option>`).join('');
     const locs = [...new Set(employees.map(e => e.locationGroup || '(No location group)'))].sort();
     F('locSelect').innerHTML = '<option value="">All location groups</option>' + locs.map(d => `<option ${d === loc ? 'selected' : ''}>${escapeHtml(d)}</option>`).join('');
-    const inDiv = employees.filter(e => (!div || (e.divisi || '(No division)') === div) && (!loc || (e.locationGroup || '(No location group)') === loc));
+    const lvlSel = F('lvlSelect').value;
+    const lvls = [...new Set(employees.map(e => e.level || '(No level)'))].sort((a, b) => { const ia = LEVEL_ORDER.indexOf(a), ib = LEVEL_ORDER.indexOf(b); return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || a.localeCompare(b); });
+    F('lvlSelect').innerHTML = '<option value="">All levels</option>' + lvls.map(d => `<option ${d === lvlSel ? 'selected' : ''}>${escapeHtml(d)}</option>`).join('');
+    const inDiv = employees.filter(e => (!div || (e.divisi || '(No division)') === div) && (!loc || (e.locationGroup || '(No location group)') === loc) && (!lvlSel || (e.level || '(No level)') === lvlSel));
     renderDash(inDiv, div, loc);
 
     const q = (document.getElementById('searchBox').value || '').toLowerCase();
@@ -425,6 +429,7 @@
   document.getElementById('filterFlag').addEventListener('change', render);
   document.getElementById('divSelect').addEventListener('change', render);
   document.getElementById('locSelect').addEventListener('change', render);
+  document.getElementById('lvlSelect').addEventListener('change', render);
 
   /* ===== Form 1 orang ===== */
   const F = id => document.getElementById(id);
