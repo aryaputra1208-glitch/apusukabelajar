@@ -99,10 +99,10 @@ onAuth(async (user) => {
   try {
     const [prof, wl] = await Promise.all([
       getDoc(doc(db, 'users', user.uid)),
-      getDoc(doc(db, 'admins', user.realEmail || user.email)),
+      getDoc(doc(db, 'admins', user.email)),
     ]);
     if (seq !== authSeq) return; // sudah ganti akun selagi menunggu
-    const role = user.__testAs?.role || (prof.exists() && prof.data().role); // mode uji (sementara)
+    const role = prof.exists() && prof.data().role;
     const isAdmin = role === 'admin' && wl.exists();
     if (!isAdmin) return;
     render();

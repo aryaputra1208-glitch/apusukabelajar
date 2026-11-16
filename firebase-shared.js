@@ -58,29 +58,12 @@ export function onAuth(callback) {
       signOut(auth).finally(() => callback(null));
       return;
     }
-    if (user) user = await applyTestAs(user); // SEMENTARA: mode uji role (lihat dev-test-as.js)
     callback(user);
   });
 }
 
-/* ===== SEMENTARA — mode uji role untuk admin. Hapus blok ini + dev-test-as.js kalau sudah tidak dipakai. =====
-   Admin bisa melihat LMS/TMS sebagai role lain (admin/trainer/trainee) dan/atau sebagai email karyawan lain
-   (untuk TMS: atasan, mentor, karyawan). Hak akses Firestore tetap hak akses admin asli. */
-const TEST_AS_KEY = 'lmsTestAs';
-export function getTestAs() { try { return JSON.parse(localStorage.getItem(TEST_AS_KEY) || 'null'); } catch { return null; } }
-export function setTestAs(v) { try { v ? localStorage.setItem(TEST_AS_KEY, JSON.stringify(v)) : localStorage.removeItem(TEST_AS_KEY); } catch {} }
-async function applyTestAs(user) {
-  let isRealAdmin = false;
-  try { const s = await getDoc(doc(db, 'users', user.uid)); isRealAdmin = s.exists() && s.data().role === 'admin'; } catch {}
-  if (!isRealAdmin) { if (getTestAs()) setTestAs(null); return user; }
-  import('./dev-test-as.js?v=20261111e').then(m => m.mountTestAs({ realEmail: user.email })).catch(err => console.error('Mode uji gagal dimuat:', err));
-  const t = getTestAs();
-  if (!t || (!t.role && !t.email)) return user;
-  return {
-    uid: user.uid, displayName: user.displayName, photoURL: user.photoURL, isAnonymous: false,
-    email: (t.email || user.email || '').toLowerCase(), realEmail: user.email, __testAs: t,
-  };
-}
+// Bersihkan sisa pilihan mode uji role (fitur Test As sudah dihapus)
+try { localStorage.removeItem('lmsTestAs'); } catch {}
 
 /**
  * Dipanggil tiap kali user login. Kalau dokumen users/{uid} belum ada,
@@ -91,18 +74,6 @@ async function applyTestAs(user) {
 export async function ensureUserProfile(user) {
   const ref = doc(db, 'users', user.uid);
   const snap = await getDoc(ref);
-  if (snap.exists() && user.__testAs) {
-    const real = snap.data(), t = user.__testAs;
-    let nama = '';
-    if (t.email) { try { const q = await getDocs(query(collection(db, 'employees'), where('email', '==', t.email), limit(1))); q.forEach(d => nama = d.data().nama || ''); } catch {} }
-    // role kosong + pilih karyawan = pakai role LMS orang itu (kalau belum pernah login: trainee)
-    let role = t.role;
-    if (!role && t.email) {
-      role = 'trainee';
-      try { const q = await getDocs(query(collection(db, 'users'), where('email', '==', t.email), limit(1))); q.forEach(d => role = d.data().role || 'trainee'); } catch {}
-    }
-    return { ...real, role: role || real.role, email: user.email, displayName: `${nama || (t.email ? t.email : real.displayName)} (test)` };
-  }
   if (snap.exists()) {
     return snap.data();
   }
