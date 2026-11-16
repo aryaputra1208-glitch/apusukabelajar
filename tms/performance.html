@@ -131,7 +131,7 @@
     LEVEL_COLUMNS, KATEGORI_ORDER, DEFAULT_SCALE, DEFAULT_WEIGHTS, slugify, escapeHtml, levelLabel,
     normalizePeriode, periodeRank, periodeLabel, scoreLabel, round2, computeFinal, viewerEmailsFor, gapsFor,
   } from '../competency-shared.js?v=20261111d';
-  import { donut, hbars, vbars, avg, f2, PALETTE } from './mini-charts.js?v=20261113a';
+  import { donut, hbars, vbars, avg, f2, PALETTE } from './mini-charts.js?v=20261116b';
   import { fillLevelSelect, bindLevelSelect, matchLevel } from './level-filter.js?v=20261116a';
   import { collection, getDocs, doc, getDoc, setDoc, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
@@ -231,7 +231,11 @@
     F('kpiAvgSub').textContent = rows.length ? `${scoreLabel(aF, scale) || ''} · PA ${f2(avg(rows.map(a => a.skorPA)))} · KPI ${f2(avg(rows.map(a => a.skorKPI)))}` : '';
     // distribusi rating (urutan skala)
     const labels = (scale.skala || []).map(x => x.label);
-    F('chDist').innerHTML = vbars(labels.map((l, i) => ({ label: l, v: rows.filter(a => scoreLabel(a.skorFinal, scale) === l).length, color: PALETTE[i % PALETTE.length] })));
+    const tc = l => String(l).toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+    // satu baris per rating, dari tertinggi ke terendah
+    const nDist = labels.map(l => rows.filter(a => scoreLabel(a.skorFinal, scale) === l).length);
+    const totDist = nDist.reduce((a, b) => a + b, 0);
+    F('chDist').innerHTML = totDist ? hbars(labels.map((l, i) => ({ label: tc(l), value: nDist[i], color: PALETTE[i % PALETTE.length], right: `<b>${nDist[i]}</b> · ${Math.round(nDist[i] / totDist * 100)}%` })).reverse(), { max: Math.max(...nDist) }) : '<div class="mc-empty">No data for this filter.</div>';
     // rata-rata per divisi
     const byDiv = new Map(); rows.forEach(a => { const d = divOf(a); if(!byDiv.has(d)) byDiv.set(d, []); byDiv.get(d).push(a); });
     F('chDivAvg').innerHTML = hbars([...byDiv.entries()].map(([d, list]) => { const v = avg(list.map(a => a.skorFinal)); return { label: d, value: v || 0, color: v != null && v < standar ? '#F59E0B' : '#16A34A', right: `<b>${f2(v)}</b> · ${list.length}` }; })
