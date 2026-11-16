@@ -99,7 +99,6 @@ const BC_CSS = `
 .bc-tbl td { padding: 7px 0; border-top: 1px solid var(--border); text-align: right; }
 .bc-tbl i { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 7px; vertical-align: 0; }
 .bc-diff { font-size: 11px; font-weight: 700; margin-left: 6px; }
-.bc-note { font-size: 12px; margin-top: 12px; padding: 9px 11px; border-radius: 8px; background: rgba(120,120,128,.08); line-height: 1.45; }
 @media (max-width: 1000px) { .bc-wrap { grid-template-columns: 1fr; } }
 `;
 if (!document.getElementById('mini-charts-bc-css')) { const st = document.createElement('style'); st.id = 'mini-charts-bc-css'; st.textContent = BC_CSS; document.head.appendChild(st); }
@@ -174,13 +173,6 @@ export function bellCurve(scores, bands, opts = {}) {
           <text x="${X(mu)}" y="${T + 18}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#fff">Mean ${nf(mu)}</text>`;
   svg += `</svg>`;
 
-  // catatan interpretasi
-  const notes = [];
-  if (n < 30) notes.push(`Only ${n} people: the curve is indicative, not a reliable picture yet.`);
-  if (sd > 0 && Math.abs(skew) >= 0.5) notes.push(skew < 0 ? 'Scores pile up on the high side (negative skew), a sign of lenient rating.' : 'Scores pile up on the low side (positive skew), a sign of strict rating.');
-  else if (sd > 0) notes.push('Scores are roughly symmetric around the mean.');
-  if (sd > 0 && sd < 0.35) notes.push(`Spread is narrow (SD ${nf(sd)}): most people get nearly the same score, so ratings barely differentiate.`);
-
   const tbl = `<table class="bc-tbl"><thead><tr><th>Rating</th><th>People</th><th>Actual</th><th title="Share expected if scores followed the normal curve">Normal curve</th></tr></thead><tbody>
     ${zones.map((z, i) => { const a = actual[i] / n * 100, e = expected[i], d = e == null ? null : a - e;
       return `<tr><td><i style="background:${z.color}"></i>${esc(z.label)}</td><td>${actual[i]}</td><td><b>${Math.round(a)}%</b></td>
@@ -190,6 +182,5 @@ export function bellCurve(scores, bands, opts = {}) {
   return `<div class="bc-wrap"><div>${svg}
       <div class="bc-stats"><span>People <b>${n}</b></span><span>Mean <b>${nf(mu)}</b></span><span>Median <b>${nf(med)}</b></span><span>SD <b>${nf(sd)}</b></span><span>Skew <b>${nf(skew)}</b></span>
         <span><i style="display:inline-block; width:14px; height:3px; background:#E6007A; vertical-align:3px; margin-right:5px; border-radius:2px;"></i>normal curve</span></div></div>
-    <div>${tbl}${notes.length ? `<div class="bc-note">${notes.map(esc).join('<br>')}</div>` : ''}
-      <div class="text-meta" style="margin-top:8px; font-size:11px;">+/− = actual share above / below the normal curve (shown when ≥ 5 points).</div></div></div>`;
+    <div>${tbl}</div></div>`;
 }
