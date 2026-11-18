@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assessment Settings — Anteraja CMS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../lms-design-system.css?v=20261105b">
+<link rel="expect" href="#cms-nav-ready" blocking="render">
+<link rel="stylesheet" href="../lms-glass.css?v=20261111b">
+
+<style>
+  .avatar { width: 28px; height: 28px; border-radius: 50%; }
+  .user-chip { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); }
+  .wrap.wide { max-width: 1180px; }
+  .page-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .page-head .acts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .page-head select, .page-head input { margin: 0; width: auto; }
+
+  .muted { color: var(--text-3); font-size: 12px; }
+  .sec { padding: 16px 20px; border-bottom: 1px solid var(--border); }
+  .sec:last-child { border-bottom: none; }
+  .sec h4 { margin: 0 0 4px; font-size: 14px; }
+  .sec p.d { margin: 0 0 12px; font-size: 12.5px; color: var(--text-3); }
+  .lbl-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+  .lbl-grid label { font-size: 12px; font-weight: 700; color: var(--pink-dark); display: block; margin-bottom: 4px; }
+  .lbl-grid input { margin: 0; }
+  .opt { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 8px; cursor: pointer; background: rgba(255,255,255,.5); }
+  .opt input { margin: 3px 0 0; width: auto; }
+  .opt b { font-size: 13.5px; }
+  .opt span { display: block; font-size: 12px; color: var(--text-3); margin-top: 2px; }
+  .opt.on { border-color: var(--pink); background: var(--pink-bg); }
+  .inline { display: flex; align-items: center; gap: 8px; font-size: 13px; flex-wrap: wrap; }
+  .inline input, .inline select { margin: 0; width: 90px; }
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .tag { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 4px 6px 4px 10px; border-radius: 99px; background: rgba(120,120,128,.12); }
+  .tag button { border: none; background: none; cursor: pointer; color: var(--text-3); font-size: 14px; line-height: 1; padding: 0 2px; }
+  .example { margin-top: 10px; font-size: 12.5px; background: rgba(255,255,255,.6); border: 1px dashed var(--border); border-radius: 10px; padding: 10px 12px; }
+  .savebar { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 20px; border-top: 1px solid var(--border); }
+  @media (max-width: 800px) { .lbl-grid { grid-template-columns: 1fr 1fr; } }
+
+</style>
+</head>
+<body><script>/* sidebar CMS dari cache — inline supaya ikut paint pertama (tanpa kedip) */(function () { try { var c = JSON.parse(sessionStorage.getItem('cmsNavCache') || 'null'); if (!c || !c.html) return; var st = document.createElement('style'); st.id = 'cms-shell-css'; st.textContent = c.css; document.head.appendChild(st); var box = document.createElement('div'); box.innerHTML = c.html; var nav = box.firstElementChild; if (c.sig) nav.setAttribute('data-sig', c.sig); var cur = location.pathname.split('/').pop() || 'index.html'; nav.querySelectorAll('a.as-item').forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === cur); }); document.body.prepend(nav); document.body.classList.add('has-admin-sidebar'); } catch (e) {} })();</script><i id="cms-nav-ready" hidden></i><script>/* loading screen CMS — tampil sampai halaman siap (appShell muncul / gate berisi pesan) */(function(){var id=document.documentElement.lang==='id';/* cek versi: kalau browser masih menyimpan halaman versi lama, muat ulang sekali */var BUILD='20261118-113829';try{fetch('build.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(v&&v!==BUILD&&sessionStorage.getItem('tmsBuildReload')!==v){sessionStorage.setItem('tmsBuildReload',v);location.reload()}}).catch(function(){})}catch(e){}var css='body.tms-loading #gate{display:none!important}.tms-loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:36;transition:opacity .35s ease;background:rgba(246,246,250,.35);-webkit-backdrop-filter:blur(18px) saturate(1.1);backdrop-filter:blur(18px) saturate(1.1)}body.has-admin-sidebar .tms-loader{left:232px}.tms-loader.out{opacity:0;pointer-events:none}.tms-loader .bx{display:flex;flex-direction:column;align-items:center;gap:14px;padding:28px 34px;border-radius:20px;background:rgba(255,255,255,.55);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.7);box-shadow:0 12px 40px rgba(0,0,0,.08);min-width:240px}.tms-loader .t{font-weight:700;font-size:15px;color:#1d1d1f}.tms-loader .s{font-size:12.5px;color:#86868b;text-align:center;max-width:260px}.tms-loader .s:empty{display:none}.tms-loader .bar{width:200px;height:5px;border-radius:99px;background:rgba(230,0,122,.12);overflow:hidden}.tms-loader .bar i{display:block;width:40%;height:100%;border-radius:99px;background:#E6007A;animation:tmsBar 1.1s ease-in-out infinite}@keyframes tmsBar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}@media (max-width:900px){body.has-admin-sidebar .tms-loader{left:0}}@media (prefers-reduced-motion:reduce){.tms-loader .bar i{animation-duration:2.4s}}';var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);document.body.classList.add('tms-loading');var L=document.createElement('div');L.className='tms-loader';L.setAttribute('role','status');L.innerHTML='<div class="bx"><div class="t">'+(id?'Memuat data…':'Loading data…')+'</div><div class="bar"><i></i></div><div class="s"></div></div>';document.body.appendChild(L);var sub=L.querySelector('.s');var t1=setTimeout(function(){sub.textContent=id?'Sebentar lagi…':'Almost there…'},3500);var t2=setTimeout(function(){sub.textContent=id?'Lebih lama dari biasanya. Cek koneksi, lalu refresh kalau tidak kunjung muncul.':'Taking longer than usual. Check your connection, then refresh if nothing appears.'},15000);window.tmsReady=window.appReady=function(){window.__tmsReady=true;check()};function ready(){var g=document.getElementById('gate'),gt=document.getElementById('gateTitle');if(window.__tmsReady)return true;if(g&&g.style.display!=='none'&&gt&&gt.textContent.trim()&&!/^(loading|memuat)/i.test(gt.textContent.trim()))return true;return false}var mo;function check(){if(!ready())return;mo&&mo.disconnect();clearTimeout(t1);clearTimeout(t2);document.body.classList.remove('tms-loading');L.classList.add('out');setTimeout(function(){L.remove()},380)}mo=new MutationObserver(check);mo.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['style','class'],characterData:true});})();</script>
+
+<div id="gate" class="locked-state" style="display:none;">
+  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Loading...</p>
+  <p class="text-sub" id="gateSub"></p>
+</div>
+
+<div id="appShell" style="display:none;">
+  <div class="topbar">
+    <div style="display:flex; align-items:center; gap:16px;">
+      <a href="index.html" class="sidebar-logo" style="margin:0; text-decoration:none;">anteraja CMS</a>
+    </div>
+    <div class="user-chip"><img class="avatar" id="userAvatar" src=""><span id="userName"></span></div>
+  </div>
+  <div class="wrap wide">
+    <div class="page-head"><h1 class="text-h1" style="margin:0;">Assessment Settings</h1>
+      <div class="acts"><span class="muted" id="lastUpd"></span></div></div>
+
+    <div class="panel">
+      <div class="sec"><h4>Proficiency Level Names</h4><p class="d">Names shown for levels 1–5 everywhere in CMS (dictionary, matrix, templates, dashboard).</p>
+        <div class="lbl-grid" id="labels"></div></div>
+
+      <div class="sec"><h4>How Supervisor &amp; HC Scores Combine Into The Final Level</h4><p class="d">Applies when an employee has both a Supervisor rating and an HC score for a competency (the latest of each is used).</p>
+        <label class="opt" data-rule="lowest"><input type="radio" name="rule" value="lowest"><div><b>Lowest of the two</b><span>The level is recognised only when both Supervisor and HC reach it. Supervisor 3 + HC 4 → 3.</span></div></label>
+        <label class="opt" data-rule="average"><input type="radio" name="rule" value="average"><div><b>Average, rounded down</b><span>Supervisor 2 + HC 4 → 3. Supervisor 3 + HC 4 → 3.</span></div></label>
+        <label class="opt" data-rule="weighted"><input type="radio" name="rule" value="weighted"><div><b>Weighted average, rounded down</b><span>Set the weight below.</span>
+          <div class="inline" style="margin-top:8px;">Supervisor <input type="number" id="wA" min="0" max="100" step="5">% · HC <b id="wH">-</b>%</div></div></label>
+        <div class="example" id="example"></div>
+      </div>
+
+      <div class="sec"><h4>When Only One Score Exists</h4><p class="d">E.g. the supervisor has rated, but there is no HC score yet.</p>
+        <label class="opt" data-ss="use"><input type="radio" name="ss" value="use"><div><b>Use that score</b><span>The final level uses the single score and is marked "1 source".</span></div></label>
+        <label class="opt" data-ss="require"><input type="radio" name="ss" value="require"><div><b>Wait for both</b><span>No final level until both Supervisor and HC have scored; shown as "Not assessed".</span></div></label>
+      </div>
+
+      <div class="sec"><h4>Calibration Flag</h4><p class="d">Flag a competency for calibration when Supervisor and HC disagree by this many levels or more.</p>
+        <div class="inline">Difference ≥ <select id="calGap"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="0">Off</option></select> levels</div></div>
+
+      <div class="sec"><h4>LMS Post-Test As HC Score</h4><p class="d">When a module is tagged with a technical competency and the level it builds, passing its post-test (score ≥ 70) counts as an HC score "Test (LMS)".</p>
+        <label class="opt" style="max-width:520px;"><input type="checkbox" id="lmsAsHc"><div><b>Count passed LMS post-tests as HC scores</b><span>The latest HC score (manual input or LMS) is the one used.</span></div></label></div>
+
+      <div class="sec"><h4>HC Assessment Types</h4><p class="d">Options in the "Type" column for HC scores (templates and manual input).</p>
+        <div class="tags" id="types"></div>
+        <div class="inline"><input type="text" id="newType" placeholder="e.g. Simulation" style="width:220px;"><button class="btn btn-outline btn-sm" id="addType">Add Type</button></div></div>
+
+      <div class="savebar"><span class="muted" id="dirtyNote">No unsaved changes.</span><div style="display:flex; gap:8px;"><button class="btn btn-outline btn-sm" id="resetBtn">Restore Defaults</button><button class="btn btn-primary" id="saveBtn">Save Settings</button></div></div>
+    </div>
+
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { onAuth, ensureUserProfile } from '../firebase-shared.js';
+  const F = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const toast = msg => { const t = F('toast'); t.textContent = msg; t.style.display = 'block'; clearTimeout(toast._t); toast._t = setTimeout(() => t.style.display = 'none', 3000); };
+  import { db } from '../firebase-shared.js';
+  import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+  import { loadAssessSettings, ASSESS_DEFAULTS, combine } from './cms-data.js?v=20261118f';
+  import '../tms/mini-charts.js?v=20261116d';
+
+  let st, me, dirty = false;
+  const setDirty = v => { dirty = v; F('dirtyNote').textContent = v ? 'You have unsaved changes.' : 'No unsaved changes.'; F('dirtyNote').style.color = v ? '#B45309' : ''; };
+  window.addEventListener('beforeunload', e => { if(dirty){ e.preventDefault(); e.returnValue = ''; } });
+
+  function render(){
+    F('labels').innerHTML = [1, 2, 3, 4, 5].map(n => `<div><label>Level ${n}</label><input type="text" data-lbl="${n}" value="${esc(st.labels[n])}"></div>`).join('');
+    F('labels').querySelectorAll('[data-lbl]').forEach(i => i.addEventListener('input', () => { st.labels[i.dataset.lbl] = i.value; setDirty(true); example(); }));
+    document.querySelectorAll('input[name=rule]').forEach(r => r.checked = r.value === st.rule);
+    document.querySelectorAll('input[name=ss]').forEach(r => r.checked = r.value === st.singleSource);
+    F('wA').value = st.weightAtasan; F('calGap').value = String(st.calibrationGap || 0); F('lmsAsHc').checked = !!st.lmsAsHc;
+    renderTypes(); marks(); example();
+  }
+  function renderTypes(){
+    F('types').innerHTML = st.hcTypes.map((t, i) => `<span class="tag">${esc(t)}<button title="Remove" data-i="${i}">×</button></span>`).join('') || '<span class="muted">No types — HC input will use "HC".</span>';
+    F('types').querySelectorAll('[data-i]').forEach(b => b.addEventListener('click', () => { st.hcTypes.splice(Number(b.dataset.i), 1); setDirty(true); renderTypes(); }));
+  }
+  function marks(){
+    document.querySelectorAll('.opt[data-rule]').forEach(o => o.classList.toggle('on', o.dataset.rule === st.rule));
+    document.querySelectorAll('.opt[data-ss]').forEach(o => o.classList.toggle('on', o.dataset.ss === st.singleSource));
+    F('wH').textContent = 100 - (Number(st.weightAtasan) || 0);
+  }
+  function example(){
+    const L = n => `${n} ${esc(st.labels[n] || '')}`;
+    const ex = [[3, 4], [2, 4], [4, 2]].map(([a, h]) => { const c = combine({ level: a }, { level: h }, st); return `Supervisor ${a} + HC ${h} → <b>${L(c.final)}</b>${c.calibrate ? ' · <span style="color:#B45309;">needs calibration</span>' : ''}`; });
+    const one = combine({ level: 3 }, null, st);
+    F('example').innerHTML = '<b>With current settings:</b><br>' + ex.join('<br>') + `<br>Supervisor 3 only → <b>${one.final ? L(one.final) + ' (1 source)' : 'Not assessed yet'}</b>`;
+  }
+
+  async function init(profile){
+    me = profile;
+    st = await loadAssessSettings();
+    st = JSON.parse(JSON.stringify(st));
+    if(st.updatedBy) F('lastUpd').textContent = `Last saved by ${st.updatedBy}`;
+    document.querySelectorAll('input[name=rule]').forEach(r => r.addEventListener('change', () => { st.rule = r.value; setDirty(true); marks(); example(); }));
+    document.querySelectorAll('input[name=ss]').forEach(r => r.addEventListener('change', () => { st.singleSource = r.value; setDirty(true); marks(); example(); }));
+    F('wA').addEventListener('input', () => { st.weightAtasan = Math.max(0, Math.min(100, Number(F('wA').value) || 0)); setDirty(true); marks(); example(); });
+    F('calGap').addEventListener('change', () => { st.calibrationGap = Number(F('calGap').value); setDirty(true); example(); });
+    F('lmsAsHc').addEventListener('change', () => { st.lmsAsHc = F('lmsAsHc').checked; setDirty(true); });
+    F('addType').addEventListener('click', () => { const t = F('newType').value.trim(); if(!t) return; if(st.hcTypes.some(x => x.toLowerCase() === t.toLowerCase())) return toast('That type already exists.'); st.hcTypes.push(t); F('newType').value = ''; setDirty(true); renderTypes(); });
+    F('resetBtn').addEventListener('click', () => { if(!confirm('Restore all assessment settings to the defaults? (Not saved until you click Save.)')) return; st = JSON.parse(JSON.stringify(ASSESS_DEFAULTS)); setDirty(true); render(); });
+    F('saveBtn').addEventListener('click', async () => {
+      if([1, 2, 3, 4, 5].some(n => !String(st.labels[n] || '').trim())) return toast('Every level needs a name.');
+      try{
+        F('saveBtn').disabled = true;
+        const out = { labels: Object.fromEntries([1, 2, 3, 4, 5].map(n => [n, String(st.labels[n]).trim()])), rule: st.rule, weightAtasan: Number(st.weightAtasan) || 0, singleSource: st.singleSource,
+          calibrationGap: Number(st.calibrationGap) || 0, lmsAsHc: !!st.lmsAsHc, hcTypes: st.hcTypes, updatedAt: serverTimestamp(), updatedBy: me.email };
+        await setDoc(doc(db, 'settings', 'technicalAssessment'), out);
+        setDirty(false); F('lastUpd').textContent = `Last saved by ${me.email}`; toast('Assessment settings saved.');
+      } catch(err){ console.error('Gagal simpan pengaturan', err.code, err.message); toast('Save failed: ' + err.message); }
+      finally { F('saveBtn').disabled = false; }
+    });
+    render();
+  }
+
+  onAuth(async (user) => { try {
+    const gate = F('gate'), shell = F('appShell');
+    if(!user){ gate.style.display = 'block'; shell.style.display = 'none'; F('gateTitle').textContent = 'Please sign in'; F('gateSub').innerHTML = '<a href="../index.html">Sign in here</a>.'; return; }
+    const profile = await ensureUserProfile(user);
+    if(profile.role !== 'admin'){ gate.style.display = 'block'; shell.style.display = 'none'; F('gateTitle').textContent = 'Access denied'; F('gateSub').innerHTML = 'CMS is for admins (HR/OD) only. <a href="../index.html">Back to LMS</a>.'; return; }
+    gate.style.display = 'none'; shell.style.display = 'block';
+    F('userAvatar').src = profile.photoURL; F('userName').textContent = profile.displayName;
+    await init(profile);
+    const { loadErrors } = await import('./cms-data.js?v=20261118f');
+    if(loadErrors.length) showErr('Some data could not be read: ' + [...new Set(loadErrors)].join(', ') + '. If it says permission-denied, publish the latest Firestore rules.');
+  } catch(err) { console.error('CMS error', err); showErr('Something went wrong: ' + (err.message || err)); }
+  finally { window.appReady?.(); } });
+  function showErr(msg){ let b = document.getElementById('cmsErr'); if(!b){ b = document.createElement('div'); b.id = 'cmsErr'; b.style.cssText = 'background:#FEF2F2;border:1px solid #FCA5A5;color:#991B1B;border-radius:12px;padding:12px 16px;margin-bottom:16px;font-size:13px;'; document.querySelector('#appShell .wrap')?.prepend(b); } b.textContent = msg; } // loading screen hilang setelah semua data halaman tampil
+</script>
+<script type="module" src="./cms-shell.js?v=20261118c"></script>
+<script src="../lms-motion.js?v=20261109" defer></script>
+</body>
+</html>

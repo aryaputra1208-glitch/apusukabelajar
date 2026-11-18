@@ -64,12 +64,16 @@ onAuth(async (user) => {
     if (profile.role !== 'admin') { unrender(); return; } // CMS hanya untuk admin
     const nav = [
       { group: 'General', items: [{ href: 'index.html', icon: 'home', label: 'Dashboard' }] },
-      { group: 'Competency', items: [
+      { group: '1. Setup', items: [
         { href: 'dictionary.html', icon: 'books', label: 'Technical Competencies' },
         { href: 'job-families.html', icon: 'layout-grid', label: 'Job Families' },
         { href: 'matrix.html', icon: 'check', label: 'Competency Matrix' },
       ] },
-      { group: 'People', items: [{ href: 'coverage.html', icon: 'user-check', label: 'Employee Coverage' }] },
+      { group: '2. Assessment', items: [
+        { href: 'assessment.html', icon: 'file-text', label: 'Input Assessment' },
+        { href: 'assessment-settings.html', icon: 'settings', label: 'Assessment Settings' },
+      ] },
+      { group: '3. Results', items: [{ href: 'coverage.html', icon: 'user-check', label: 'Employee Profiles' }] },
       { group: 'Other Apps', items: [
         { href: '../index.html', icon: 'arrow-right', label: 'LMS' },
         { href: '../tms/index.html', icon: 'arrow-right', label: 'TMS' },

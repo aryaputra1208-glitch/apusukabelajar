@@ -19,29 +19,33 @@
   .page-head select, .page-head input { margin: 0; width: auto; }
 
   .muted { color: var(--text-3); font-size: 12px; }
+  .flow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+  .fstep { background: rgba(255,255,255,.62); border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px; }
+  .fstep .no { font-size: 11px; font-weight: 700; color: var(--pink); }
+  .fstep b { display: block; font-size: 14px; margin: 2px 0 6px; }
+  .fstep a { display: block; font-size: 12.5px; color: var(--text-2); text-decoration: none; padding: 3px 0; }
+  .fstep a:hover { color: var(--pink-dark); }
+  .fstep a span { float: right; color: var(--text-3); }
+  .fstep a span.ok { color: #15803D; font-weight: 700; }
+  .fstep a span.warn { color: #B45309; font-weight: 700; }
+  #appShell .dash-card a, table.fs a { color: var(--pink-dark); font-weight: 600; text-decoration: none; }
   table.fs { width: 100%; border-collapse: collapse; font-size: 13px; }
   table.fs th { text-align: left; font-size: 11px; color: var(--text-3); font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--border); }
   table.fs td { padding: 9px 10px; border-bottom: 1px solid var(--border); }
   table.fs tr:last-child td { border-bottom: none; }
-  #appShell .dash-card a, table.fs a { color: var(--pink-dark); font-weight: 600; text-decoration: none; }
-  #appShell .dash-card a:hover, table.fs a:hover { text-decoration: underline; }
-  .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 99px; }
+  .num { text-align: right; }
+  .lst { display: grid; gap: 2px; font-size: 13px; }
+  .lst a { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px dashed var(--border); color: inherit !important; font-weight: 400 !important; }
+  .lst a:last-child { border-bottom: none; }
+  .lst a:hover b { color: var(--pink-dark); }
+  .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+  .tag.w { background: rgba(245,158,11,.15); color: #B45309; }
   .tag.ok { background: rgba(22,163,74,.12); color: #15803D; }
-  .tag.warn { background: rgba(245,158,11,.14); color: #B45309; }
-  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
-  .step { display: block; text-decoration: none; color: inherit; background: rgba(255,255,255,.62); border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px; }
-  .step:hover { border-color: var(--pink); }
-  .step .no { font-size: 11px; font-weight: 700; color: var(--pink); }
-  .step b { display: block; font-size: 14px; margin: 2px 0; }
-  .step span { font-size: 12px; color: var(--text-3); }
-  .nomod { display: grid; gap: 6px; font-size: 13px; }
-  .nomod div { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; border-bottom: 1px dashed var(--border); }
-  .nomod div:last-child { border-bottom: none; }
-  @media (max-width: 1000px) { .steps { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 1000px) { .flow { grid-template-columns: 1fr; } }
 
 </style>
 </head>
-<body><script>/* sidebar CMS dari cache — inline supaya ikut paint pertama (tanpa kedip) */(function () { try { var c = JSON.parse(sessionStorage.getItem('cmsNavCache') || 'null'); if (!c || !c.html) return; var st = document.createElement('style'); st.id = 'cms-shell-css'; st.textContent = c.css; document.head.appendChild(st); var box = document.createElement('div'); box.innerHTML = c.html; var nav = box.firstElementChild; if (c.sig) nav.setAttribute('data-sig', c.sig); var cur = location.pathname.split('/').pop() || 'index.html'; nav.querySelectorAll('a.as-item').forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === cur); }); document.body.prepend(nav); document.body.classList.add('has-admin-sidebar'); } catch (e) {} })();</script><i id="cms-nav-ready" hidden></i><script>/* loading screen CMS — tampil sampai halaman siap (appShell muncul / gate berisi pesan) */(function(){var id=document.documentElement.lang==='id';/* cek versi: kalau browser masih menyimpan halaman versi lama, muat ulang sekali */var BUILD='20261118-111105';try{fetch('build.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(v&&v!==BUILD&&sessionStorage.getItem('tmsBuildReload')!==v){sessionStorage.setItem('tmsBuildReload',v);location.reload()}}).catch(function(){})}catch(e){}var css='body.tms-loading #gate{display:none!important}.tms-loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:36;transition:opacity .35s ease;background:rgba(246,246,250,.35);-webkit-backdrop-filter:blur(18px) saturate(1.1);backdrop-filter:blur(18px) saturate(1.1)}body.has-admin-sidebar .tms-loader{left:232px}.tms-loader.out{opacity:0;pointer-events:none}.tms-loader .bx{display:flex;flex-direction:column;align-items:center;gap:14px;padding:28px 34px;border-radius:20px;background:rgba(255,255,255,.55);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.7);box-shadow:0 12px 40px rgba(0,0,0,.08);min-width:240px}.tms-loader .t{font-weight:700;font-size:15px;color:#1d1d1f}.tms-loader .s{font-size:12.5px;color:#86868b;text-align:center;max-width:260px}.tms-loader .s:empty{display:none}.tms-loader .bar{width:200px;height:5px;border-radius:99px;background:rgba(230,0,122,.12);overflow:hidden}.tms-loader .bar i{display:block;width:40%;height:100%;border-radius:99px;background:#E6007A;animation:tmsBar 1.1s ease-in-out infinite}@keyframes tmsBar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}@media (max-width:900px){body.has-admin-sidebar .tms-loader{left:0}}@media (prefers-reduced-motion:reduce){.tms-loader .bar i{animation-duration:2.4s}}';var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);document.body.classList.add('tms-loading');var L=document.createElement('div');L.className='tms-loader';L.setAttribute('role','status');L.innerHTML='<div class="bx"><div class="t">'+(id?'Memuat data…':'Loading data…')+'</div><div class="bar"><i></i></div><div class="s"></div></div>';document.body.appendChild(L);var sub=L.querySelector('.s');var t1=setTimeout(function(){sub.textContent=id?'Sebentar lagi…':'Almost there…'},3500);var t2=setTimeout(function(){sub.textContent=id?'Lebih lama dari biasanya. Cek koneksi, lalu refresh kalau tidak kunjung muncul.':'Taking longer than usual. Check your connection, then refresh if nothing appears.'},15000);window.tmsReady=window.appReady=function(){window.__tmsReady=true;check()};function ready(){var g=document.getElementById('gate'),gt=document.getElementById('gateTitle');if(window.__tmsReady)return true;if(g&&g.style.display!=='none'&&gt&&gt.textContent.trim()&&!/^(loading|memuat)/i.test(gt.textContent.trim()))return true;return false}var mo;function check(){if(!ready())return;mo&&mo.disconnect();clearTimeout(t1);clearTimeout(t2);document.body.classList.remove('tms-loading');L.classList.add('out');setTimeout(function(){L.remove()},380)}mo=new MutationObserver(check);mo.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['style','class'],characterData:true});})();</script>
+<body><script>/* sidebar CMS dari cache — inline supaya ikut paint pertama (tanpa kedip) */(function () { try { var c = JSON.parse(sessionStorage.getItem('cmsNavCache') || 'null'); if (!c || !c.html) return; var st = document.createElement('style'); st.id = 'cms-shell-css'; st.textContent = c.css; document.head.appendChild(st); var box = document.createElement('div'); box.innerHTML = c.html; var nav = box.firstElementChild; if (c.sig) nav.setAttribute('data-sig', c.sig); var cur = location.pathname.split('/').pop() || 'index.html'; nav.querySelectorAll('a.as-item').forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === cur); }); document.body.prepend(nav); document.body.classList.add('has-admin-sidebar'); } catch (e) {} })();</script><i id="cms-nav-ready" hidden></i><script>/* loading screen CMS — tampil sampai halaman siap (appShell muncul / gate berisi pesan) */(function(){var id=document.documentElement.lang==='id';/* cek versi: kalau browser masih menyimpan halaman versi lama, muat ulang sekali */var BUILD='20261118-113829';try{fetch('build.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(v&&v!==BUILD&&sessionStorage.getItem('tmsBuildReload')!==v){sessionStorage.setItem('tmsBuildReload',v);location.reload()}}).catch(function(){})}catch(e){}var css='body.tms-loading #gate{display:none!important}.tms-loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:36;transition:opacity .35s ease;background:rgba(246,246,250,.35);-webkit-backdrop-filter:blur(18px) saturate(1.1);backdrop-filter:blur(18px) saturate(1.1)}body.has-admin-sidebar .tms-loader{left:232px}.tms-loader.out{opacity:0;pointer-events:none}.tms-loader .bx{display:flex;flex-direction:column;align-items:center;gap:14px;padding:28px 34px;border-radius:20px;background:rgba(255,255,255,.55);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.7);box-shadow:0 12px 40px rgba(0,0,0,.08);min-width:240px}.tms-loader .t{font-weight:700;font-size:15px;color:#1d1d1f}.tms-loader .s{font-size:12.5px;color:#86868b;text-align:center;max-width:260px}.tms-loader .s:empty{display:none}.tms-loader .bar{width:200px;height:5px;border-radius:99px;background:rgba(230,0,122,.12);overflow:hidden}.tms-loader .bar i{display:block;width:40%;height:100%;border-radius:99px;background:#E6007A;animation:tmsBar 1.1s ease-in-out infinite}@keyframes tmsBar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}@media (max-width:900px){body.has-admin-sidebar .tms-loader{left:0}}@media (prefers-reduced-motion:reduce){.tms-loader .bar i{animation-duration:2.4s}}';var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);document.body.classList.add('tms-loading');var L=document.createElement('div');L.className='tms-loader';L.setAttribute('role','status');L.innerHTML='<div class="bx"><div class="t">'+(id?'Memuat data…':'Loading data…')+'</div><div class="bar"><i></i></div><div class="s"></div></div>';document.body.appendChild(L);var sub=L.querySelector('.s');var t1=setTimeout(function(){sub.textContent=id?'Sebentar lagi…':'Almost there…'},3500);var t2=setTimeout(function(){sub.textContent=id?'Lebih lama dari biasanya. Cek koneksi, lalu refresh kalau tidak kunjung muncul.':'Taking longer than usual. Check your connection, then refresh if nothing appears.'},15000);window.tmsReady=window.appReady=function(){window.__tmsReady=true;check()};function ready(){var g=document.getElementById('gate'),gt=document.getElementById('gateTitle');if(window.__tmsReady)return true;if(g&&g.style.display!=='none'&&gt&&gt.textContent.trim()&&!/^(loading|memuat)/i.test(gt.textContent.trim()))return true;return false}var mo;function check(){if(!ready())return;mo&&mo.disconnect();clearTimeout(t1);clearTimeout(t2);document.body.classList.remove('tms-loading');L.classList.add('out');setTimeout(function(){L.remove()},380)}mo=new MutationObserver(check);mo.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['style','class'],characterData:true});})();</script>
 
 <div id="gate" class="locked-state" style="display:none;">
   <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Loading...</p>
@@ -56,34 +60,36 @@
     <div class="user-chip"><img class="avatar" id="userAvatar" src=""><span id="userName"></span></div>
   </div>
   <div class="wrap wide">
-    <div class="page-head"><h1 class="text-h1" style="margin:0;">Competency Dashboard</h1></div>
+    <div class="page-head"><h1 class="text-h1" style="margin:0;">Technical Competency Dashboard</h1></div>
 
-    <div class="steps">
-      <a class="step" href="dictionary.html"><div class="no">STEP 1</div><b>Technical Competencies</b><span id="s1">Technical competencies &amp; indicators per level</span></a>
-      <a class="step" href="job-families.html"><div class="no">STEP 2</div><b>Job Families</b><span id="s2">Group positions into job families</span></a>
-      <a class="step" href="matrix.html"><div class="no">STEP 3</div><b>Competency Matrix</b><span id="s3">Required competencies per family &amp; level</span></a>
-      <a class="step" href="coverage.html"><div class="no">STEP 4</div><b>Employee Coverage</b><span id="s4">Trained vs not yet, per employee</span></a>
+    <div class="flow">
+      <div class="fstep"><div class="no">1 · SETUP</div><b>Define What Is Required</b>
+        <a href="dictionary.html">Technical Competencies<span id="f1"></span></a><a href="job-families.html">Positions mapped to job families<span id="f2"></span></a><a href="matrix.html">Job families with a matrix<span id="f3"></span></a></div>
+      <div class="fstep"><div class="no">2 · ASSESSMENT</div><b>Score Employees</b>
+        <a href="assessment.html">Employees assessed<span id="f4"></span></a><a href="assessment.html">Supervisor ratings / HC scores<span id="f5"></span></a><a href="assessment-settings.html">Combine rule<span id="f6"></span></a></div>
+      <div class="fstep"><div class="no">3 · RESULTS</div><b>See Who Meets The Standard</b>
+        <a href="coverage.html?status=meet">Meet all standards<span id="f7"></span></a><a href="coverage.html?status=below">Below standard<span id="f8"></span></a><a href="coverage.html?status=cal">Needs calibration<span id="f9"></span></a></div>
     </div>
 
     <div class="dash-kpis">
-      <div class="dk"><div class="n" id="kComp">-</div><div class="l">Technical Competencies</div><div class="s" id="kCompSub"></div></div>
-      <div class="dk"><div class="n" id="kFam">-</div><div class="l">Job Families</div><div class="s" id="kFamSub"></div></div>
       <div class="dk"><div class="n" id="kEmp">-</div><div class="l">Employees With Requirements</div><div class="s" id="kEmpSub"></div></div>
-      <div class="dk"><div class="n" id="kCov">-</div><div class="l">Overall Coverage</div><div class="s" id="kCovSub">Required competencies already trained</div></div>
+      <div class="dk"><div class="n" id="kAss">-</div><div class="l">Assessment Progress</div><div class="s" id="kAssSub"></div></div>
+      <div class="dk"><div class="n" id="kMeet">-</div><div class="l">Standard Met</div><div class="s" id="kMeetSub"></div></div>
+      <div class="dk"><div class="n" id="kGap">-</div><div class="l">Average Gap</div><div class="s">Levels below required, where below</div></div>
     </div>
 
     <div class="dash-grid g2">
-      <div class="dash-card"><h3>Coverage by Competency</h3><div class="hint">% of employees who need it that have been trained · lowest first</div><div id="chComp"></div></div>
-      <div class="dash-card"><h3>Trained Through</h3><div class="hint">Evidence behind each trained requirement</div><div id="chVia"></div></div>
+      <div class="dash-card"><h3>Standard Met by Competency</h3><div class="hint">% of assessed requirements at or above the required level · lowest first</div><div id="chComp"></div></div>
+      <div class="dash-card"><h3>Requirement Status</h3><div class="hint">All employee × required competency pairs</div><div id="chStatus"></div></div>
     </div>
     <div class="dash-grid g2">
-      <div class="dash-card"><h3>Coverage by Division</h3><div class="hint">% of required competencies trained</div><div id="chDiv"></div></div>
-      <div class="dash-card"><h3>Required, But No LMS Module</h3><div class="hint">Competencies in the matrix with no published online module to train them</div><div id="noMod"></div></div>
+      <div class="dash-card"><h3>Standard Met by Job Family</h3><div class="hint">% of assessed requirements met · employees</div><div id="chFam"></div></div>
+      <div class="dash-card"><h3>Largest Gaps</h3><div class="hint">Employees with the most levels below standard · click to open profile</div><div id="gapList"></div></div>
     </div>
 
     <div class="panel">
-      <div class="panel-head"><h3 class="text-h2" style="margin:0;">Job Family Status</h3><span class="text-meta">Mapping &amp; matrix readiness</span></div>
-      <table class="fs"><thead><tr><th>Job Family</th><th style="text-align:right;">Positions</th><th style="text-align:right;">Employees</th><th>Matrix</th><th>Coverage</th><th></th></tr></thead><tbody id="famBody"></tbody></table>
+      <div class="panel-head"><h3 class="text-h2" style="margin:0;">Job Family Overview</h3><span class="text-meta">Setup, assessment &amp; result per job family</span></div>
+      <table class="fs"><thead><tr><th>Job Family</th><th class="num">Employees</th><th>Matrix</th><th class="num">Assessed</th><th class="num">Standard Met</th><th class="num">Needs Calibration</th><th></th></tr></thead><tbody id="famBody"></tbody></table>
     </div>
 
   </div>
@@ -95,72 +101,72 @@
   const F = id => document.getElementById(id);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const toast = msg => { const t = F('toast'); t.textContent = msg; t.style.display = 'block'; clearTimeout(toast._t); toast._t = setTimeout(() => t.style.display = 'none', 3000); };
-  import { loadFamilies, loadMatrix, loadCompetencies, loadEmployees, loadModules, loadAttempts, loadPlans, loadUpdates, isActive, buildTrainedIndex, coverageFor } from './cms-data.js?v=20261118e';
+  import { loadFamilies, loadMatrix, loadCompetencies, loadEmployees, loadModules, loadAttempts, loadRatings, loadAssessSettings, applyLabels, isActive, buildRatingIndex, proficiencyFor } from './cms-data.js?v=20261118f';
   import { hbars, donut } from '../tms/mini-charts.js?v=20261116d';
 
   const pct = (a, b) => b ? Math.round(a / b * 100) : null;
   const colorFor = p => p == null ? '#94A3B8' : p >= 80 ? '#16A34A' : p >= 50 ? '#F59E0B' : '#DC2626';
-  let techIds = new Set();
-  const cells = req => Object.values(req || {}).reduce((n, m) => n + Object.entries(m).filter(([k, v]) => Number(v) > 0 && techIds.has(k)).length, 0);
+  const RULE = { lowest: 'Lowest of the two', average: 'Average (rounded down)', weighted: 'Weighted' };
 
   async function init(){
-    const [cfg, matrix, comps, emps, mods, attempts, plans, updates] = await Promise.all([loadFamilies(), loadMatrix(), loadCompetencies(), loadEmployees(), loadModules(), loadAttempts(), loadPlans(), loadUpdates()]);
-    const compById = {}; comps.forEach(c => compById[c.id] = c); techIds = new Set(comps.map(c => c.id));
+    const [cfg, matrix, comps, emps, mods, attempts, ratings, st] = await Promise.all([loadFamilies(), loadMatrix(), loadCompetencies(), loadEmployees(), loadModules(), loadAttempts(), loadRatings(), loadAssessSettings()]);
+    applyLabels(st);
+    const compById = {}; comps.forEach(c => compById[c.id] = c);
     const active = emps.filter(isActive);
-    const idx = buildTrainedIndex({ employees: emps, modules: mods, attempts, plans, updates });
-    const rows = active.map(e => { const cov = coverageFor(e, cfg, matrix, idx); const items = cov.items.filter(i => compById[i.comp]); return { e, fam: cov.fam, items, nReq: items.length, nTr: items.filter(i => i.trained).length }; });
-    const withReq = rows.filter(r => r.nReq), req = withReq.reduce((n, r) => n + r.nReq, 0), tr = withReq.reduce((n, r) => n + r.nTr, 0);
+    const rIdx = buildRatingIndex({ ratings, employees: emps, modules: mods, attempts }, st);
+    const rows = active.map(e => { const p = proficiencyFor(e, cfg, matrix, rIdx, st); p.items = p.items.filter(i => compById[i.comp]); return { e, p }; });
+    const withReq = rows.filter(r => r.p.items.length);
+    const all = withReq.flatMap(r => r.p.items.map(i => ({ ...i, r })));
+    const nMeet = all.filter(i => i.status === 'meet').length, nBelow = all.filter(i => i.status === 'below').length, nPend = all.filter(i => i.status === 'pending').length;
+    const assessedEmp = withReq.filter(r => r.p.items.some(i => i.status !== 'pending')).length;
+    const fullEmp = withReq.filter(r => r.p.items.every(i => i.status === 'meet')).length;
+    const belowEmp = withReq.filter(r => r.p.items.some(i => i.status === 'below')).length;
+    const calEmp = withReq.filter(r => r.p.items.some(i => i.calibrate)).length;
+    const gaps = all.filter(i => i.status === 'below');
+
+    // alur
+    const jabs = [...new Set(active.map(e => (e.jabatan || '').trim()).filter(Boolean))], mapped = jabs.filter(j => cfg.jabatanMap[j]).length;
+    const famSet = cfg.families.filter(f => comps.some(c => Object.values(matrix[f.id] || {}).some(m => Number(m[c.id]) > 0))).length;
+    const S = (id, txt, ok) => { F(id).textContent = txt; F(id).className = ok == null ? '' : ok ? 'ok' : 'warn'; };
+    S('f1', comps.length, comps.length > 0); S('f2', jabs.length ? `${mapped}/${jabs.length}` : '-', jabs.length && mapped === jabs.length);
+    S('f3', `${famSet}/${cfg.families.length}`, cfg.families.length && famSet === cfg.families.length);
+    S('f4', `${assessedEmp}/${withReq.length}`, withReq.length && assessedEmp === withReq.length);
+    const lat = {}; ratings.forEach(r => lat[r.nik + '|' + r.compId + '|' + r.jalur] = 1); const k = Object.keys(lat);
+    S('f5', `${k.filter(x => x.endsWith('|atasan')).length} / ${k.filter(x => x.endsWith('|hc')).length}`); S('f6', RULE[st.rule] || st.rule);
+    S('f7', fullEmp, null); S('f8', belowEmp, belowEmp ? false : null); S('f9', calEmp, calEmp ? false : null);
 
     // KPI
-    F('kComp').textContent = comps.length; F('kCompSub').textContent = 'Technical competencies in the dictionary';
-    const jabs = [...new Set(active.map(e => (e.jabatan || '').trim()).filter(Boolean))];
-    const mapped = jabs.filter(j => cfg.jabatanMap[j]).length;
-    F('kFam').textContent = cfg.families.length; F('kFamSub').textContent = jabs.length ? `${pct(mapped, jabs.length)}% of ${jabs.length} positions mapped` : 'No employees yet';
     F('kEmp').textContent = withReq.length; F('kEmpSub').textContent = `of ${active.length} active employees`;
-    F('kCov').textContent = req ? pct(tr, req) + '%' : '-'; F('kCovSub').textContent = req ? `${tr} of ${req} requirements trained` : 'Set the matrix first';
-    F('s1').textContent = `${comps.length} technical competencies`;
-    F('s2').textContent = `${cfg.families.length} families · ${mapped}/${jabs.length} positions mapped`;
-    F('s3').textContent = `${cfg.families.filter(f => cells(matrix[f.id])).length}/${cfg.families.length} families set`;
-    F('s4').textContent = req ? `${pct(tr, req)}% trained overall` : 'Waiting for the matrix';
+    F('kAss').textContent = all.length ? pct(all.length - nPend, all.length) + '%' : '-'; F('kAssSub').textContent = `${all.length - nPend} of ${all.length} requirements have a final level`;
+    F('kMeet').textContent = (nMeet + nBelow) ? pct(nMeet, nMeet + nBelow) + '%' : '-'; F('kMeetSub').textContent = `${nMeet} of ${nMeet + nBelow} assessed requirements`;
+    F('kGap').textContent = gaps.length ? (gaps.reduce((n, i) => n + i.gap, 0) / gaps.length).toFixed(1).replace('.', ',') : '-';
 
-    // Chart kompetensi
-    const byComp = {};
-    withReq.forEach(r => r.items.forEach(i => { const o = byComp[i.comp] = byComp[i.comp] || { n: 0, t: 0 }; o.n++; if(i.trained) o.t++; }));
-    const cr = Object.entries(byComp).map(([id, o]) => ({ id, ...o, p: pct(o.t, o.n) })).sort((a, b) => a.p - b.p || b.n - a.n);
-    const noReq = '<div class="mc-empty">No requirements yet. Set them in the <a href="matrix.html">Competency Matrix</a>.</div>';
-    F('chComp').innerHTML = req ? hbars(cr.slice(0, 10).map(o => ({ label: compById[o.id].nama, value: o.p, color: colorFor(o.p), right: `<b>${o.p}%</b> · ${o.t}/${o.n}` })), { max: 100 })
-      + (cr.length > 10 ? `<div class="muted" style="margin-top:10px;"><a href="coverage.html">+${cr.length - 10} more in Employee Coverage</a></div>` : '') : noReq;
+    const empty = msg => `<div class="mc-empty">${msg}</div>`;
+    const noReq = !comps.length ? empty('Add technical competencies first in <a href="dictionary.html">Technical Competencies</a>.') : !all.length ? empty('No requirements yet. Map positions in <a href="job-families.html">Job Families</a> and fill the <a href="matrix.html">Competency Matrix</a>.') : null;
 
-    // Lewat apa
-    let lms = 0, idp = 0, both = 0;
-    withReq.forEach(r => r.items.forEach(i => { if(!i.trained) return; const l = i.evidence.some(x => x.via === 'LMS'), d = i.evidence.some(x => x.via === 'IDP'); if(l && d) both++; else if(l) lms++; else idp++; }));
-    F('chVia').innerHTML = req ? donut([{ label: 'LMS module passed', v: lms, color: '#3B82F6' }, { label: 'IDP activity done', v: idp, color: '#8B5CF6' }, { label: 'Both', v: both, color: '#16A34A' }, { label: 'Not trained yet', v: req - tr, color: '#E5E7EB' }], `<b>${pct(tr, req)}%</b>trained`, 140) : noReq;
+    // per kompetensi
+    const byC = {}; all.forEach(i => { const o = byC[i.comp] = byC[i.comp] || { m: 0, b: 0, p: 0 }; o[i.status === 'meet' ? 'm' : i.status === 'below' ? 'b' : 'p']++; });
+    const cr = Object.entries(byC).map(([id, o]) => ({ id, ...o, pc: pct(o.m, o.m + o.b) })).sort((a, b) => (a.pc ?? 101) - (b.pc ?? 101) || b.b - a.b);
+    F('chComp').innerHTML = noReq || hbars(cr.slice(0, 10).map(o => ({ label: compById[o.id].nama, value: o.pc ?? 0, color: colorFor(o.pc), right: o.pc == null ? `<span>not assessed · ${o.p}</span>` : `<b>${o.pc}%</b> · ${o.m}/${o.m + o.b}${o.p ? ` · ${o.p} pending` : ''}` })), { max: 100 });
+    F('chStatus').innerHTML = noReq || donut([{ label: 'Meets required level', v: nMeet, color: '#16A34A' }, { label: 'Below required level', v: nBelow, color: '#F59E0B' }, { label: 'Not assessed yet', v: nPend, color: '#CBD5E1' }], `<b>${all.length ? pct(nMeet, all.length) : 0}%</b>meet`, 140);
 
-    // Divisi
-    const byDiv = {};
-    withReq.forEach(r => { const o = byDiv[r.e.divisi || '-'] = byDiv[r.e.divisi || '-'] || { n: 0, t: 0, e: 0 }; o.n += r.nReq; o.t += r.nTr; o.e++; });
-    F('chDiv').innerHTML = req ? hbars(Object.entries(byDiv).map(([d, o]) => ({ d, ...o, p: pct(o.t, o.n) })).sort((a, b) => a.p - b.p).slice(0, 10).map(o => ({ label: o.d, value: o.p, color: colorFor(o.p), right: `<b>${o.p}%</b> · ${o.e} emp.` })), { max: 100 }) : noReq;
+    // per job family
+    const fr = cfg.families.map(f => { const rs = withReq.filter(r => r.p.fam === f.id), its = rs.flatMap(r => r.p.items); const m = its.filter(i => i.status === 'meet').length, b = its.filter(i => i.status === 'below').length;
+      return { f, rs, its, m, b, pend: its.filter(i => i.status === 'pending').length, cal: rs.filter(r => r.p.items.some(i => i.calibrate)).length, pc: pct(m, m + b) }; });
+    F('chFam').innerHTML = noReq || hbars(fr.filter(x => x.its.length).sort((a, b) => (a.pc ?? 101) - (b.pc ?? 101)).map(x => ({ label: x.f.nama, value: x.pc ?? 0, color: colorFor(x.pc), right: x.pc == null ? `not assessed · ${x.rs.length} emp.` : `<b>${x.pc}%</b> · ${x.rs.length} emp.` })), { max: 100 });
 
-    // Wajib tapi tidak ada modul LMS
-    const trainable = new Set(mods.filter(m => m.status === 'published' && (m.mode || 'online') === 'online').flatMap(m => m.kompetensiIds || []));
-    const gaps = cr.filter(o => !trainable.has(o.id)).sort((a, b) => (b.n - b.t) - (a.n - a.t));
-    F('noMod').innerHTML = !req ? noReq : gaps.length
-      ? `<div class="nomod">${gaps.slice(0, 10).map(o => `<div><span><b>${esc(compById[o.id].nama)}</b></span><span class="muted">${o.n - o.t} employees not trained</span></div>`).join('')}</div>`
-        + (gaps.length > 10 ? `<div class="muted" style="margin-top:8px;">+${gaps.length - 10} more</div>` : '')
-      : '<div class="mc-empty">Every required competency has at least one published online module.</div>';
+    // gap terbesar
+    const ge = withReq.map(r => ({ r, g: r.p.items.reduce((n, i) => n + (i.gap || 0), 0), n: r.p.items.filter(i => i.status === 'below').length })).filter(x => x.g > 0).sort((a, b) => b.g - a.g).slice(0, 8);
+    F('gapList').innerHTML = noReq || (ge.length ? `<div class="lst">${ge.map(x => `<a href="coverage.html?nik=${encodeURIComponent(x.r.e.nik)}"><span><b>${esc(x.r.e.nama || x.r.e.nik)}</b> <span class="muted">${esc(x.r.e.jabatan || '')}</span></span><span class="muted">${x.n} competenc${x.n === 1 ? 'y' : 'ies'} · ${x.g} level${x.g === 1 ? '' : 's'} total</span></a>`).join('')}</div>` : empty(nMeet ? 'No gaps among assessed employees.' : 'No assessed requirements yet. Start in <a href="assessment.html">Input Assessment</a>.'));
 
-    // Status job family
-    const famRows = cfg.families.map(f => {
-      const ps = jabs.filter(j => cfg.jabatanMap[j] === f.id), rs = rows.filter(r => r.fam === f.id);
-      const n = rs.reduce((x, r) => x + r.nReq, 0), t = rs.reduce((x, r) => x + r.nTr, 0), c = cells(matrix[f.id]);
-      return `<tr><td><b>${esc(f.nama)}</b>${f.deskripsi ? `<div class="muted">${esc(f.deskripsi)}</div>` : ''}</td><td style="text-align:right;">${ps.length}</td><td style="text-align:right;">${rs.length}</td>
-        <td>${c ? `<span class="tag ok">${c} cells set</span>` : '<span class="tag warn">Not set</span>'}</td>
-        <td style="min-width:140px;">${n ? `<b style="color:${colorFor(pct(t, n))}">${pct(t, n)}%</b> <span class="muted">${t}/${n}</span>` : '<span class="muted">–</span>'}</td>
-        <td style="text-align:right; white-space:nowrap;"><a href="matrix.html?family=${encodeURIComponent(f.id)}">Matrix</a> · <a href="coverage.html?family=${encodeURIComponent(f.id)}">Coverage</a></td></tr>`;
-    });
-    const un = rows.filter(r => !r.fam).length;
-    F('famBody').innerHTML = (famRows.join('') || '<tr><td colspan="6" class="muted" style="padding:16px 10px;">No job families yet. <a href="job-families.html">Create them in Job Families</a>.</td></tr>')
-      + (un ? `<tr><td><span class="muted">Not mapped to a family</span></td><td></td><td style="text-align:right;">${un}</td><td colspan="2" class="muted">No requirements</td><td style="text-align:right;"><a href="job-families.html">Map positions</a></td></tr>` : '');
+    // tabel job family
+    const un = rows.filter(r => !r.p.fam).length;
+    F('famBody').innerHTML = (fr.map(x => `<tr><td><b>${esc(x.f.nama)}</b></td><td class="num">${rows.filter(r => r.p.fam === x.f.id).length}</td>
+        <td>${comps.some(c => Object.values(matrix[x.f.id] || {}).some(m => Number(m[c.id]) > 0)) ? '<span class="tag ok">Set</span>' : '<span class="tag w">Not set</span>'}</td>
+        <td class="num">${x.its.length ? pct(x.its.length - x.pend, x.its.length) + '%' : '–'}</td><td class="num">${x.pc == null ? '–' : `<b style="color:${colorFor(x.pc)}">${x.pc}%</b>`}</td><td class="num">${x.cal || '–'}</td>
+        <td class="num" style="white-space:nowrap;"><a href="matrix.html?family=${encodeURIComponent(x.f.id)}">Matrix</a> · <a href="coverage.html?family=${encodeURIComponent(x.f.id)}">Employees</a></td></tr>`).join('')
+      || '<tr><td colspan="7" class="muted" style="padding:16px 10px;">No job families yet. <a href="job-families.html">Create them in Job Families</a>.</td></tr>')
+      + (un ? `<tr><td class="muted">Not mapped to a job family</td><td class="num">${un}</td><td colspan="4" class="muted">No technical requirements</td><td class="num"><a href="job-families.html">Map positions</a></td></tr>` : '');
   }
 
   onAuth(async (user) => { try {
@@ -171,13 +177,13 @@
     gate.style.display = 'none'; shell.style.display = 'block';
     F('userAvatar').src = profile.photoURL; F('userName').textContent = profile.displayName;
     await init(profile);
-    const { loadErrors } = await import('./cms-data.js?v=20261118e');
+    const { loadErrors } = await import('./cms-data.js?v=20261118f');
     if(loadErrors.length) showErr('Some data could not be read: ' + [...new Set(loadErrors)].join(', ') + '. If it says permission-denied, publish the latest Firestore rules.');
   } catch(err) { console.error('CMS error', err); showErr('Something went wrong: ' + (err.message || err)); }
   finally { window.appReady?.(); } });
   function showErr(msg){ let b = document.getElementById('cmsErr'); if(!b){ b = document.createElement('div'); b.id = 'cmsErr'; b.style.cssText = 'background:#FEF2F2;border:1px solid #FCA5A5;color:#991B1B;border-radius:12px;padding:12px 16px;margin-bottom:16px;font-size:13px;'; document.querySelector('#appShell .wrap')?.prepend(b); } b.textContent = msg; } // loading screen hilang setelah semua data halaman tampil
 </script>
-<script type="module" src="./cms-shell.js?v=20261118b"></script>
+<script type="module" src="./cms-shell.js?v=20261118c"></script>
 <script src="../lms-motion.js?v=20261109" defer></script>
 </body>
 </html>

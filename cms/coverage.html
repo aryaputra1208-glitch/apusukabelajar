@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Employee Coverage — Anteraja CMS</title>
+<title>Employee Profiles — Anteraja CMS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../lms-design-system.css?v=20261105b">
@@ -19,32 +19,47 @@
   .page-head select, .page-head input { margin: 0; width: auto; }
 
   .muted { color: var(--text-3); font-size: 12px; }
-  .cv-tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--border); }
+  .cv-tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding: 14px 20px; }
   .cv-tools select, .cv-tools input { margin: 0; width: auto; }
   table.cv { width: 100%; border-collapse: collapse; font-size: 13px; }
   table.cv th { text-align: left; font-size: 11px; color: var(--text-3); font-weight: 600; padding: 10px 12px; border-bottom: 1px solid var(--border); }
   table.cv td { padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
   table.cv tr.emp { cursor: pointer; }
   table.cv tr.emp:hover td { background: rgba(230,0,122,.03); }
-  table.cv tr.emp.open td { background: rgba(230,0,122,.05); }
-  .pbar { display: flex; align-items: center; gap: 8px; min-width: 150px; }
-  .pbar .trk { flex: 1; height: 8px; border-radius: 99px; background: rgba(120,120,128,.13); overflow: hidden; }
-  .pbar .trk span { display: block; height: 100%; border-radius: 99px; }
-  .pbar b { font-size: 12px; min-width: 36px; text-align: right; }
-  .detail td { background: rgba(255,255,255,.5); padding: 4px 12px 16px 44px !important; }
-  .ci { display: grid; grid-template-columns: minmax(180px, 1.2fr) 130px 110px minmax(200px, 2fr); gap: 12px; padding: 9px 0; border-bottom: 1px dashed var(--border); font-size: 12.5px; align-items: start; }
-  .ci:last-child { border-bottom: none; }
-  .ci.hd { font-size: 11px; color: var(--text-3); font-weight: 600; }
-  .pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 99px; }
+  table.cv tr.emp.open td { background: rgba(230,0,122,.06); }
+  .num { text-align: right; }
+  .stack { display: flex; height: 8px; border-radius: 99px; overflow: hidden; background: rgba(120,120,128,.13); min-width: 120px; }
+  .stack i { display: block; height: 100%; }
+  .detail > td { background: rgba(255,255,255,.55); padding: 6px 16px 18px !important; }
+  .pc { display: grid; grid-template-columns: minmax(160px, 1.3fr) 160px 110px 150px 120px minmax(170px, 1.4fr); gap: 12px; padding: 10px 0; border-bottom: 1px dashed var(--border); font-size: 12.5px; align-items: center; }
+  .pc:last-of-type { border-bottom: none; }
+  .pc.hd { font-size: 11px; color: var(--text-3); font-weight: 600; }
+  .lvbar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
+  .lvbar i { height: 10px; border-radius: 3px; background: rgba(120,120,128,.15); }
+  .lvbar i.f { background: #16A34A; }
+  .lvbar i.f.below { background: #F59E0B; }
+  .lvbar i.need { outline: 2px solid var(--text); outline-offset: 1px; }
+  .lvtxt { font-size: 11px; color: var(--text-3); margin-top: 5px; }
+  .src b { font-size: 13px; }
+  .src small { display: block; color: var(--text-3); font-size: 11px; }
+  .pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 99px; white-space: nowrap; }
   .pill.ok { background: rgba(22,163,74,.12); color: #15803D; }
-  .pill.no { background: rgba(220,38,38,.1); color: #B91C1C; }
-  .ev { display: block; color: var(--text-2); }
-  .ev small { color: var(--text-3); }
+  .pill.no { background: rgba(245,158,11,.15); color: #B45309; }
+  .pill.pd { background: rgba(120,120,128,.14); color: var(--text-2); }
+  .flag { display: block; font-size: 11px; margin-top: 3px; color: #B45309; }
+  .flag.g { color: var(--text-3); }
+  .ev { display: block; color: var(--text-2); font-size: 12px; }
+  .hist { margin-top: 10px; font-size: 12px; }
+  .hist summary { cursor: pointer; color: var(--pink-dark); font-weight: 600; }
+  .hist table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+  .hist td { padding: 4px 8px; border-bottom: 1px solid var(--border); }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 11.5px; color: var(--text-3); padding: 10px 20px; border-top: 1px solid var(--border); }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
   .more { padding: 14px 20px; text-align: center; }
 
 </style>
 </head>
-<body><script>/* sidebar CMS dari cache — inline supaya ikut paint pertama (tanpa kedip) */(function () { try { var c = JSON.parse(sessionStorage.getItem('cmsNavCache') || 'null'); if (!c || !c.html) return; var st = document.createElement('style'); st.id = 'cms-shell-css'; st.textContent = c.css; document.head.appendChild(st); var box = document.createElement('div'); box.innerHTML = c.html; var nav = box.firstElementChild; if (c.sig) nav.setAttribute('data-sig', c.sig); var cur = location.pathname.split('/').pop() || 'index.html'; nav.querySelectorAll('a.as-item').forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === cur); }); document.body.prepend(nav); document.body.classList.add('has-admin-sidebar'); } catch (e) {} })();</script><i id="cms-nav-ready" hidden></i><script>/* loading screen CMS — tampil sampai halaman siap (appShell muncul / gate berisi pesan) */(function(){var id=document.documentElement.lang==='id';/* cek versi: kalau browser masih menyimpan halaman versi lama, muat ulang sekali */var BUILD='20261118-111105';try{fetch('build.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(v&&v!==BUILD&&sessionStorage.getItem('tmsBuildReload')!==v){sessionStorage.setItem('tmsBuildReload',v);location.reload()}}).catch(function(){})}catch(e){}var css='body.tms-loading #gate{display:none!important}.tms-loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:36;transition:opacity .35s ease;background:rgba(246,246,250,.35);-webkit-backdrop-filter:blur(18px) saturate(1.1);backdrop-filter:blur(18px) saturate(1.1)}body.has-admin-sidebar .tms-loader{left:232px}.tms-loader.out{opacity:0;pointer-events:none}.tms-loader .bx{display:flex;flex-direction:column;align-items:center;gap:14px;padding:28px 34px;border-radius:20px;background:rgba(255,255,255,.55);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.7);box-shadow:0 12px 40px rgba(0,0,0,.08);min-width:240px}.tms-loader .t{font-weight:700;font-size:15px;color:#1d1d1f}.tms-loader .s{font-size:12.5px;color:#86868b;text-align:center;max-width:260px}.tms-loader .s:empty{display:none}.tms-loader .bar{width:200px;height:5px;border-radius:99px;background:rgba(230,0,122,.12);overflow:hidden}.tms-loader .bar i{display:block;width:40%;height:100%;border-radius:99px;background:#E6007A;animation:tmsBar 1.1s ease-in-out infinite}@keyframes tmsBar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}@media (max-width:900px){body.has-admin-sidebar .tms-loader{left:0}}@media (prefers-reduced-motion:reduce){.tms-loader .bar i{animation-duration:2.4s}}';var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);document.body.classList.add('tms-loading');var L=document.createElement('div');L.className='tms-loader';L.setAttribute('role','status');L.innerHTML='<div class="bx"><div class="t">'+(id?'Memuat data…':'Loading data…')+'</div><div class="bar"><i></i></div><div class="s"></div></div>';document.body.appendChild(L);var sub=L.querySelector('.s');var t1=setTimeout(function(){sub.textContent=id?'Sebentar lagi…':'Almost there…'},3500);var t2=setTimeout(function(){sub.textContent=id?'Lebih lama dari biasanya. Cek koneksi, lalu refresh kalau tidak kunjung muncul.':'Taking longer than usual. Check your connection, then refresh if nothing appears.'},15000);window.tmsReady=window.appReady=function(){window.__tmsReady=true;check()};function ready(){var g=document.getElementById('gate'),gt=document.getElementById('gateTitle');if(window.__tmsReady)return true;if(g&&g.style.display!=='none'&&gt&&gt.textContent.trim()&&!/^(loading|memuat)/i.test(gt.textContent.trim()))return true;return false}var mo;function check(){if(!ready())return;mo&&mo.disconnect();clearTimeout(t1);clearTimeout(t2);document.body.classList.remove('tms-loading');L.classList.add('out');setTimeout(function(){L.remove()},380)}mo=new MutationObserver(check);mo.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['style','class'],characterData:true});})();</script>
+<body><script>/* sidebar CMS dari cache — inline supaya ikut paint pertama (tanpa kedip) */(function () { try { var c = JSON.parse(sessionStorage.getItem('cmsNavCache') || 'null'); if (!c || !c.html) return; var st = document.createElement('style'); st.id = 'cms-shell-css'; st.textContent = c.css; document.head.appendChild(st); var box = document.createElement('div'); box.innerHTML = c.html; var nav = box.firstElementChild; if (c.sig) nav.setAttribute('data-sig', c.sig); var cur = location.pathname.split('/').pop() || 'index.html'; nav.querySelectorAll('a.as-item').forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === cur); }); document.body.prepend(nav); document.body.classList.add('has-admin-sidebar'); } catch (e) {} })();</script><i id="cms-nav-ready" hidden></i><script>/* loading screen CMS — tampil sampai halaman siap (appShell muncul / gate berisi pesan) */(function(){var id=document.documentElement.lang==='id';/* cek versi: kalau browser masih menyimpan halaman versi lama, muat ulang sekali */var BUILD='20261118-113829';try{fetch('build.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(v&&v!==BUILD&&sessionStorage.getItem('tmsBuildReload')!==v){sessionStorage.setItem('tmsBuildReload',v);location.reload()}}).catch(function(){})}catch(e){}var css='body.tms-loading #gate{display:none!important}.tms-loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:36;transition:opacity .35s ease;background:rgba(246,246,250,.35);-webkit-backdrop-filter:blur(18px) saturate(1.1);backdrop-filter:blur(18px) saturate(1.1)}body.has-admin-sidebar .tms-loader{left:232px}.tms-loader.out{opacity:0;pointer-events:none}.tms-loader .bx{display:flex;flex-direction:column;align-items:center;gap:14px;padding:28px 34px;border-radius:20px;background:rgba(255,255,255,.55);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.7);box-shadow:0 12px 40px rgba(0,0,0,.08);min-width:240px}.tms-loader .t{font-weight:700;font-size:15px;color:#1d1d1f}.tms-loader .s{font-size:12.5px;color:#86868b;text-align:center;max-width:260px}.tms-loader .s:empty{display:none}.tms-loader .bar{width:200px;height:5px;border-radius:99px;background:rgba(230,0,122,.12);overflow:hidden}.tms-loader .bar i{display:block;width:40%;height:100%;border-radius:99px;background:#E6007A;animation:tmsBar 1.1s ease-in-out infinite}@keyframes tmsBar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}@media (max-width:900px){body.has-admin-sidebar .tms-loader{left:0}}@media (prefers-reduced-motion:reduce){.tms-loader .bar i{animation-duration:2.4s}}';var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);document.body.classList.add('tms-loading');var L=document.createElement('div');L.className='tms-loader';L.setAttribute('role','status');L.innerHTML='<div class="bx"><div class="t">'+(id?'Memuat data…':'Loading data…')+'</div><div class="bar"><i></i></div><div class="s"></div></div>';document.body.appendChild(L);var sub=L.querySelector('.s');var t1=setTimeout(function(){sub.textContent=id?'Sebentar lagi…':'Almost there…'},3500);var t2=setTimeout(function(){sub.textContent=id?'Lebih lama dari biasanya. Cek koneksi, lalu refresh kalau tidak kunjung muncul.':'Taking longer than usual. Check your connection, then refresh if nothing appears.'},15000);window.tmsReady=window.appReady=function(){window.__tmsReady=true;check()};function ready(){var g=document.getElementById('gate'),gt=document.getElementById('gateTitle');if(window.__tmsReady)return true;if(g&&g.style.display!=='none'&&gt&&gt.textContent.trim()&&!/^(loading|memuat)/i.test(gt.textContent.trim()))return true;return false}var mo;function check(){if(!ready())return;mo&&mo.disconnect();clearTimeout(t1);clearTimeout(t2);document.body.classList.remove('tms-loading');L.classList.add('out');setTimeout(function(){L.remove()},380)}mo=new MutationObserver(check);mo.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['style','class'],characterData:true});})();</script>
 
 <div id="gate" class="locked-state" style="display:none;">
   <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Loading...</p>
@@ -59,31 +74,27 @@
     <div class="user-chip"><img class="avatar" id="userAvatar" src=""><span id="userName"></span></div>
   </div>
   <div class="wrap wide">
-    <div class="page-head"><h1 class="text-h1" style="margin:0;">Employee Coverage</h1>
+    <div class="page-head"><h1 class="text-h1" style="margin:0;">Employee Profiles</h1>
       <div class="acts"><button class="btn btn-outline btn-sm" id="exportBtn">Export (Excel)</button></div></div>
 
-    <div class="panel" style="margin-bottom:16px;"><div class="cv-tools" style="border-bottom:none;">
+    <div class="panel" style="margin-bottom:16px;"><div class="cv-tools">
       <select id="fDiv"></select><select id="fFam"></select><select id="fLevel"></select>
-      <select id="fStatus"><option value="">All employees</option><option value="gap">Has untrained competencies</option><option value="full">Fully trained</option><option value="none">No requirements</option></select>
+      <select id="fStatus"><option value="">All employees</option><option value="below">Below standard (≥ 1 competency)</option><option value="meet">Meets all standards</option><option value="pending">Not fully assessed</option><option value="cal">Needs calibration</option></select>
       <input type="text" id="fSearch" placeholder="Search name, NIK, position" style="min-width:220px;">
     </div></div>
 
     <div class="dash-kpis">
       <div class="dk"><div class="n" id="kEmp">-</div><div class="l">Employees</div><div class="s" id="kEmpSub"></div></div>
-      <div class="dk"><div class="n" id="kCov">-</div><div class="l">Overall Coverage</div><div class="s">Required competencies already trained</div></div>
-      <div class="dk"><div class="n" id="kFull">-</div><div class="l">Fully Trained</div><div class="s" id="kFullSub"></div></div>
-      <div class="dk"><div class="n" id="kGap">-</div><div class="l">Untrained Requirements</div><div class="s">Employee × competency still to train</div></div>
-    </div>
-
-    <div class="dash-grid g2">
-      <div class="dash-card"><h3>Coverage by Competency</h3><div class="hint">% of employees who need it that have been trained · lowest first</div><div id="chComp"></div></div>
-      <div class="dash-card"><h3>Coverage by Division</h3><div class="hint">% of required competencies trained</div><div id="chDiv"></div></div>
+      <div class="dk"><div class="n" id="kMeet">-</div><div class="l">Meet All Standards</div><div class="s" id="kMeetSub"></div></div>
+      <div class="dk"><div class="n" id="kBelow">-</div><div class="l">Below Standard</div><div class="s">At least 1 competency below the required level</div></div>
+      <div class="dk"><div class="n" id="kCal">-</div><div class="l">Needs Calibration</div><div class="s" id="kCalSub"></div></div>
     </div>
 
     <div class="panel">
       <div class="panel-head"><h3 class="text-h2" style="margin:0;">Employees</h3><span class="text-meta" id="tblCount"></span></div>
-      <table class="cv"><thead><tr><th>Employee</th><th>Position</th><th>Job Family</th><th>Level</th><th style="text-align:right;">Required</th><th style="text-align:right;">Trained</th><th style="text-align:right;">Not Yet</th><th>Coverage</th></tr></thead><tbody id="tblBody"></tbody></table>
+      <table class="cv"><thead><tr><th>Employee</th><th>Position</th><th>Job Family</th><th>Level</th><th class="num">Required</th><th class="num">Meet</th><th class="num">Below</th><th class="num">Not Assessed</th><th>Status</th></tr></thead><tbody id="tblBody"></tbody></table>
       <div class="more" id="moreWrap" style="display:none;"><button class="btn btn-outline btn-sm" id="moreBtn">Show more</button></div>
+      <div class="legend"><span><i style="background:#16A34A"></i>Meets required level</span><span><i style="background:#F59E0B"></i>Below required level</span><span><i style="background:rgba(120,120,128,.25)"></i>Not assessed</span><span>Click an employee to see each competency: final level (outlined box = required), Supervisor &amp; HC scores, training.</span></div>
     </div>
 
   </div>
@@ -95,93 +106,86 @@
   const F = id => document.getElementById(id);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const toast = msg => { const t = F('toast'); t.textContent = msg; t.style.display = 'block'; clearTimeout(toast._t); toast._t = setTimeout(() => t.style.display = 'none', 3000); };
-  import { loadFamilies, loadMatrix, loadCompetencies, loadEmployees, loadModules, loadAttempts, loadPlans, loadUpdates, isActive, levelLabelOf, buildTrainedIndex, coverageFor, profLabel } from './cms-data.js?v=20261118e';
+  import { loadFamilies, loadMatrix, loadCompetencies, loadEmployees, loadModules, loadAttempts, loadPlans, loadUpdates, loadRatings, loadAssessSettings, applyLabels,
+    isActive, buildTrainedIndex, buildRatingIndex, proficiencyFor, lvLabel } from './cms-data.js?v=20261118f';
   import { moduleTargetsEmployee } from '../competency-shared.js?v=20261118a';
-  import { hbars } from '../tms/mini-charts.js?v=20261116d';
+  import '../tms/mini-charts.js?v=20261116d';
   import { fillLevelSelect, bindLevelSelect, matchLevel, getLevel } from '../tms/level-filter.js?v=20261116a';
 
-  let cfg, compById = {}, modules = [], rows = [], view = [], shown = 100, openNik = null;
-  const pct = (a, b) => b ? Math.round(a / b * 100) : null;
-  const colorFor = p => p == null ? '#94A3B8' : p >= 80 ? '#16A34A' : p >= 50 ? '#F59E0B' : '#DC2626';
+  let cfg, st, compById = {}, modules = [], trained = {}, rows = [], view = [], shown = 100, openNik = null;
   const famName = id => cfg.families.find(f => f.id === id)?.nama || '';
-  const pbar = p => `<div class="pbar"><div class="trk"><span style="width:${p ?? 0}%; background:${colorFor(p)}"></span></div><b>${p == null ? '–' : p + '%'}</b></div>`;
+  const stackBar = p => { const t = p.nReq || 1; return `<div class="stack" title="${p.nMeet} meet · ${p.nBelow} below · ${p.nPending} not assessed"><i style="width:${p.nMeet / t * 100}%; background:#16A34A"></i><i style="width:${p.nBelow / t * 100}%; background:#F59E0B"></i></div>`; };
+  const counts = p => { p.nReq = p.items.length; p.nMeet = p.items.filter(i => i.status === 'meet').length; p.nBelow = p.items.filter(i => i.status === 'below').length; p.nPending = p.items.filter(i => i.status === 'pending').length; p.nCal = p.items.filter(i => i.calibrate).length; return p; };
 
   function applyFilters(){
-    const d = F('fDiv').value, fm = F('fFam').value, lv = getLevel(), st = F('fStatus').value, q = F('fSearch').value.trim().toLowerCase();
-    view = rows.filter(r => (!d || r.e.divisi === d) && (!fm || (fm === '_none' ? !r.cov.fam : r.cov.fam === fm)) && matchLevel(r.e.level, lv)
-      && (!st || (st === 'none' ? !r.cov.nReq : st === 'full' ? r.cov.nReq && r.cov.nTrained === r.cov.nReq : r.cov.nTrained < r.cov.nReq))
+    const d = F('fDiv').value, fm = F('fFam').value, lv = getLevel(), s = F('fStatus').value, q = F('fSearch').value.trim().toLowerCase();
+    view = rows.filter(r => (!d || r.e.divisi === d) && (!fm || (fm === '_none' ? !r.p.fam : r.p.fam === fm)) && matchLevel(r.e.level, lv)
+      && (!s || (s === 'below' ? r.p.nBelow > 0 : s === 'meet' ? r.p.nReq && r.p.nMeet === r.p.nReq : s === 'pending' ? r.p.nPending > 0 : r.p.nCal > 0))
       && (!q || [r.e.nama, r.e.nik, r.e.jabatan].some(x => String(x || '').toLowerCase().includes(q))));
     shown = 100; render();
   }
-
   function render(){
-    const withReq = view.filter(r => r.cov.nReq);
-    const req = withReq.reduce((n, r) => n + r.cov.nReq, 0), tr = withReq.reduce((n, r) => n + r.cov.nTrained, 0);
-    const full = withReq.filter(r => r.cov.nTrained === r.cov.nReq).length;
-    F('kEmp').textContent = view.length; F('kEmpSub').textContent = `${withReq.length} with required competencies`;
-    F('kCov').textContent = req ? pct(tr, req) + '%' : '-';
-    F('kFull').textContent = full; F('kFullSub').textContent = withReq.length ? `${pct(full, withReq.length)}% of employees with requirements` : 'No requirements set yet';
-    F('kGap').textContent = req - tr;
-
-    const byComp = {};
-    withReq.forEach(r => r.cov.items.forEach(i => { const o = byComp[i.comp] = byComp[i.comp] || { n: 0, t: 0 }; o.n++; if(i.trained) o.t++; }));
-    const cr = Object.entries(byComp).map(([id, o]) => ({ id, ...o, p: pct(o.t, o.n) })).sort((a, b) => a.p - b.p || b.n - a.n);
-    F('chComp').innerHTML = req ? hbars(cr.slice(0, 12).map(o => ({ label: compById[o.id]?.nama || o.id, value: o.p, color: colorFor(o.p), right: `<b>${o.p}%</b> · ${o.t}/${o.n}` })), { max: 100 })
-      + (cr.length > 12 ? `<div class="muted" style="margin-top:10px;">+${cr.length - 12} more competencies — see the export.</div>` : '')
-      : '<div class="mc-empty">No required competencies for this filter. Set them in the <a href="matrix.html">Competency Matrix</a>.</div>';
-    const byDiv = {};
-    withReq.forEach(r => { const o = byDiv[r.e.divisi || '-'] = byDiv[r.e.divisi || '-'] || { n: 0, t: 0, e: 0 }; o.n += r.cov.nReq; o.t += r.cov.nTrained; o.e++; });
-    const dr = Object.entries(byDiv).map(([d, o]) => ({ d, ...o, p: pct(o.t, o.n) })).sort((a, b) => a.p - b.p);
-    F('chDiv').innerHTML = req ? hbars(dr.slice(0, 12).map(o => ({ label: o.d, value: o.p, color: colorFor(o.p), right: `<b>${o.p}%</b> · ${o.e} emp.` })), { max: 100 }) : '<div class="mc-empty">No data for this filter.</div>';
-
+    const withReq = view.filter(r => r.p.nReq);
+    const full = withReq.filter(r => r.p.nMeet === r.p.nReq).length;
+    F('kEmp').textContent = withReq.length; F('kEmpSub').textContent = `with required technical competencies (of ${view.length})`;
+    F('kMeet').textContent = full; F('kMeetSub').textContent = withReq.length ? `${Math.round(full / withReq.length * 100)}% of these employees` : '-';
+    F('kBelow').textContent = withReq.filter(r => r.p.nBelow).length;
+    F('kCal').textContent = withReq.filter(r => r.p.nCal).length; F('kCalSub').textContent = st.calibrationGap ? `Supervisor vs HC differ by ≥ ${st.calibrationGap} levels` : 'Calibration flag is off';
     F('tblCount').textContent = `${Math.min(shown, view.length)} of ${view.length} employees`;
-    F('tblBody').innerHTML = view.slice(0, shown).map(r => {
-      const p = pct(r.cov.nTrained, r.cov.nReq);
-      return `<tr class="emp ${openNik === r.e.nik ? 'open' : ''}" data-nik="${esc(r.e.nik)}"><td><b>${esc(r.e.nama || '-')}</b><div class="muted">${esc(r.e.nik)} · ${esc(r.e.divisi || '-')}</div></td>
-        <td>${esc(r.e.jabatan || '-')}</td><td>${r.cov.fam ? esc(famName(r.cov.fam)) : '<span class="muted">Not mapped</span>'}</td><td>${esc(r.e.level || '-')}${r.e.levelKey ? '' : ' <span class="muted">(unmapped)</span>'}</td>
-        <td style="text-align:right;">${r.cov.nReq}</td><td style="text-align:right;">${r.cov.nTrained}</td><td style="text-align:right;">${r.cov.nReq - r.cov.nTrained}</td>
-        <td>${r.cov.nReq ? pbar(p) : '<span class="muted">No requirements</span>'}</td></tr>` + (openNik === r.e.nik ? detail(r) : '');
-    }).join('') || '<tr><td colspan="8" class="muted" style="padding:20px;">No employees match.</td></tr>';
+    F('tblBody').innerHTML = view.slice(0, shown).map(r => `<tr class="emp ${openNik === r.e.nik ? 'open' : ''}" data-nik="${esc(r.e.nik)}">
+        <td><b>${esc(r.e.nama || '-')}</b><div class="muted">${esc(r.e.nik)} · ${esc(r.e.divisi || '-')}</div></td><td>${esc(r.e.jabatan || '-')}</td>
+        <td>${r.p.fam ? esc(famName(r.p.fam)) : '<span class="muted">Not mapped</span>'}</td><td>${esc(r.e.level || '-')}</td>
+        <td class="num">${r.p.nReq}</td><td class="num">${r.p.nMeet}</td><td class="num">${r.p.nBelow}</td><td class="num">${r.p.nPending}</td>
+        <td>${r.p.nReq ? stackBar(r.p) : '<span class="muted">No requirements</span>'}</td></tr>` + (openNik === r.e.nik ? detail(r) : '')).join('')
+      || '<tr><td colspan="9" class="muted" style="padding:20px;">No employees match.</td></tr>';
     F('moreWrap').style.display = view.length > shown ? 'block' : 'none';
     F('tblBody').querySelectorAll('tr.emp').forEach(tr => tr.addEventListener('click', () => { openNik = openNik === tr.dataset.nik ? null : tr.dataset.nik; render(); }));
   }
-
-  function suggest(emp, compId){
-    return modules.filter(m => m.status === 'published' && (m.mode || 'online') === 'online' && (m.kompetensiIds || []).includes(compId) && moduleTargetsEmployee(m, emp)).slice(0, 3);
-  }
+  const srcCell = (x, kind) => x ? `<div class="src"><b>${x.level}</b> <span class="muted">${kind === 'hc' ? esc(x.jenis) : ''}</span><small>${esc(x.tanggal || '')}${x.catatan ? ' · ' + esc(x.catatan) : ''}</small></div>` : '<span class="muted">–</span>';
+  const lvbar = i => `<div class="lvbar">${[1, 2, 3, 4, 5].map(n => `<i class="${i.final && n <= i.final ? 'f' + (i.status === 'below' ? ' below' : '') : ''} ${n === i.need ? 'need' : ''}"></i>`).join('')}</div>`;
   function detail(r){
-    if(!r.cov.nReq) return `<tr class="detail"><td colspan="8"><div class="muted" style="padding:10px 0;">${!r.cov.fam ? 'This position is not mapped to a job family yet (see Job Families).' : r.e.levelKey ? 'The matrix has no required technical competencies for this job family and level yet.' : 'This employee\'s level is not mapped to a competency level, so no requirements apply.'}</div></td></tr>`;
-    const items = [...r.cov.items].sort((a, b) => a.trained - b.trained || String(compById[a.comp]?.nama).localeCompare(String(compById[b.comp]?.nama)));
-    return `<tr class="detail"><td colspan="8"><div class="ci hd"><span>Technical Competency</span><span>Required Proficiency</span><span>Status</span><span>Evidence / Suggested Training</span></div>` + items.map(i => {
+    if(!r.p.nReq) return `<tr class="detail"><td colspan="9"><div class="muted" style="padding:10px 0;">${!r.p.fam ? 'This position is not mapped to a job family yet (see Job Families).' : r.e.levelKey ? 'The matrix has no technical competencies for this job family and level yet.' : 'This employee\'s level is not mapped to a job level.'}</div></td></tr>`;
+    const ev = trained[r.e.nik] || {};
+    const ord = { below: 0, pending: 1, meet: 2 };
+    const items = [...r.p.items].sort((a, b) => ord[a.status] - ord[b.status] || (b.gap || 0) - (a.gap || 0));
+    const hist = items.flatMap(i => i.history.map(h => ({ ...h, comp: i.comp }))).sort((a, b) => String(b.tanggal).localeCompare(String(a.tanggal)));
+    return `<tr class="detail"><td colspan="9"><div class="pc hd"><span>Technical Competency</span><span>Final Level vs Required</span><span>Supervisor</span><span>HC</span><span>Status</span><span>Training</span></div>` + items.map(i => {
       const c = compById[i.comp];
-      const ev = i.trained ? i.evidence.map(x => `<span class="ev">${x.via === 'LMS' ? 'LMS module' : 'IDP activity'}: ${esc(x.judul)} <small>${esc(x.tanggal || '')}</small></span>`).join('')
-        : (() => { const s = suggest(r.e, i.comp); return s.length ? s.map(m => `<span class="ev">Suggested: ${esc(m.judul)}</span>`).join('') : '<span class="muted">No published online module for this competency yet.</span>'; })();
-      return `<div class="ci"><span><b>${esc(c?.nama || i.comp)}</b></span><span>${esc(profLabel(i.lvl))}</span><span>${i.trained ? '<span class="pill ok">Trained</span>' : '<span class="pill no">Not yet</span>'}</span><span>${ev}</span></div>`;
-    }).join('') + '</td></tr>';
+      const sug = i.status !== 'meet' ? modules.filter(m => m.status === 'published' && (m.mode || 'online') === 'online' && (m.kompetensiIds || []).includes(i.comp) && moduleTargetsEmployee(m, r.e) && !(Number(m.kompetensiLevel?.[i.comp]) <= (i.final || 0))).slice(0, 2) : [];
+      const tr = (ev[i.comp] || []).map(x => `<span class="ev">${x.via === 'LMS' ? 'LMS' : 'IDP'}: ${esc(x.judul)}</span>`).join('') + sug.map(m => `<span class="ev" style="color:var(--pink-dark);">Suggested: ${esc(m.judul)}${m.kompetensiLevel?.[i.comp] ? ` (level ${m.kompetensiLevel[i.comp]})` : ''}</span>`).join('');
+      return `<div class="pc"><span><b>${esc(c?.nama || i.comp)}</b></span>
+        <span>${lvbar(i)}<div class="lvtxt">Final <b>${i.final ? esc(lvLabel(i.final, st)) : '–'}</b> · needs ${esc(lvLabel(i.need, st))}</div></span>
+        <span>${srcCell(i.atasan, 'atasan')}</span><span>${srcCell(i.hc, 'hc')}</span>
+        <span>${i.status === 'meet' ? '<span class="pill ok">Meets</span>' : i.status === 'below' ? `<span class="pill no">Gap ${i.gap}</span>` : '<span class="pill pd">Not assessed</span>'}
+          ${i.sources === 1 && i.final ? '<span class="flag g">1 source</span>' : ''}${i.sources === 1 && !i.final ? '<span class="flag g">Waiting for 2nd source</span>' : ''}${i.calibrate ? '<span class="flag">Needs calibration</span>' : ''}</span>
+        <span>${tr || '<span class="muted">–</span>'}</span></div>`;
+    }).join('') + (hist.length ? `<details class="hist"><summary>Score history (${hist.length})</summary><table>${hist.map(h => `<tr><td>${esc(h.tanggal || '-')}</td><td>${esc(compById[h.comp]?.nama || h.comp)}</td><td>${h.jalur === 'atasan' ? 'Supervisor' : 'HC · ' + esc(h.jenis || '')}</td><td><b>${h.level}</b></td><td class="muted">${esc(h.catatan || '')}</td></tr>`).join('')}</table></details>` : '') + '</td></tr>';
   }
 
   async function init(){
-    const [c, matrix, comps, emps, mods, attempts, plans, updates] = await Promise.all([loadFamilies(), loadMatrix(), loadCompetencies(), loadEmployees(), loadModules(), loadAttempts(), loadPlans(), loadUpdates()]);
-    cfg = c; modules = mods; comps.forEach(x => compById[x.id] = x);
-    const idx = buildTrainedIndex({ employees: emps, modules: mods, attempts, plans, updates });
-    rows = emps.filter(isActive).map(e => ({ e, cov: coverageFor(e, cfg, matrix, idx) }))
-      .map(r => ({ ...r, cov: { ...r.cov, items: r.cov.items.filter(i => compById[i.comp]) } })) // kompetensi yang sudah dihapus dari kamus diabaikan
-      .map(r => ({ ...r, cov: { ...r.cov, nReq: r.cov.items.length, nTrained: r.cov.items.filter(i => i.trained).length } }))
-      .sort((a, b) => String(a.e.nama || '').localeCompare(String(b.e.nama || '')));
+    const [c, matrix, comps, emps, mods, attempts, plans, updates, ratings, s] = await Promise.all([loadFamilies(), loadMatrix(), loadCompetencies(), loadEmployees(), loadModules(), loadAttempts(), loadPlans(), loadUpdates(), loadRatings(), loadAssessSettings()]);
+    cfg = c; st = s; modules = mods; applyLabels(st); comps.forEach(x => compById[x.id] = x);
+    trained = buildTrainedIndex({ employees: emps, modules: mods, attempts, plans, updates });
+    const rIdx = buildRatingIndex({ ratings, employees: emps, modules: mods, attempts }, st);
+    rows = emps.filter(isActive).map(e => { const p = proficiencyFor(e, cfg, matrix, rIdx, st); p.items = p.items.filter(i => compById[i.comp]); return { e, p: counts(p) }; })
+      .sort((a, b) => (b.p.nReq ? 1 : 0) - (a.p.nReq ? 1 : 0) || String(a.e.nama || '').localeCompare(String(b.e.nama || '')));
     const divs = [...new Set(rows.map(r => r.e.divisi).filter(Boolean))].sort();
     F('fDiv').innerHTML = '<option value="">All divisions</option>' + divs.map(d => `<option>${esc(d)}</option>`).join('');
     F('fFam').innerHTML = '<option value="">All job families</option>' + cfg.families.map(f => `<option value="${esc(f.id)}">${esc(f.nama)}</option>`).join('') + '<option value="_none">Not mapped</option>';
-    const want = new URLSearchParams(location.search).get('family'); if(want) F('fFam').value = want;
-    fillLevelSelect(F('fLevel'), rows.map(r => r.e.level));
-    bindLevelSelect(F('fLevel'), applyFilters);
+    const qs = new URLSearchParams(location.search);
+    if(qs.get('family')) F('fFam').value = qs.get('family');
+    if(qs.get('status')) F('fStatus').value = qs.get('status');
+    if(qs.get('nik')){ openNik = qs.get('nik'); F('fSearch').value = qs.get('nik'); }
+    fillLevelSelect(F('fLevel'), rows.map(r => r.e.level)); bindLevelSelect(F('fLevel'), applyFilters);
     ['fDiv', 'fFam', 'fStatus'].forEach(id => F(id).addEventListener('change', applyFilters));
     F('fSearch').addEventListener('input', applyFilters);
     F('moreBtn').addEventListener('click', () => { shown += 200; render(); });
     F('exportBtn').addEventListener('click', () => {
-      const out = [['NIK', 'Nama', 'Divisi', 'Jabatan', 'Job Family', 'Level', 'Kompetensi Technical', 'Level Kemahiran Dibutuhkan', 'Status', 'Bukti']];
-      view.forEach(r => r.cov.items.forEach(i => out.push([r.e.nik, r.e.nama, r.e.divisi, r.e.jabatan, famName(r.cov.fam), r.e.level, compById[i.comp]?.nama || i.comp, profLabel(i.lvl), i.trained ? 'Sudah ditrain' : 'Belum', i.evidence.map(x => `${x.via}: ${x.judul}${x.tanggal ? ' (' + x.tanggal + ')' : ''}`).join('; ')])));
+      const out = [['NIK', 'Nama', 'Divisi', 'Jabatan', 'Job Family', 'Level', 'Kompetensi Technical', 'Level Dibutuhkan', 'Nilai Atasan', 'Tgl Atasan', 'Nilai HC', 'Jenis HC', 'Tgl HC', 'Level Akhir', 'Status', 'Gap', 'Catatan']];
+      view.forEach(r => r.p.items.forEach(i => out.push([r.e.nik, r.e.nama, r.e.divisi, r.e.jabatan, famName(r.p.fam), r.e.level, compById[i.comp]?.nama || i.comp, i.need, i.atasan?.level ?? '', i.atasan?.tanggal ?? '', i.hc?.level ?? '', i.hc?.jenis ?? '', i.hc?.tanggal ?? '', i.final ?? '',
+        i.status === 'meet' ? 'Memenuhi' : i.status === 'below' ? 'Di bawah standar' : 'Belum dinilai', i.gap ?? '', [i.sources === 1 && i.final ? '1 sumber' : '', i.calibrate ? 'Perlu kalibrasi' : ''].filter(Boolean).join(', ')])));
       if(out.length === 1) return toast('Nothing to export for this filter.');
-      const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(out), 'Coverage'); XLSX.writeFile(wb, 'competency-coverage.xlsx');
+      const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(out), 'Proficiency'); XLSX.writeFile(wb, 'technical-proficiency.xlsx');
     });
     applyFilters();
   }
@@ -194,13 +198,13 @@
     gate.style.display = 'none'; shell.style.display = 'block';
     F('userAvatar').src = profile.photoURL; F('userName').textContent = profile.displayName;
     await init(profile);
-    const { loadErrors } = await import('./cms-data.js?v=20261118e');
+    const { loadErrors } = await import('./cms-data.js?v=20261118f');
     if(loadErrors.length) showErr('Some data could not be read: ' + [...new Set(loadErrors)].join(', ') + '. If it says permission-denied, publish the latest Firestore rules.');
   } catch(err) { console.error('CMS error', err); showErr('Something went wrong: ' + (err.message || err)); }
   finally { window.appReady?.(); } });
   function showErr(msg){ let b = document.getElementById('cmsErr'); if(!b){ b = document.createElement('div'); b.id = 'cmsErr'; b.style.cssText = 'background:#FEF2F2;border:1px solid #FCA5A5;color:#991B1B;border-radius:12px;padding:12px 16px;margin-bottom:16px;font-size:13px;'; document.querySelector('#appShell .wrap')?.prepend(b); } b.textContent = msg; } // loading screen hilang setelah semua data halaman tampil
 </script>
-<script type="module" src="./cms-shell.js?v=20261118b"></script>
+<script type="module" src="./cms-shell.js?v=20261118c"></script>
 <script src="../lms-motion.js?v=20261109" defer></script>
 </body>
 </html>

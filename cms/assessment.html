@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Input Assessment — Anteraja CMS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../lms-design-system.css?v=20261105b">
+<link rel="expect" href="#cms-nav-ready" blocking="render">
+<link rel="stylesheet" href="../lms-glass.css?v=20261111b">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  .avatar { width: 28px; height: 28px; border-radius: 50%; }
+  .user-chip { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); }
+  .wrap.wide { max-width: 1180px; }
+  .page-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .page-head .acts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .page-head select, .page-head input { margin: 0; width: auto; }
+
+  .muted { color: var(--text-3); font-size: 12px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .row select, .row input { margin: 0; width: auto; }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: rgba(255,255,255,.6); }
+  .seg button { border: none; background: none; padding: 8px 16px; font-size: 13px; font-weight: 600; color: var(--text-2); cursor: pointer; }
+  .seg button.on { background: var(--pink); color: #fff; }
+  .step { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+  .step:last-child { border-bottom: none; }
+  .step .no { width: 26px; height: 26px; border-radius: 50%; background: var(--pink-bg); color: var(--pink-dark); font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; }
+  .step h4 { margin: 2px 0 4px; font-size: 14px; }
+  .step p { margin: 0 0 10px; font-size: 12.5px; color: var(--text-3); }
+  .dz { border: 1.5px dashed var(--border); border-radius: 12px; padding: 16px; text-align: center; font-size: 13px; color: var(--text-2); cursor: pointer; }
+  .dz.over { border-color: var(--pink); background: var(--pink-bg); }
+  .preview { background: rgba(255,255,255,.6); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-top: 12px; font-size: 13px; }
+  .preview ul { margin: 8px 0 0; padding-left: 18px; font-size: 12px; color: #92400E; max-height: 150px; overflow: auto; }
+  table.t { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.t th { text-align: left; font-size: 11px; color: var(--text-3); font-weight: 600; padding: 9px 12px; border-bottom: 1px solid var(--border); }
+  table.t td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 99px; }
+  .pill.a { background: rgba(59,130,246,.12); color: #1D4ED8; }
+  .pill.h { background: rgba(139,92,246,.12); color: #6D28D9; }
+  .lv { font-weight: 700; color: var(--pink-dark); }
+  .man-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 8px; }
+  .man-grid select, .man-grid input { margin: 0; }
+  .icon-x { border: none; background: none; color: var(--text-3); cursor: pointer; font-size: 16px; }
+  .icon-x:hover { color: #B91C1C; }
+  @media (max-width: 900px) { .man-grid { grid-template-columns: 1fr 1fr; } }
+
+</style>
+</head>
+<body><script>/* sidebar CMS dari cache — inline supaya ikut paint pertama (tanpa kedip) */(function () { try { var c = JSON.parse(sessionStorage.getItem('cmsNavCache') || 'null'); if (!c || !c.html) return; var st = document.createElement('style'); st.id = 'cms-shell-css'; st.textContent = c.css; document.head.appendChild(st); var box = document.createElement('div'); box.innerHTML = c.html; var nav = box.firstElementChild; if (c.sig) nav.setAttribute('data-sig', c.sig); var cur = location.pathname.split('/').pop() || 'index.html'; nav.querySelectorAll('a.as-item').forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === cur); }); document.body.prepend(nav); document.body.classList.add('has-admin-sidebar'); } catch (e) {} })();</script><i id="cms-nav-ready" hidden></i><script>/* loading screen CMS — tampil sampai halaman siap (appShell muncul / gate berisi pesan) */(function(){var id=document.documentElement.lang==='id';/* cek versi: kalau browser masih menyimpan halaman versi lama, muat ulang sekali */var BUILD='20261118-113829';try{fetch('build.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(v&&v!==BUILD&&sessionStorage.getItem('tmsBuildReload')!==v){sessionStorage.setItem('tmsBuildReload',v);location.reload()}}).catch(function(){})}catch(e){}var css='body.tms-loading #gate{display:none!important}.tms-loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:36;transition:opacity .35s ease;background:rgba(246,246,250,.35);-webkit-backdrop-filter:blur(18px) saturate(1.1);backdrop-filter:blur(18px) saturate(1.1)}body.has-admin-sidebar .tms-loader{left:232px}.tms-loader.out{opacity:0;pointer-events:none}.tms-loader .bx{display:flex;flex-direction:column;align-items:center;gap:14px;padding:28px 34px;border-radius:20px;background:rgba(255,255,255,.55);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.7);box-shadow:0 12px 40px rgba(0,0,0,.08);min-width:240px}.tms-loader .t{font-weight:700;font-size:15px;color:#1d1d1f}.tms-loader .s{font-size:12.5px;color:#86868b;text-align:center;max-width:260px}.tms-loader .s:empty{display:none}.tms-loader .bar{width:200px;height:5px;border-radius:99px;background:rgba(230,0,122,.12);overflow:hidden}.tms-loader .bar i{display:block;width:40%;height:100%;border-radius:99px;background:#E6007A;animation:tmsBar 1.1s ease-in-out infinite}@keyframes tmsBar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}@media (max-width:900px){body.has-admin-sidebar .tms-loader{left:0}}@media (prefers-reduced-motion:reduce){.tms-loader .bar i{animation-duration:2.4s}}';var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);document.body.classList.add('tms-loading');var L=document.createElement('div');L.className='tms-loader';L.setAttribute('role','status');L.innerHTML='<div class="bx"><div class="t">'+(id?'Memuat data…':'Loading data…')+'</div><div class="bar"><i></i></div><div class="s"></div></div>';document.body.appendChild(L);var sub=L.querySelector('.s');var t1=setTimeout(function(){sub.textContent=id?'Sebentar lagi…':'Almost there…'},3500);var t2=setTimeout(function(){sub.textContent=id?'Lebih lama dari biasanya. Cek koneksi, lalu refresh kalau tidak kunjung muncul.':'Taking longer than usual. Check your connection, then refresh if nothing appears.'},15000);window.tmsReady=window.appReady=function(){window.__tmsReady=true;check()};function ready(){var g=document.getElementById('gate'),gt=document.getElementById('gateTitle');if(window.__tmsReady)return true;if(g&&g.style.display!=='none'&&gt&&gt.textContent.trim()&&!/^(loading|memuat)/i.test(gt.textContent.trim()))return true;return false}var mo;function check(){if(!ready())return;mo&&mo.disconnect();clearTimeout(t1);clearTimeout(t2);document.body.classList.remove('tms-loading');L.classList.add('out');setTimeout(function(){L.remove()},380)}mo=new MutationObserver(check);mo.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['style','class'],characterData:true});})();</script>
+
+<div id="gate" class="locked-state" style="display:none;">
+  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Loading...</p>
+  <p class="text-sub" id="gateSub"></p>
+</div>
+
+<div id="appShell" style="display:none;">
+  <div class="topbar">
+    <div style="display:flex; align-items:center; gap:16px;">
+      <a href="index.html" class="sidebar-logo" style="margin:0; text-decoration:none;">anteraja CMS</a>
+    </div>
+    <div class="user-chip"><img class="avatar" id="userAvatar" src=""><span id="userName"></span></div>
+  </div>
+  <div class="wrap wide">
+    <div class="page-head"><h1 class="text-h1" style="margin:0;">Input Assessment</h1>
+      <div class="acts"><a href="assessment-settings.html" class="btn btn-outline btn-sm">Assessment Settings</a></div></div>
+
+    <div class="dash-kpis">
+      <div class="dk"><div class="n" id="kAssessed">-</div><div class="l">Employees Assessed</div><div class="s" id="kAssessedSub"></div></div>
+      <div class="dk"><div class="n" id="kAt">-</div><div class="l">Supervisor Ratings</div><div class="s">Latest per employee × competency</div></div>
+      <div class="dk"><div class="n" id="kHc">-</div><div class="l">HC Scores</div><div class="s" id="kHcSub"></div></div>
+      <div class="dk"><div class="n" id="kTodo">-</div><div class="l">Not Assessed Yet</div><div class="s">Required competencies with no score</div></div>
+    </div>
+
+    <div class="panel" style="margin-bottom:16px;">
+      <div class="panel-head"><h3 class="text-h2" style="margin:0;">Upload Scores (Excel)</h3>
+        <div class="seg" id="srcSeg"><button data-src="atasan" class="on">Supervisor Rating</button><button data-src="hc">HC Assessment</button></div></div>
+      <div class="step"><div class="no">1</div><div><h4>Download the template</h4><p id="tplHint"></p>
+        <div class="row"><select id="tDiv"></select><select id="tFam"></select><select id="tAt"></select><button class="btn btn-outline btn-sm" id="tplBtn">Download Template</button><span class="muted" id="tplCount"></span></div></div></div>
+      <div class="step"><div class="no">2</div><div><h4>Fill in the Level column (1–5)</h4><p>Use the "Level Guide" sheet in the file as the rubric. Rows left empty are skipped. Date is optional (default: upload date).</p></div></div>
+      <div class="step"><div class="no">3</div><div><h4>Upload the filled file</h4><p>Scores are added as history; the latest score per source is the one used.</p>
+        <div class="dz" id="dz">Drag &amp; drop the .xlsx here, or click to browse<input type="file" id="fileIn" accept=".xlsx,.xls" style="display:none"></div><div id="preview"></div></div></div>
+    </div>
+
+    <div class="panel" style="margin-bottom:16px;">
+      <div class="panel-head"><h3 class="text-h2" style="margin:0;">Manual Input</h3><span class="text-meta">For one-off scores or corrections</span></div>
+      <div style="padding:14px 20px 18px;">
+        <div class="row" style="margin-bottom:10px;"><input type="text" id="mEmp" list="empList" placeholder="Type employee name or NIK" style="min-width:320px;"><datalist id="empList"></datalist><span class="muted" id="mEmpInfo"></span></div>
+        <div class="man-grid"><select id="mComp"></select><select id="mSrc"><option value="atasan">Supervisor Rating</option><option value="hc">HC Assessment</option></select><select id="mType"></select><select id="mLv"></select>
+          <input type="date" id="mDate"><input type="text" id="mNote" placeholder="Note (optional)" style="grid-column: span 2;"><button class="btn btn-primary btn-sm" id="mAdd">Add Score</button></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h3 class="text-h2" style="margin:0;">Score History</h3>
+        <div class="row"><select id="hSrc"><option value="">All sources</option><option value="atasan">Supervisor Rating</option><option value="hc">HC Assessment</option></select><input type="text" id="hQ" placeholder="Search name / NIK / competency" style="width:240px;"></div></div>
+      <table class="t"><thead><tr><th>Date</th><th>Employee</th><th>Competency</th><th>Source</th><th>Level</th><th>Note</th><th></th></tr></thead><tbody id="hBody"></tbody></table>
+      <div class="muted" id="hMore" style="padding:12px 20px;"></div>
+    </div>
+
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { onAuth, ensureUserProfile } from '../firebase-shared.js';
+  const F = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const toast = msg => { const t = F('toast'); t.textContent = msg; t.style.display = 'block'; clearTimeout(toast._t); toast._t = setTimeout(() => t.style.display = 'none', 3000); };
+  import { db } from '../firebase-shared.js';
+  import { doc, collection, deleteDoc, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+  import { loadFamilies, loadMatrix, loadCompetencies, loadEmployees, loadRatings, loadAssessSettings, applyLabels, isActive, familyOf, requiredFor, lvLabel, PROFICIENCY } from './cms-data.js?v=20261118f';
+  import '../tms/mini-charts.js?v=20261116d';
+
+  let cfg, matrix, comps, emps, ratings, st, me, src = 'atasan', pending = null, compById = {}, empByNik = {}, active = [];
+  const today = () => new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10);
+  const famName = id => cfg.families.find(f => f.id === id)?.nama || '';
+  const reqOf = e => requiredFor(familyOf(e, cfg), e.levelKey, matrix);
+  const srcName = s => s === 'atasan' ? 'Supervisor Rating' : 'HC Assessment';
+  const norm = s => String(s ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
+
+  function kpis(){
+    const latest = {}; ratings.forEach(r => { latest[r.nik + '|' + r.compId + '|' + r.jalur] = 1; });
+    const keys = Object.keys(latest);
+    const withReq = active.filter(e => Object.keys(reqOf(e)).length);
+    const assessed = new Set(ratings.map(r => r.nik));
+    F('kAssessed').textContent = withReq.filter(e => assessed.has(e.nik)).length;
+    F('kAssessedSub').textContent = `of ${withReq.length} employees with technical requirements`;
+    F('kAt').textContent = keys.filter(k => k.endsWith('|atasan')).length;
+    F('kHc').textContent = keys.filter(k => k.endsWith('|hc')).length; F('kHcSub').textContent = st.lmsAsHc ? 'Manual/Excel (LMS post-tests are added automatically)' : 'Manual/Excel';
+    let todo = 0; withReq.forEach(e => Object.keys(reqOf(e)).forEach(c => { if(!keys.includes(e.nik + '|' + c + '|atasan') && !keys.includes(e.nik + '|' + c + '|hc')) todo++; }));
+    F('kTodo').textContent = todo;
+  }
+
+  /* ===== Template ===== */
+  function tplRows(){
+    const d = F('tDiv').value, fm = F('tFam').value, at = F('tAt').value;
+    const rows = [];
+    active.filter(e => (!d || e.divisi === d) && (!fm || familyOf(e, cfg) === fm) && (!at || e.atasanNik === at)).forEach(e => {
+      Object.entries(reqOf(e)).forEach(([c, need]) => { if(compById[c]) rows.push([e.nik, e.nama || '', e.jabatan || '', famName(familyOf(e, cfg)), e.level || '', e.atasanNik ? `${empByNik[e.atasanNik]?.nama || ''} (${e.atasanNik})` : '', compById[c].nama, lvLabel(need, st), '', ...(src === 'hc' ? [st.hcTypes[0] || 'HC'] : []), '', '']); });
+    });
+    return rows;
+  }
+  function updTplCount(){ const n = tplRows().length; F('tplCount').textContent = `${n} rows (employee × required competency)`; }
+  function downloadTpl(){
+    const rows = tplRows(); if(!rows.length) return toast('No employees with required technical competencies for this filter. Check Job Families and the Competency Matrix.');
+    const head = ['NIK', 'Nama', 'Jabatan', 'Job Family', 'Level Jabatan', 'Atasan', 'Kompetensi', 'Level Dibutuhkan', 'Level (1-5)', ...(src === 'hc' ? ['Jenis'] : []), 'Tanggal (yyyy-mm-dd)', 'Catatan'];
+    const ws = XLSX.utils.aoa_to_sheet([head, ...rows]);
+    ws['!cols'] = head.map(h => ({ wch: ['Nama', 'Kompetensi', 'Atasan', 'Catatan'].includes(h) ? 28 : h === 'Jabatan' ? 24 : 14 }));
+    const guide = [['Kompetensi', ...PROFICIENCY.map(p => `${p.lv} - ${p.label}`)], ...comps.map(c => [c.nama, ...PROFICIENCY.map(p => c.profisiensi?.[p.lv] || '')])];
+    const wg = XLSX.utils.aoa_to_sheet(guide); wg['!cols'] = [{ wch: 30 }, ...PROFICIENCY.map(() => ({ wch: 45 }))];
+    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, src === 'atasan' ? 'Supervisor Rating' : 'HC Assessment'); XLSX.utils.book_append_sheet(wb, wg, 'Level Guide');
+    if(src === 'hc'){ const wt = XLSX.utils.aoa_to_sheet([['Jenis (pilihan)'], ...st.hcTypes.map(t => [t])]); XLSX.utils.book_append_sheet(wb, wt, 'Types'); }
+    const at = F('tAt').value ? '-' + (empByNik[F('tAt').value]?.nama || F('tAt').value).replace(/[^A-Za-z0-9]+/g, '_') : '';
+    XLSX.writeFile(wb, `${src === 'atasan' ? 'supervisor-rating' : 'hc-assessment'}${at}.xlsx`);
+  }
+
+  /* ===== Upload ===== */
+  const toISO = v => { if(v instanceof Date) return new Date(v.getTime() + 12 * 3600e3).toISOString().slice(0, 10); const s = String(v || '').trim(); if(!s) return ''; if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10); const m = s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/); return m ? `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}` : 'x'; };
+  function parse(rows){
+    const head = rows[0].map(norm);
+    // cari kolom per prioritas nama; nama berakhiran '=' harus sama persis (mis. 'level=' tidak boleh kena 'Level Jabatan')
+    const col = (...names) => { for(const n of names){ const exact = n.endsWith('='), k = exact ? n.slice(0, -1) : n; const i = head.findIndex(h => exact ? h === k : (h === k || h.startsWith(k))); if(i >= 0) return i; } return -1; };
+    const cN = col('nik', 'nip'), cK = col('kompetensi', 'competency'), cL = col('level (1-5)', 'level 1-5', 'level (1 - 5)', 'nilai', 'score', 'level=', 'proficiency'), cJ = col('jenis', 'type'), cT = col('tanggal', 'date'), cC = col('catatan', 'note');
+    if(cN < 0 || cK < 0 || cL < 0) throw new Error('Columns NIK, Kompetensi and Level (1-5) are required.');
+    const byName = {}; comps.forEach(c => { byName[norm(c.nama)] = c.id; byName[c.id] = c.id; });
+    const items = [], warnings = []; let skipped = 0;
+    rows.slice(1).forEach((r, i) => {
+      const line = i + 2, nik = String(r[cN] ?? '').trim(), kn = String(r[cK] ?? '').trim(), lvRaw = String(r[cL] ?? '').trim();
+      if(!nik && !kn) return;
+      if(!lvRaw){ skipped++; return; }
+      const lv = Number(lvRaw.match(/^[1-5]/)?.[0]);
+      if(!empByNik[nik]) return warnings.push(`Row ${line}: NIK ${nik} not found in employee data.`);
+      const comp = byName[norm(kn)]; if(!comp) return warnings.push(`Row ${line}: competency "${kn}" is not in the technical dictionary.`);
+      if(!(lv >= 1 && lv <= 5)) return warnings.push(`Row ${line}: level "${lvRaw}" must be 1–5.`);
+      let tgl = cT >= 0 ? toISO(r[cT]) : ''; if(tgl === 'x'){ warnings.push(`Row ${line}: date "${r[cT]}" not recognised — upload date used.`); tgl = ''; }
+      if(!reqOf(empByNik[nik])[comp]) warnings.push(`Row ${line}: ${empByNik[nik].nama} — ${compById[comp].nama} is not required for this employee in the matrix (saved anyway).`);
+      items.push({ nik, compId: comp, jalur: src, level: lv, jenis: src === 'atasan' ? 'Supervisor Rating' : (cJ >= 0 && String(r[cJ] ?? '').trim()) || st.hcTypes[0] || 'HC', tanggal: tgl || today(), catatan: cC >= 0 ? String(r[cC] ?? '').trim() : '' });
+    });
+    return { items, warnings, skipped };
+  }
+  function showPreview(){
+    if(!pending) return F('preview').innerHTML = '';
+    const nE = new Set(pending.items.map(i => i.nik)).size;
+    F('preview').innerHTML = `<div class="preview"><b>${pending.items.length} ${srcName(src)} scores</b> for ${nE} employees${pending.skipped ? ` · ${pending.skipped} rows without level skipped` : ''}.
+      ${pending.warnings.length ? `<ul>${pending.warnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul>` : ''}
+      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;"><button class="btn btn-outline btn-sm" id="pvCancel">Cancel</button><button class="btn btn-primary btn-sm" id="pvSave" ${pending.items.length ? '' : 'disabled'}>Save ${pending.items.length} Scores</button></div></div>`;
+    F('pvCancel').addEventListener('click', () => { pending = null; showPreview(); });
+    F('pvSave').addEventListener('click', async () => {
+      try{
+        F('pvSave').disabled = true;
+        for(let i = 0; i < pending.items.length; i += 400){
+          const b = writeBatch(db);
+          pending.items.slice(i, i + 400).forEach(it => b.set(doc(collection(db, 'technicalRatings')), { ...it, createdAt: serverTimestamp(), createdBy: me.email }));
+          await b.commit();
+        }
+        toast(`${pending.items.length} scores saved.`); pending = null; showPreview();
+        ratings = await loadRatings(); kpis(); renderHist(); manualInfo();
+      } catch(err){ console.error('Gagal simpan nilai', err.code, err.message); toast('Save failed: ' + err.message); F('pvSave').disabled = false; }
+    });
+  }
+  function readFile(file){
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try{ const wb = XLSX.read(ev.target.result, { type: 'binary', cellDates: true }); pending = parse(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '', raw: true })); showPreview(); }
+      catch(err){ console.error('Gagal baca file nilai', err); toast('Could not read the file: ' + err.message); }
+    };
+    reader.readAsBinaryString(file);
+  }
+
+  /* ===== Manual ===== */
+  const pickedEmp = () => { const v = F('mEmp').value.trim(); const nik = v.match(/\(([^)]+)\)\s*$/)?.[1] || v; return empByNik[nik] || active.find(e => norm(e.nama) === norm(v)); };
+  function manualInfo(){
+    const e = pickedEmp();
+    if(!e){ F('mEmpInfo').textContent = ''; F('mComp').innerHTML = comps.map(c => `<option value="${esc(c.id)}">${esc(c.nama)}</option>`).join(''); return; }
+    const req = reqOf(e);
+    F('mEmpInfo').textContent = `${e.jabatan || '-'} · ${famName(familyOf(e, cfg)) || 'no job family'} · ${e.level || '-'}`;
+    const req1 = comps.filter(c => req[c.id]), other = comps.filter(c => !req[c.id]);
+    F('mComp').innerHTML = (req1.length ? `<optgroup label="Required for this employee">${req1.map(c => `<option value="${esc(c.id)}">${esc(c.nama)} (needs ${req[c.id]})</option>`).join('')}</optgroup>` : '') + (other.length ? `<optgroup label="Other">${other.map(c => `<option value="${esc(c.id)}">${esc(c.nama)}</option>`).join('')}</optgroup>` : '');
+  }
+  function mTypes(){ F('mType').disabled = F('mSrc').value === 'atasan'; F('mType').innerHTML = F('mSrc').value === 'atasan' ? '<option>Supervisor Rating</option>' : st.hcTypes.map(t => `<option>${esc(t)}</option>`).join(''); }
+
+  /* ===== History ===== */
+  function renderHist(){
+    const s = F('hSrc').value, q = norm(F('hQ').value);
+    const list = ratings.filter(r => (!s || r.jalur === s) && (!q || [r.nik, empByNik[r.nik]?.nama, compById[r.compId]?.nama].some(x => norm(x).includes(q))))
+      .sort((a, b) => String(b.tanggal).localeCompare(String(a.tanggal)) || ((b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)));
+    F('hBody').innerHTML = list.slice(0, 100).map(r => `<tr><td>${esc(r.tanggal || '-')}</td><td><b>${esc(empByNik[r.nik]?.nama || r.nik)}</b><div class="muted">${esc(r.nik)}</div></td><td>${esc(compById[r.compId]?.nama || r.compId)}</td>
+      <td><span class="pill ${r.jalur === 'atasan' ? 'a' : 'h'}">${r.jalur === 'atasan' ? 'Supervisor' : 'HC'}</span> <span class="muted">${r.jalur === 'hc' ? esc(r.jenis || '') : ''}</span></td>
+      <td class="lv">${esc(lvLabel(r.level, st))}</td><td class="muted">${esc(r.catatan || '')}</td><td><button class="icon-x" data-del="${esc(r._id)}" title="Delete this score">×</button></td></tr>`).join('')
+      || '<tr><td colspan="7" class="muted" style="padding:18px 12px;">No scores yet. Upload a template or add one manually.</td></tr>';
+    F('hMore').textContent = list.length > 100 ? `Showing the latest 100 of ${list.length}. Use search to narrow down.` : (list.length ? `${list.length} scores` : '');
+    F('hBody').querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', async () => {
+      if(!confirm('Delete this score?')) return;
+      try{ await deleteDoc(doc(db, 'technicalRatings', b.dataset.del)); ratings = ratings.filter(r => r._id !== b.dataset.del); kpis(); renderHist(); toast('Score deleted.'); }
+      catch(err){ console.error('Gagal hapus nilai', err.code, err.message); toast('Delete failed: ' + err.message); }
+    }));
+  }
+
+  async function init(profile){
+    me = profile;
+    [cfg, matrix, comps, emps, ratings, st] = await Promise.all([loadFamilies(), loadMatrix(), loadCompetencies(), loadEmployees(), loadRatings(), loadAssessSettings()]);
+    applyLabels(st);
+    comps.forEach(c => compById[c.id] = c); emps.forEach(e => empByNik[e.nik] = e);
+    active = emps.filter(isActive).sort((a, b) => String(a.nama || '').localeCompare(String(b.nama || '')));
+    const divs = [...new Set(active.map(e => e.divisi).filter(Boolean))].sort();
+    F('tDiv').innerHTML = '<option value="">All divisions</option>' + divs.map(d => `<option>${esc(d)}</option>`).join('');
+    F('tFam').innerHTML = '<option value="">All job families</option>' + cfg.families.map(f => `<option value="${esc(f.id)}">${esc(f.nama)}</option>`).join('');
+    const sups = [...new Set(active.filter(e => Object.keys(reqOf(e)).length).map(e => e.atasanNik).filter(Boolean))].map(n => empByNik[n]).filter(Boolean).sort((a, b) => String(a.nama).localeCompare(String(b.nama)));
+    F('tAt').innerHTML = '<option value="">All supervisors</option>' + sups.map(e => `<option value="${esc(e.nik)}">${esc(e.nama)}</option>`).join('');
+    const setSrc = s => { src = s; F('srcSeg').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.src === s));
+      F('tplHint').textContent = s === 'atasan' ? 'One file per supervisor (pick a supervisor) or all at once. The supervisor rates each subordinate using the Level Guide sheet.' : 'Pick the employees to assess. Fill the "Jenis" column with the HC assessment type (e.g. Test, Certification).';
+      F('tAt').style.display = s === 'atasan' ? '' : 'none'; if(s !== 'atasan') F('tAt').value = ''; pending = null; showPreview(); updTplCount(); };
+    F('srcSeg').querySelectorAll('button').forEach(b => b.addEventListener('click', () => setSrc(b.dataset.src)));
+    ['tDiv', 'tFam', 'tAt'].forEach(id => F(id).addEventListener('change', updTplCount));
+    F('tplBtn').addEventListener('click', downloadTpl);
+    const dz = F('dz');
+    dz.addEventListener('click', () => F('fileIn').click());
+    F('fileIn').addEventListener('change', e => { if(e.target.files[0]) readFile(e.target.files[0]); e.target.value = ''; });
+    dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
+    dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+    dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('over'); if(e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0]); });
+    // manual
+    F('empList').innerHTML = active.map(e => `<option value="${esc((e.nama || '') + ' (' + e.nik + ')')}">`).join('');
+    F('mEmp').addEventListener('input', manualInfo);
+    F('mLv').innerHTML = PROFICIENCY.map(p => `<option value="${p.lv}" ${p.lv === 3 ? 'selected' : ''}>${esc(lvLabel(p.lv, st))}</option>`).join('');
+    F('mSrc').addEventListener('change', mTypes); mTypes(); F('mDate').value = today(); manualInfo();
+    F('mAdd').addEventListener('click', async () => {
+      const e = pickedEmp(); if(!e) return toast('Choose an employee from the list first.');
+      if(!F('mComp').value) return toast('Add technical competencies to the dictionary first.');
+      const it = { nik: e.nik, compId: F('mComp').value, jalur: F('mSrc').value, level: Number(F('mLv').value), jenis: F('mSrc').value === 'atasan' ? 'Supervisor Rating' : (F('mType').value || 'HC'), tanggal: F('mDate').value || today(), catatan: F('mNote').value.trim() };
+      try{
+        const b = writeBatch(db); const ref = doc(collection(db, 'technicalRatings')); b.set(ref, { ...it, createdAt: serverTimestamp(), createdBy: me.email }); await b.commit();
+        ratings = await loadRatings(); kpis(); renderHist(); F('mNote').value = '';
+        toast(`${srcName(it.jalur)} ${it.level} saved for ${e.nama}.`);
+      } catch(err){ console.error('Gagal simpan nilai manual', err.code, err.message); toast('Save failed: ' + err.message); }
+    });
+    F('hSrc').addEventListener('change', renderHist); F('hQ').addEventListener('input', renderHist);
+    setSrc('atasan'); kpis(); renderHist();
+  }
+
+  onAuth(async (user) => { try {
+    const gate = F('gate'), shell = F('appShell');
+    if(!user){ gate.style.display = 'block'; shell.style.display = 'none'; F('gateTitle').textContent = 'Please sign in'; F('gateSub').innerHTML = '<a href="../index.html">Sign in here</a>.'; return; }
+    const profile = await ensureUserProfile(user);
+    if(profile.role !== 'admin'){ gate.style.display = 'block'; shell.style.display = 'none'; F('gateTitle').textContent = 'Access denied'; F('gateSub').innerHTML = 'CMS is for admins (HR/OD) only. <a href="../index.html">Back to LMS</a>.'; return; }
+    gate.style.display = 'none'; shell.style.display = 'block';
+    F('userAvatar').src = profile.photoURL; F('userName').textContent = profile.displayName;
+    await init(profile);
+    const { loadErrors } = await import('./cms-data.js?v=20261118f');
+    if(loadErrors.length) showErr('Some data could not be read: ' + [...new Set(loadErrors)].join(', ') + '. If it says permission-denied, publish the latest Firestore rules.');
+  } catch(err) { console.error('CMS error', err); showErr('Something went wrong: ' + (err.message || err)); }
+  finally { window.appReady?.(); } });
+  function showErr(msg){ let b = document.getElementById('cmsErr'); if(!b){ b = document.createElement('div'); b.id = 'cmsErr'; b.style.cssText = 'background:#FEF2F2;border:1px solid #FCA5A5;color:#991B1B;border-radius:12px;padding:12px 16px;margin-bottom:16px;font-size:13px;'; document.querySelector('#appShell .wrap')?.prepend(b); } b.textContent = msg; } // loading screen hilang setelah semua data halaman tampil
+</script>
+<script type="module" src="./cms-shell.js?v=20261118c"></script>
+<script src="../lms-motion.js?v=20261109" defer></script>
+</body>
+</html>

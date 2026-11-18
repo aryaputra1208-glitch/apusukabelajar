@@ -125,3 +125,74 @@ export function coverageFor(emp, cfg, matrix, trainedIdx) {
   const items = Object.entries(req).map(([comp, lvl]) => ({ comp, lvl, evidence: ev[comp] || [], trained: !!(ev[comp] || []).length }));
   return { fam, items, nReq: items.length, nTrained: items.filter(i => i.trained).length };
 }
+
+/* =========================================================
+   PENILAIAN TECHNICAL (Atasan & HC) → level kemahiran akhir
+   - technicalRatings/{auto}: { nik, compId, jalur: 'atasan'|'hc', level 1-5, jenis, tanggal 'yyyy-mm-dd', catatan, createdAt, createdBy }
+   - settings/technicalAssessment: aturan yang bisa diubah admin (lihat ASSESS_DEFAULTS)
+   ========================================================= */
+export const ASSESS_DEFAULTS = {
+  labels: { 1: 'Basic', 2: 'Developing', 3: 'Proficient', 4: 'Advanced', 5: 'Expert' },
+  rule: 'lowest',          // 'lowest' | 'average' (dibulatkan ke bawah) | 'weighted'
+  weightAtasan: 60,        // % (rule 'weighted'); HC = 100 - weightAtasan
+  singleSource: 'use',     // 'use' = 1 sumber tetap dipakai (ditandai) | 'require' = level akhir baru ada kalau Atasan & HC lengkap
+  calibrationGap: 2,       // selisih Atasan vs HC ≥ ini → "perlu kalibrasi"
+  lmsAsHc: true,           // lulus post-test modul LMS (yang punya level) dihitung sebagai nilai HC "Test (LMS)"
+  hcTypes: ['Test', 'Practical Test', 'Assessment Center', 'Certification', 'Interview'],
+};
+export async function loadAssessSettings() {
+  try { const s = await getDoc(doc(db, 'settings', 'technicalAssessment')); const d = s.exists() ? s.data() : {}; return { ...ASSESS_DEFAULTS, ...d, labels: { ...ASSESS_DEFAULTS.labels, ...(d.labels || {}) }, hcTypes: d.hcTypes?.length ? d.hcTypes : ASSESS_DEFAULTS.hcTypes }; }
+  catch (err) { console.error('CMS: gagal baca settings/technicalAssessment', err.code, err.message); loadErrors.push(`settings/technicalAssessment: ${err.code || err.message}`); return { ...ASSESS_DEFAULTS }; }
+}
+export const lvLabel = (n, st) => { n = Number(n); return n >= 1 && n <= 5 ? `${n} · ${(st?.labels || ASSESS_DEFAULTS.labels)[n]}` : '-'; };
+export const loadRatings = () => grab(collection(db, 'technicalRatings'), 'technicalRatings');
+
+/** Nilai terbaru per { nik: { compId: { atasan, hc } } }. Nilai HC = terbaru antara input HC dan lulus post-test LMS (kalau diaktifkan). */
+export function buildRatingIndex({ ratings, employees, modules, attempts }, st) {
+  const idx = {};
+  const later = (a, b) => !a ? b : (String(b.tanggal) > String(a.tanggal) || (String(b.tanggal) === String(a.tanggal) && String(b._order || '') > String(a._order || '')) ? b : a);
+  const put = (nik, comp, jalur, r) => { const o = ((idx[nik] = idx[nik] || {})[comp] = idx[nik][comp] || { atasan: null, hc: null, history: [] }); o[jalur] = later(o[jalur], r); o.history.push({ ...r, jalur }); };
+  ratings.forEach(r => { const lv = Number(r.level); if (!r.nik || !r.compId || !(lv >= 1 && lv <= 5) || !['atasan', 'hc'].includes(r.jalur)) return;
+    put(r.nik, r.compId, r.jalur, { level: lv, jenis: r.jenis || (r.jalur === 'atasan' ? 'Supervisor Rating' : 'HC'), tanggal: String(r.tanggal || '').slice(0, 10), catatan: r.catatan || '', _id: r._id, _order: r.createdAt?.seconds ? String(r.createdAt.seconds) : '' }); });
+  if (st.lmsAsHc) {
+    const byEmail = {}, byNik = {}; employees.forEach(e => { if (e.email) byEmail[String(e.email).toLowerCase()] = e.nik; byNik[e.nik] = e.nik; });
+    const modById = {}; modules.forEach(m => modById[m._id] = m);
+    attempts.forEach(a => {
+      const m = modById[a.moduleId]; if (!m || !isPassed(a)) return;
+      const nik = (a.nik && byNik[a.nik]) || byEmail[String(a.email || '').toLowerCase()]; if (!nik) return;
+      const tgl = a.submittedAt?.seconds ? new Date(a.submittedAt.seconds * 1000).toISOString().slice(0, 10) : '';
+      Object.entries(m.kompetensiLevel || {}).forEach(([comp, lv]) => { lv = Number(lv); if (lv >= 1 && lv <= 5 && (m.kompetensiIds || []).includes(comp)) put(nik, comp, 'hc', { level: lv, jenis: 'Test (LMS)', tanggal: tgl, catatan: m.judul || '', lms: true }); });
+    });
+  }
+  return idx;
+}
+
+/** Gabungkan Atasan & HC sesuai aturan admin → { final, sources, calibrate } */
+export function combine(atasan, hc, st) {
+  const a = atasan?.level, h = hc?.level;
+  if (a && h) {
+    let f;
+    if (st.rule === 'average') f = Math.floor((a + h) / 2 + 1e-9);
+    else if (st.rule === 'weighted') { const w = Math.min(100, Math.max(0, Number(st.weightAtasan) || 0)) / 100; f = Math.floor(a * w + h * (1 - w) + 1e-9); }
+    else f = Math.min(a, h);
+    return { final: Math.max(1, Math.min(5, f)), sources: 2, calibrate: Math.abs(a - h) >= (Number(st.calibrationGap) || 99) };
+  }
+  if (a || h) return { final: st.singleSource === 'require' ? null : (a || h), sources: 1, calibrate: false };
+  return { final: null, sources: 0, calibrate: false };
+}
+
+/** Profil kemahiran satu karyawan: kompetensi wajib (matrix) + nilai Atasan/HC + level akhir + status. */
+export function proficiencyFor(emp, cfg, matrix, ratingIdx, st) {
+  const fam = familyOf(emp, cfg);
+  const req = requiredFor(fam, emp.levelKey, matrix);
+  const mine = ratingIdx[emp.nik] || {};
+  const items = Object.entries(req).map(([comp, need]) => {
+    const r = mine[comp] || { atasan: null, hc: null, history: [] };
+    const c = combine(r.atasan, r.hc, st);
+    const status = c.final == null ? 'pending' : c.final >= need ? 'meet' : 'below';
+    return { comp, need, atasan: r.atasan, hc: r.hc, history: r.history, ...c, gap: c.final == null ? null : Math.max(0, need - c.final), status };
+  });
+  return { fam, items, nReq: items.length, nMeet: items.filter(i => i.status === 'meet').length, nBelow: items.filter(i => i.status === 'below').length, nPending: items.filter(i => i.status === 'pending').length, nCal: items.filter(i => i.calibrate).length };
+}
+/** Pakai label level dari pengaturan admin untuk PROFICIENCY / profLabel di seluruh halaman. */
+export function applyLabels(st) { PROFICIENCY.forEach(p => { if (st?.labels?.[p.lv]) p.label = st.labels[p.lv]; }); }
