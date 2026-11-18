@@ -26,16 +26,21 @@
   .stp select { margin: 0; }
   .fam-pick { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
   .fam-pick select { width: 320px; font-weight: 600; }
-  .cgrp { margin-bottom: 10px; }
-  .cgrp:last-child { margin-bottom: 0; }
-  .cgrp-h { display: flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 700; color: var(--pink-dark); margin-bottom: 6px; }
-  .cgrp-h a { font-weight: 600; font-size: 11.5px; color: var(--text-3); text-decoration: none; cursor: pointer; }
-  .cgrp-h a:hover { color: var(--pink-dark); }
-  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
-  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 6px 12px; border-radius: 99px; border: 1px solid var(--border); background: rgba(255,255,255,.65); cursor: pointer; user-select: none; }
-  .chip input { display: none; }
-  .chip.on { background: var(--pink); border-color: var(--pink); color: #fff; font-weight: 600; }
-  .chip.on::before { content: '✓'; font-weight: 800; }
+  .msel { position: relative; width: 520px; max-width: 100%; }
+  .msel-btn { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 12px; background: rgba(255,255,255,.75); font: inherit; font-size: 14px; cursor: pointer; text-align: left; }
+  .msel-btn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .msel-btn span.ph { color: var(--text-3); }
+  .msel-btn::after { content: '▾'; color: var(--text-3); }
+  .msel-pop { display: none; position: absolute; z-index: 20; top: calc(100% + 6px); left: 0; right: 0; background: #fff; border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,.12); padding: 8px; max-height: 360px; overflow-y: auto; }
+  .msel.open .msel-pop { display: block; }
+  .msel-pop input[type=text] { margin: 0 0 6px; }
+  .msel-g { display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; font-weight: 700; color: var(--pink-dark); padding: 8px 8px 4px; }
+  .msel-g a { font-weight: 600; color: var(--text-3); cursor: pointer; }
+  .msel-g a:hover { color: var(--pink-dark); }
+  .msel-o { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 8px; font-size: 13.5px; cursor: pointer; }
+  .msel-o:hover { background: var(--pink-bg); }
+  .msel-o input { margin: 0; width: auto; accent-color: var(--pink); }
+  .sel-sum { font-size: 12px; color: var(--text-3); margin-top: 6px; }
   .qf { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; }
   .qf select { width: auto; max-width: 230px; }
   .mx-scroll { overflow-x: auto; }
@@ -56,7 +61,7 @@
 
 </style>
 </head>
-<body><script>/* sidebar CMS dari cache — inline supaya ikut paint pertama (tanpa kedip) */(function () { try { var c = JSON.parse(sessionStorage.getItem('cmsNavCache') || 'null'); if (!c || !c.html) return; var st = document.createElement('style'); st.id = 'cms-shell-css'; st.textContent = c.css; document.head.appendChild(st); var box = document.createElement('div'); box.innerHTML = c.html; var nav = box.firstElementChild; if (c.sig) nav.setAttribute('data-sig', c.sig); var cur = location.pathname.split('/').pop() || 'index.html'; nav.querySelectorAll('a.as-item').forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === cur); }); document.body.prepend(nav); document.body.classList.add('has-admin-sidebar'); } catch (e) {} })();</script><i id="cms-nav-ready" hidden></i><script>/* loading screen CMS — tampil sampai halaman siap (appShell muncul / gate berisi pesan) */(function(){var id=document.documentElement.lang==='id';/* cek versi: kalau browser masih menyimpan halaman versi lama, muat ulang sekali */var BUILD='20261118-172642';try{fetch('build.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(v&&v!==BUILD&&sessionStorage.getItem('tmsBuildReload')!==v){sessionStorage.setItem('tmsBuildReload',v);location.reload()}}).catch(function(){})}catch(e){}var css='body.tms-loading #gate{display:none!important}.tms-loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:36;transition:opacity .35s ease;background:rgba(246,246,250,.35);-webkit-backdrop-filter:blur(18px) saturate(1.1);backdrop-filter:blur(18px) saturate(1.1)}body.has-admin-sidebar .tms-loader{left:232px}.tms-loader.out{opacity:0;pointer-events:none}.tms-loader .bx{display:flex;flex-direction:column;align-items:center;gap:14px;padding:28px 34px;border-radius:20px;background:rgba(255,255,255,.55);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.7);box-shadow:0 12px 40px rgba(0,0,0,.08);min-width:240px}.tms-loader .t{font-weight:700;font-size:15px;color:#1d1d1f}.tms-loader .s{font-size:12.5px;color:#86868b;text-align:center;max-width:260px}.tms-loader .s:empty{display:none}.tms-loader .bar{width:200px;height:5px;border-radius:99px;background:rgba(230,0,122,.12);overflow:hidden}.tms-loader .bar i{display:block;width:40%;height:100%;border-radius:99px;background:#E6007A;animation:tmsBar 1.1s ease-in-out infinite}@keyframes tmsBar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}@media (max-width:900px){body.has-admin-sidebar .tms-loader{left:0}}@media (prefers-reduced-motion:reduce){.tms-loader .bar i{animation-duration:2.4s}}';var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);document.body.classList.add('tms-loading');var L=document.createElement('div');L.className='tms-loader';L.setAttribute('role','status');L.innerHTML='<div class="bx"><div class="t">'+(id?'Memuat data…':'Loading data…')+'</div><div class="bar"><i></i></div><div class="s"></div></div>';document.body.appendChild(L);var sub=L.querySelector('.s');var t1=setTimeout(function(){sub.textContent=id?'Sebentar lagi…':'Almost there…'},3500);var t2=setTimeout(function(){sub.textContent=id?'Lebih lama dari biasanya. Cek koneksi, lalu refresh kalau tidak kunjung muncul.':'Taking longer than usual. Check your connection, then refresh if nothing appears.'},15000);window.tmsReady=window.appReady=function(){window.__tmsReady=true;check()};function ready(){var g=document.getElementById('gate'),gt=document.getElementById('gateTitle');if(window.__tmsReady)return true;if(g&&g.style.display!=='none'&&gt&&gt.textContent.trim()&&!/^(loading|memuat)/i.test(gt.textContent.trim()))return true;return false}var mo;function check(){if(!ready())return;mo&&mo.disconnect();clearTimeout(t1);clearTimeout(t2);document.body.classList.remove('tms-loading');L.classList.add('out');setTimeout(function(){L.remove()},380)}mo=new MutationObserver(check);mo.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['style','class'],characterData:true});})();</script>
+<body><script>/* sidebar CMS dari cache — inline supaya ikut paint pertama (tanpa kedip) */(function () { try { var c = JSON.parse(sessionStorage.getItem('cmsNavCache') || 'null'); if (!c || !c.html) return; var st = document.createElement('style'); st.id = 'cms-shell-css'; st.textContent = c.css; document.head.appendChild(st); var box = document.createElement('div'); box.innerHTML = c.html; var nav = box.firstElementChild; if (c.sig) nav.setAttribute('data-sig', c.sig); var cur = location.pathname.split('/').pop() || 'index.html'; nav.querySelectorAll('a.as-item').forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === cur); }); document.body.prepend(nav); document.body.classList.add('has-admin-sidebar'); } catch (e) {} })();</script><i id="cms-nav-ready" hidden></i><script>/* loading screen CMS — tampil sampai halaman siap (appShell muncul / gate berisi pesan) */(function(){var id=document.documentElement.lang==='id';/* cek versi: kalau browser masih menyimpan halaman versi lama, muat ulang sekali */var BUILD='20261118-173146';try{fetch('build.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(v&&v!==BUILD&&sessionStorage.getItem('tmsBuildReload')!==v){sessionStorage.setItem('tmsBuildReload',v);location.reload()}}).catch(function(){})}catch(e){}var css='body.tms-loading #gate{display:none!important}.tms-loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:36;transition:opacity .35s ease;background:rgba(246,246,250,.35);-webkit-backdrop-filter:blur(18px) saturate(1.1);backdrop-filter:blur(18px) saturate(1.1)}body.has-admin-sidebar .tms-loader{left:232px}.tms-loader.out{opacity:0;pointer-events:none}.tms-loader .bx{display:flex;flex-direction:column;align-items:center;gap:14px;padding:28px 34px;border-radius:20px;background:rgba(255,255,255,.55);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.7);box-shadow:0 12px 40px rgba(0,0,0,.08);min-width:240px}.tms-loader .t{font-weight:700;font-size:15px;color:#1d1d1f}.tms-loader .s{font-size:12.5px;color:#86868b;text-align:center;max-width:260px}.tms-loader .s:empty{display:none}.tms-loader .bar{width:200px;height:5px;border-radius:99px;background:rgba(230,0,122,.12);overflow:hidden}.tms-loader .bar i{display:block;width:40%;height:100%;border-radius:99px;background:#E6007A;animation:tmsBar 1.1s ease-in-out infinite}@keyframes tmsBar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}@media (max-width:900px){body.has-admin-sidebar .tms-loader{left:0}}@media (prefers-reduced-motion:reduce){.tms-loader .bar i{animation-duration:2.4s}}';var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);document.body.classList.add('tms-loading');var L=document.createElement('div');L.className='tms-loader';L.setAttribute('role','status');L.innerHTML='<div class="bx"><div class="t">'+(id?'Memuat data…':'Loading data…')+'</div><div class="bar"><i></i></div><div class="s"></div></div>';document.body.appendChild(L);var sub=L.querySelector('.s');var t1=setTimeout(function(){sub.textContent=id?'Sebentar lagi…':'Almost there…'},3500);var t2=setTimeout(function(){sub.textContent=id?'Lebih lama dari biasanya. Cek koneksi, lalu refresh kalau tidak kunjung muncul.':'Taking longer than usual. Check your connection, then refresh if nothing appears.'},15000);window.tmsReady=window.appReady=function(){window.__tmsReady=true;check()};function ready(){var g=document.getElementById('gate'),gt=document.getElementById('gateTitle');if(window.__tmsReady)return true;if(g&&g.style.display!=='none'&&gt&&gt.textContent.trim()&&!/^(loading|memuat)/i.test(gt.textContent.trim()))return true;return false}var mo;function check(){if(!ready())return;mo&&mo.disconnect();clearTimeout(t1);clearTimeout(t2);document.body.classList.remove('tms-loading');L.classList.add('out');setTimeout(function(){L.remove()},380)}mo=new MutationObserver(check);mo.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['style','class'],characterData:true});})();</script>
 
 <div id="gate" class="locked-state" style="display:none;">
   <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Loading...</p>
@@ -84,8 +89,9 @@
       <div class="stp"><div class="no">1</div><div><h4>Choose Job Family</h4>
         <div class="fam-pick"><select id="famSel"></select><span class="muted" id="famInfo"></span></div></div></div>
 
-      <div class="stp"><div class="no">2</div><div><h4>Choose Competencies For This Job Family</h4><p class="d">Click to select from the Technical Competencies dictionary. Only selected competencies appear in step 3.</p>
-        <div id="compPick"></div></div></div>
+      <div class="stp"><div class="no">2</div><div><h4>Choose Competencies For This Job Family</h4><p class="d">Pick one or more from the Technical Competencies dictionary. Only selected competencies appear in step 3.</p>
+        <div class="msel" id="msel"><button type="button" class="msel-btn" id="mselBtn"></button><div class="msel-pop"><input type="text" id="mselQ" placeholder="Search competency"><div id="compPick"></div></div></div>
+        <div class="sel-sum" id="selSum"></div></div></div>
 
       <div class="stp" style="border-bottom:none;"><div class="no">3</div><div><h4>Set Required Proficiency Per Job Level</h4><p class="d">Use quick fill for many cells at once, then adjust single cells in the table. Hover a cell to read the level description.</p>
         <div class="qf"><span>Set</span><select id="qComp"></select><span>for</span><select id="qLv"></select><span>to</span><select id="qVal"></select><button class="btn btn-outline btn-sm" id="qBtn">Apply</button></div></div></div>
@@ -136,16 +142,22 @@
     F('kFams').textContent = `${cfg.families.filter(f => famHasMatrix(f.id)).length}/${cfg.families.length}`;
   }
   function renderPick(){
-    F('compPick').innerHTML = comps.length ? cats().map(g => { const cs = comps.filter(c => (c.grup || 'Uncategorized') === g), all = cs.every(c => sel.has(c.id));
-      return `<div class="cgrp"><div class="cgrp-h">${esc(g)} <a data-cat="${esc(g)}">${all ? 'Unselect all' : 'Select all'}</a></div><div class="chips">${cs.map(c => `<span class="chip ${sel.has(c.id) ? 'on' : ''}" data-c="${esc(c.id)}">${esc(c.nama)}</span>`).join('')}</div></div>`; }).join('')
-      : '<div class="muted">No technical competencies yet. Add them in <a href="dictionary.html">Technical Competencies</a>.</div>';
-    F('compPick').querySelectorAll('.chip').forEach(ch => ch.addEventListener('click', () => toggle([ch.dataset.c], !sel.has(ch.dataset.c))));
-    F('compPick').querySelectorAll('[data-cat]').forEach(a => a.addEventListener('click', () => { const cs = comps.filter(c => (c.grup || 'Uncategorized') === a.dataset.cat).map(c => c.id); toggle(cs, !cs.every(id => sel.has(id))); }));
+    const q = F('mselQ').value.trim().toLowerCase();
+    const list = selected();
+    F('mselBtn').innerHTML = list.length ? `<span>${list.length} selected · ${esc(list.map(c => c.nama).join(', '))}</span>` : '<span class="ph">Select competencies…</span>';
+    const gsel = [...new Set(list.map(c => c.grup || 'Uncategorized'))];
+    F('selSum').textContent = list.length ? gsel.map(g => `${g}: ${list.filter(c => (c.grup || 'Uncategorized') === g).length}`).join(' · ') : '';
+    F('compPick').innerHTML = comps.length ? cats().map(g => { const cs = comps.filter(c => (c.grup || 'Uncategorized') === g && (!q || c.nama.toLowerCase().includes(q))); if(!cs.length) return '';
+      const all = cs.every(c => sel.has(c.id));
+      return `<div class="msel-g">${esc(g)}<a data-cat="${esc(g)}">${all ? 'Unselect all' : 'Select all'}</a></div>` + cs.map(c => `<label class="msel-o"><input type="checkbox" data-c="${esc(c.id)}" ${sel.has(c.id) ? 'checked' : ''}>${esc(c.nama)}</label>`).join(''); }).join('') || '<div class="muted" style="padding:8px;">No competency matches.</div>'
+      : '<div class="muted" style="padding:8px;">No technical competencies yet. Add them in <a href="dictionary.html">Technical Competencies</a>.</div>';
+    F('compPick').querySelectorAll('input[data-c]').forEach(ch => ch.addEventListener('change', () => toggle([ch.dataset.c], ch.checked)));
+    F('compPick').querySelectorAll('[data-cat]').forEach(a => a.addEventListener('click', () => { const q2 = F('mselQ').value.trim().toLowerCase(); const cs = comps.filter(c => (c.grup || 'Uncategorized') === a.dataset.cat && (!q2 || c.nama.toLowerCase().includes(q2))).map(c => c.id); toggle(cs, !cs.every(id => sel.has(id))); }));
   }
   function toggle(ids, on){
     if(!on){
       const withLv = ids.filter(id => hasAny(req, id));
-      if(withLv.length && !confirm(`Remove ${withLv.length === 1 ? `"${comps.find(c => c.id === withLv[0]).nama}"` : withLv.length + ' competencies'} from this job family? Their levels will be cleared.`)) return;
+      if(withLv.length && !confirm(`Remove ${withLv.length === 1 ? `"${comps.find(c => c.id === withLv[0]).nama}"` : withLv.length + ' competencies'} from this job family? Their levels will be cleared.`)) return renderPick();
       ids.forEach(id => { sel.delete(id); LEVEL_COLUMNS.forEach(l => setV(l.key, id, 0)); });
     } else ids.forEach(id => sel.add(id));
     setDirty(true); render();
@@ -195,6 +207,9 @@
     F('famSel').innerHTML = cfg.families.map(f => `<option value="${esc(f.id)}">${esc(f.nama)}</option>`).join('');
     F('famSel').value = fam; req = clone(docs[fam]?.req); sel = selFrom(docs[fam]); famInfo();
     F('famSel').addEventListener('change', () => selectFamily(F('famSel').value));
+    F('mselBtn').addEventListener('click', () => { F('msel').classList.toggle('open'); if(F('msel').classList.contains('open')) F('mselQ').focus(); });
+    document.addEventListener('click', e => { if(!e.composedPath().includes(F('msel'))) F('msel').classList.remove('open'); }); // composedPath: tetap terbuka walau isi popup dirender ulang
+    F('mselQ').addEventListener('input', renderPick);
     F('profLeg').innerHTML = '<span>Proficiency:</span>' + PROFICIENCY.map(p => `<span><b>${p.lv}</b> ${esc(p.label)}</span>`).join('') + '<span>· – = not required at that job level</span>';
     F('qLv').innerHTML = '<option value="">all job levels</option>' + LEVEL_COLUMNS.map(l => `<option value="${l.key}">${esc(l.label)}</option>`).join('');
     F('qVal').innerHTML = PROFICIENCY.map(p => `<option value="${p.lv}" ${p.lv === 3 ? 'selected' : ''}>${esc(profLabel(p.lv))}</option>`).join('') + '<option value="">– (not required)</option>';
