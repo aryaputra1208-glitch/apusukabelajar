@@ -1,9 +1,8 @@
 /* =========================================================
-   CMS — data & aturan bersama
+   CMS — data & aturan bersama (khusus kompetensi TECHNICAL; Core/Managerial/Values ada di TMS)
+   - Kamus: koleksi competencies dengan kategori 'Technical' (indikator per level jabatan)
    - Job family: settings/jobFamilies = { families: [{ id, nama, deskripsi }], jabatanMap: { "<Jabatan>": familyId } }
-   - Competency matrix: competencyMatrix/{familyId} = { req: { <LEVEL_KEY>: { <compId>: levelDibutuhkan(1-5) } } }
-       familyId '_all' = baseline untuk SEMUA job family (mis. kompetensi Core & Values);
-       matrix job family menimpa baseline untuk kompetensi yang sama; nilai 0 = dikeluarkan dari baseline.
+   - Competency matrix: competencyMatrix/{familyId} = { req: { <LEVEL_KEY>: { <compId>: 1 } } }  (1 = wajib)
    - "Sudah ditrain" = lulus modul LMS online yang membangun kompetensi itu (post-test ≥ 70)
                        ATAU aktivitas IDP untuk kompetensi itu sudah Done (IDP approved).
    ========================================================= */
@@ -29,11 +28,12 @@ export async function loadMatrix() {
   const rows = await grab(collection(db, 'competencyMatrix'), 'competencyMatrix');
   const m = {}; rows.forEach(r => m[r._id] = r.req || {}); return m;
 }
+/** CMS hanya mengelola kompetensi Technical (Core, Managerial & Values ada di TMS). */
 export async function loadCompetencies() {
-  const order = ['Core', 'Managerial', 'Technical', 'Values'];
   return (await grab(collection(db, 'competencies'), 'competencies'))
+    .filter(c => c.kategori === 'Technical')
     .map(c => ({ ...c, id: c._id }))
-    .sort((a, b) => (order.indexOf(a.kategori) - order.indexOf(b.kategori)) || ((a.urutan ?? 999) - (b.urutan ?? 999)) || String(a.nama).localeCompare(String(b.nama)));
+    .sort((a, b) => ((a.urutan ?? 999) - (b.urutan ?? 999)) || String(a.nama).localeCompare(String(b.nama)));
 }
 // kolom teks dipaksa jadi string yang sudah di-trim (Excel kadang menyimpan angka / spasi berlebih)
 const TEXT = ['nama', 'jabatan', 'level', 'divisi', 'departemen', 'email', 'jobFamily', 'status'];
@@ -64,11 +64,11 @@ export function familyOf(emp, cfg) {
   return null;
 }
 
-/** Kompetensi wajib { compId: levelDibutuhkan } untuk job family + level: baseline lalu ditimpa job family. */
+/** Kompetensi Technical wajib { compId: 1 } untuk job family + level (dari matrix job family itu). */
 export function requiredFor(familyId, levelKey, matrix) {
-  if (!levelKey) return {};
-  const out = { ...((matrix[BASELINE] || {})[levelKey] || {}) };
-  Object.entries(((familyId && matrix[familyId]) || {})[levelKey] || {}).forEach(([k, v]) => { if (Number(v) > 0) out[k] = Number(v); else delete out[k]; });
+  if (!levelKey || !familyId) return {};
+  const out = {};
+  Object.entries((matrix[familyId] || {})[levelKey] || {}).forEach(([k, v]) => { if (Number(v) > 0) out[k] = 1; });
   return out;
 }
 

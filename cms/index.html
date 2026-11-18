@@ -41,7 +41,7 @@
 
 </style>
 </head>
-<body><script>/* sidebar CMS dari cache — inline supaya ikut paint pertama (tanpa kedip) */(function () { try { var c = JSON.parse(sessionStorage.getItem('cmsNavCache') || 'null'); if (!c || !c.html) return; var st = document.createElement('style'); st.id = 'cms-shell-css'; st.textContent = c.css; document.head.appendChild(st); var box = document.createElement('div'); box.innerHTML = c.html; var nav = box.firstElementChild; if (c.sig) nav.setAttribute('data-sig', c.sig); var cur = location.pathname.split('/').pop() || 'index.html'; nav.querySelectorAll('a.as-item').forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === cur); }); document.body.prepend(nav); document.body.classList.add('has-admin-sidebar'); } catch (e) {} })();</script><i id="cms-nav-ready" hidden></i><script>/* loading screen CMS — tampil sampai halaman siap (appShell muncul / gate berisi pesan) */(function(){var id=document.documentElement.lang==='id';/* cek versi: kalau browser masih menyimpan halaman versi lama, muat ulang sekali */var BUILD='20261118-102633';try{fetch('build.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(v&&v!==BUILD&&sessionStorage.getItem('tmsBuildReload')!==v){sessionStorage.setItem('tmsBuildReload',v);location.reload()}}).catch(function(){})}catch(e){}var css='body.tms-loading #gate{display:none!important}.tms-loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:36;transition:opacity .35s ease;background:rgba(246,246,250,.35);-webkit-backdrop-filter:blur(18px) saturate(1.1);backdrop-filter:blur(18px) saturate(1.1)}body.has-admin-sidebar .tms-loader{left:232px}.tms-loader.out{opacity:0;pointer-events:none}.tms-loader .bx{display:flex;flex-direction:column;align-items:center;gap:14px;padding:28px 34px;border-radius:20px;background:rgba(255,255,255,.55);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.7);box-shadow:0 12px 40px rgba(0,0,0,.08);min-width:240px}.tms-loader .t{font-weight:700;font-size:15px;color:#1d1d1f}.tms-loader .s{font-size:12.5px;color:#86868b;text-align:center;max-width:260px}.tms-loader .s:empty{display:none}.tms-loader .bar{width:200px;height:5px;border-radius:99px;background:rgba(230,0,122,.12);overflow:hidden}.tms-loader .bar i{display:block;width:40%;height:100%;border-radius:99px;background:#E6007A;animation:tmsBar 1.1s ease-in-out infinite}@keyframes tmsBar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}@media (max-width:900px){body.has-admin-sidebar .tms-loader{left:0}}@media (prefers-reduced-motion:reduce){.tms-loader .bar i{animation-duration:2.4s}}';var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);document.body.classList.add('tms-loading');var L=document.createElement('div');L.className='tms-loader';L.setAttribute('role','status');L.innerHTML='<div class="bx"><div class="t">'+(id?'Memuat data…':'Loading data…')+'</div><div class="bar"><i></i></div><div class="s"></div></div>';document.body.appendChild(L);var sub=L.querySelector('.s');var t1=setTimeout(function(){sub.textContent=id?'Sebentar lagi…':'Almost there…'},3500);var t2=setTimeout(function(){sub.textContent=id?'Lebih lama dari biasanya. Cek koneksi, lalu refresh kalau tidak kunjung muncul.':'Taking longer than usual. Check your connection, then refresh if nothing appears.'},15000);window.tmsReady=window.appReady=function(){window.__tmsReady=true;check()};function ready(){var g=document.getElementById('gate'),gt=document.getElementById('gateTitle');if(window.__tmsReady)return true;if(g&&g.style.display!=='none'&&gt&&gt.textContent.trim()&&!/^(loading|memuat)/i.test(gt.textContent.trim()))return true;return false}var mo;function check(){if(!ready())return;mo&&mo.disconnect();clearTimeout(t1);clearTimeout(t2);document.body.classList.remove('tms-loading');L.classList.add('out');setTimeout(function(){L.remove()},380)}mo=new MutationObserver(check);mo.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['style','class'],characterData:true});})();</script>
+<body><script>/* sidebar CMS dari cache — inline supaya ikut paint pertama (tanpa kedip) */(function () { try { var c = JSON.parse(sessionStorage.getItem('cmsNavCache') || 'null'); if (!c || !c.html) return; var st = document.createElement('style'); st.id = 'cms-shell-css'; st.textContent = c.css; document.head.appendChild(st); var box = document.createElement('div'); box.innerHTML = c.html; var nav = box.firstElementChild; if (c.sig) nav.setAttribute('data-sig', c.sig); var cur = location.pathname.split('/').pop() || 'index.html'; nav.querySelectorAll('a.as-item').forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === cur); }); document.body.prepend(nav); document.body.classList.add('has-admin-sidebar'); } catch (e) {} })();</script><i id="cms-nav-ready" hidden></i><script>/* loading screen CMS — tampil sampai halaman siap (appShell muncul / gate berisi pesan) */(function(){var id=document.documentElement.lang==='id';/* cek versi: kalau browser masih menyimpan halaman versi lama, muat ulang sekali */var BUILD='20261118-103909';try{fetch('build.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(v&&v!==BUILD&&sessionStorage.getItem('tmsBuildReload')!==v){sessionStorage.setItem('tmsBuildReload',v);location.reload()}}).catch(function(){})}catch(e){}var css='body.tms-loading #gate{display:none!important}.tms-loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:36;transition:opacity .35s ease;background:rgba(246,246,250,.35);-webkit-backdrop-filter:blur(18px) saturate(1.1);backdrop-filter:blur(18px) saturate(1.1)}body.has-admin-sidebar .tms-loader{left:232px}.tms-loader.out{opacity:0;pointer-events:none}.tms-loader .bx{display:flex;flex-direction:column;align-items:center;gap:14px;padding:28px 34px;border-radius:20px;background:rgba(255,255,255,.55);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.7);box-shadow:0 12px 40px rgba(0,0,0,.08);min-width:240px}.tms-loader .t{font-weight:700;font-size:15px;color:#1d1d1f}.tms-loader .s{font-size:12.5px;color:#86868b;text-align:center;max-width:260px}.tms-loader .s:empty{display:none}.tms-loader .bar{width:200px;height:5px;border-radius:99px;background:rgba(230,0,122,.12);overflow:hidden}.tms-loader .bar i{display:block;width:40%;height:100%;border-radius:99px;background:#E6007A;animation:tmsBar 1.1s ease-in-out infinite}@keyframes tmsBar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}@media (max-width:900px){body.has-admin-sidebar .tms-loader{left:0}}@media (prefers-reduced-motion:reduce){.tms-loader .bar i{animation-duration:2.4s}}';var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);document.body.classList.add('tms-loading');var L=document.createElement('div');L.className='tms-loader';L.setAttribute('role','status');L.innerHTML='<div class="bx"><div class="t">'+(id?'Memuat data…':'Loading data…')+'</div><div class="bar"><i></i></div><div class="s"></div></div>';document.body.appendChild(L);var sub=L.querySelector('.s');var t1=setTimeout(function(){sub.textContent=id?'Sebentar lagi…':'Almost there…'},3500);var t2=setTimeout(function(){sub.textContent=id?'Lebih lama dari biasanya. Cek koneksi, lalu refresh kalau tidak kunjung muncul.':'Taking longer than usual. Check your connection, then refresh if nothing appears.'},15000);window.tmsReady=window.appReady=function(){window.__tmsReady=true;check()};function ready(){var g=document.getElementById('gate'),gt=document.getElementById('gateTitle');if(window.__tmsReady)return true;if(g&&g.style.display!=='none'&&gt&&gt.textContent.trim()&&!/^(loading|memuat)/i.test(gt.textContent.trim()))return true;return false}var mo;function check(){if(!ready())return;mo&&mo.disconnect();clearTimeout(t1);clearTimeout(t2);document.body.classList.remove('tms-loading');L.classList.add('out');setTimeout(function(){L.remove()},380)}mo=new MutationObserver(check);mo.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['style','class'],characterData:true});})();</script>
 
 <div id="gate" class="locked-state" style="display:none;">
   <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Loading...</p>
@@ -59,14 +59,14 @@
     <div class="page-head"><h1 class="text-h1" style="margin:0;">Competency Dashboard</h1></div>
 
     <div class="steps">
-      <a class="step" href="dictionary.html"><div class="no">STEP 1</div><b>Competency Dictionary</b><span id="s1">Competencies, indicators &amp; rating scale</span></a>
+      <a class="step" href="dictionary.html"><div class="no">STEP 1</div><b>Technical Competencies</b><span id="s1">Technical competencies &amp; indicators per level</span></a>
       <a class="step" href="job-families.html"><div class="no">STEP 2</div><b>Job Families</b><span id="s2">Group positions into job families</span></a>
-      <a class="step" href="matrix.html"><div class="no">STEP 3</div><b>Competency Matrix</b><span id="s3">Required level per family &amp; level</span></a>
+      <a class="step" href="matrix.html"><div class="no">STEP 3</div><b>Competency Matrix</b><span id="s3">Required competencies per family &amp; level</span></a>
       <a class="step" href="coverage.html"><div class="no">STEP 4</div><b>Employee Coverage</b><span id="s4">Trained vs not yet, per employee</span></a>
     </div>
 
     <div class="dash-kpis">
-      <div class="dk"><div class="n" id="kComp">-</div><div class="l">Competencies</div><div class="s" id="kCompSub"></div></div>
+      <div class="dk"><div class="n" id="kComp">-</div><div class="l">Technical Competencies</div><div class="s" id="kCompSub"></div></div>
       <div class="dk"><div class="n" id="kFam">-</div><div class="l">Job Families</div><div class="s" id="kFamSub"></div></div>
       <div class="dk"><div class="n" id="kEmp">-</div><div class="l">Employees With Requirements</div><div class="s" id="kEmpSub"></div></div>
       <div class="dk"><div class="n" id="kCov">-</div><div class="l">Overall Coverage</div><div class="s" id="kCovSub">Required competencies already trained</div></div>
@@ -95,32 +95,32 @@
   const F = id => document.getElementById(id);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const toast = msg => { const t = F('toast'); t.textContent = msg; t.style.display = 'block'; clearTimeout(toast._t); toast._t = setTimeout(() => t.style.display = 'none', 3000); };
-  import { loadFamilies, loadMatrix, loadCompetencies, loadEmployees, loadModules, loadAttempts, loadPlans, loadUpdates, isActive, buildTrainedIndex, coverageFor, BASELINE } from './cms-data.js?v=20261118c';
+  import { loadFamilies, loadMatrix, loadCompetencies, loadEmployees, loadModules, loadAttempts, loadPlans, loadUpdates, isActive, buildTrainedIndex, coverageFor } from './cms-data.js?v=20261118d';
   import { hbars, donut } from '../tms/mini-charts.js?v=20261116d';
 
   const pct = (a, b) => b ? Math.round(a / b * 100) : null;
   const colorFor = p => p == null ? '#94A3B8' : p >= 80 ? '#16A34A' : p >= 50 ? '#F59E0B' : '#DC2626';
-  const cells = req => Object.values(req || {}).reduce((n, m) => n + Object.values(m).filter(v => Number(v) > 0).length, 0);
+  let techIds = new Set();
+  const cells = req => Object.values(req || {}).reduce((n, m) => n + Object.entries(m).filter(([k, v]) => Number(v) > 0 && techIds.has(k)).length, 0);
 
   async function init(){
     const [cfg, matrix, comps, emps, mods, attempts, plans, updates] = await Promise.all([loadFamilies(), loadMatrix(), loadCompetencies(), loadEmployees(), loadModules(), loadAttempts(), loadPlans(), loadUpdates()]);
-    const compById = {}; comps.forEach(c => compById[c.id] = c);
+    const compById = {}; comps.forEach(c => compById[c.id] = c); techIds = new Set(comps.map(c => c.id));
     const active = emps.filter(isActive);
     const idx = buildTrainedIndex({ employees: emps, modules: mods, attempts, plans, updates });
     const rows = active.map(e => { const cov = coverageFor(e, cfg, matrix, idx); const items = cov.items.filter(i => compById[i.comp]); return { e, fam: cov.fam, items, nReq: items.length, nTr: items.filter(i => i.trained).length }; });
     const withReq = rows.filter(r => r.nReq), req = withReq.reduce((n, r) => n + r.nReq, 0), tr = withReq.reduce((n, r) => n + r.nTr, 0);
 
     // KPI
-    const cat = k => comps.filter(c => c.kategori === k).length;
-    F('kComp').textContent = comps.length; F('kCompSub').textContent = `${cat('Core')} Core · ${cat('Managerial')} Managerial${cat('Technical') ? ` · ${cat('Technical')} Technical` : ''} · ${cat('Values')} Values`;
+    F('kComp').textContent = comps.length; F('kCompSub').textContent = 'Technical competencies in the dictionary';
     const jabs = [...new Set(active.map(e => (e.jabatan || '').trim()).filter(Boolean))];
     const mapped = jabs.filter(j => cfg.jabatanMap[j]).length;
     F('kFam').textContent = cfg.families.length; F('kFamSub').textContent = jabs.length ? `${pct(mapped, jabs.length)}% of ${jabs.length} positions mapped` : 'No employees yet';
     F('kEmp').textContent = withReq.length; F('kEmpSub').textContent = `of ${active.length} active employees`;
     F('kCov').textContent = req ? pct(tr, req) + '%' : '-'; F('kCovSub').textContent = req ? `${tr} of ${req} requirements trained` : 'Set the matrix first';
-    F('s1').textContent = `${comps.length} competencies`;
+    F('s1').textContent = `${comps.length} technical competencies`;
     F('s2').textContent = `${cfg.families.length} families · ${mapped}/${jabs.length} positions mapped`;
-    F('s3').textContent = `${cfg.families.filter(f => cells(matrix[f.id])).length}/${cfg.families.length} families set${cells(matrix[BASELINE]) ? ' + baseline' : ''}`;
+    F('s3').textContent = `${cfg.families.filter(f => cells(matrix[f.id])).length}/${cfg.families.length} families set`;
     F('s4').textContent = req ? `${pct(tr, req)}% trained overall` : 'Waiting for the matrix';
 
     // Chart kompetensi
@@ -145,7 +145,7 @@
     const trainable = new Set(mods.filter(m => m.status === 'published' && (m.mode || 'online') === 'online').flatMap(m => m.kompetensiIds || []));
     const gaps = cr.filter(o => !trainable.has(o.id)).sort((a, b) => (b.n - b.t) - (a.n - a.t));
     F('noMod').innerHTML = !req ? noReq : gaps.length
-      ? `<div class="nomod">${gaps.slice(0, 10).map(o => `<div><span><b>${esc(compById[o.id].nama)}</b> <span class="muted">${esc(compById[o.id].kategori || '')}</span></span><span class="muted">${o.n - o.t} employees not trained</span></div>`).join('')}</div>`
+      ? `<div class="nomod">${gaps.slice(0, 10).map(o => `<div><span><b>${esc(compById[o.id].nama)}</b></span><span class="muted">${o.n - o.t} employees not trained</span></div>`).join('')}</div>`
         + (gaps.length > 10 ? `<div class="muted" style="margin-top:8px;">+${gaps.length - 10} more</div>` : '')
       : '<div class="mc-empty">Every required competency has at least one published online module.</div>';
 
@@ -154,13 +154,13 @@
       const ps = jabs.filter(j => cfg.jabatanMap[j] === f.id), rs = rows.filter(r => r.fam === f.id);
       const n = rs.reduce((x, r) => x + r.nReq, 0), t = rs.reduce((x, r) => x + r.nTr, 0), c = cells(matrix[f.id]);
       return `<tr><td><b>${esc(f.nama)}</b>${f.deskripsi ? `<div class="muted">${esc(f.deskripsi)}</div>` : ''}</td><td style="text-align:right;">${ps.length}</td><td style="text-align:right;">${rs.length}</td>
-        <td>${c ? `<span class="tag ok">${c} cells set</span>` : cells(matrix[BASELINE]) ? '<span class="tag warn">Baseline only</span>' : '<span class="tag warn">Not set</span>'}</td>
+        <td>${c ? `<span class="tag ok">${c} cells set</span>` : '<span class="tag warn">Not set</span>'}</td>
         <td style="min-width:140px;">${n ? `<b style="color:${colorFor(pct(t, n))}">${pct(t, n)}%</b> <span class="muted">${t}/${n}</span>` : '<span class="muted">–</span>'}</td>
         <td style="text-align:right; white-space:nowrap;"><a href="matrix.html?family=${encodeURIComponent(f.id)}">Matrix</a> · <a href="coverage.html?family=${encodeURIComponent(f.id)}">Coverage</a></td></tr>`;
     });
     const un = rows.filter(r => !r.fam).length;
     F('famBody').innerHTML = (famRows.join('') || '<tr><td colspan="6" class="muted" style="padding:16px 10px;">No job families yet. <a href="job-families.html">Create them in Job Families</a>.</td></tr>')
-      + (un ? `<tr><td><span class="muted">Not mapped to a family</span></td><td></td><td style="text-align:right;">${un}</td><td colspan="2" class="muted">Baseline only</td><td style="text-align:right;"><a href="job-families.html">Map positions</a></td></tr>` : '');
+      + (un ? `<tr><td><span class="muted">Not mapped to a family</span></td><td></td><td style="text-align:right;">${un}</td><td colspan="2" class="muted">No requirements</td><td style="text-align:right;"><a href="job-families.html">Map positions</a></td></tr>` : '');
   }
 
   onAuth(async (user) => { try {
@@ -171,13 +171,13 @@
     gate.style.display = 'none'; shell.style.display = 'block';
     F('userAvatar').src = profile.photoURL; F('userName').textContent = profile.displayName;
     await init(profile);
-    const { loadErrors } = await import('./cms-data.js?v=20261118c');
+    const { loadErrors } = await import('./cms-data.js?v=20261118d');
     if(loadErrors.length) showErr('Some data could not be read: ' + [...new Set(loadErrors)].join(', ') + '. If it says permission-denied, publish the latest Firestore rules.');
   } catch(err) { console.error('CMS error', err); showErr('Something went wrong: ' + (err.message || err)); }
   finally { window.appReady?.(); } });
   function showErr(msg){ let b = document.getElementById('cmsErr'); if(!b){ b = document.createElement('div'); b.id = 'cmsErr'; b.style.cssText = 'background:#FEF2F2;border:1px solid #FCA5A5;color:#991B1B;border-radius:12px;padding:12px 16px;margin-bottom:16px;font-size:13px;'; document.querySelector('#appShell .wrap')?.prepend(b); } b.textContent = msg; } // loading screen hilang setelah semua data halaman tampil
 </script>
-<script type="module" src="./cms-shell.js?v=20261118a"></script>
+<script type="module" src="./cms-shell.js?v=20261118b"></script>
 <script src="../lms-motion.js?v=20261109" defer></script>
 </body>
 </html>

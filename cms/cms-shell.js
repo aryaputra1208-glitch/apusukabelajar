@@ -65,7 +65,7 @@ onAuth(async (user) => {
     const nav = [
       { group: 'General', items: [{ href: 'index.html', icon: 'home', label: 'Dashboard' }] },
       { group: 'Competency', items: [
-        { href: 'dictionary.html', icon: 'books', label: 'Competency Dictionary' },
+        { href: 'dictionary.html', icon: 'books', label: 'Technical Competencies' },
         { href: 'job-families.html', icon: 'layout-grid', label: 'Job Families' },
         { href: 'matrix.html', icon: 'check', label: 'Competency Matrix' },
       ] },

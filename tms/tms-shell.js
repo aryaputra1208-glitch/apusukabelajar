@@ -87,6 +87,7 @@ onAuth(async (user) => {
         { href: 'idp.html', icon: 'check', label: 'IDP' },
       ] : [] },
       { group: 'Settings', items: isAdmin ? [
+        { href: 'competencies.html', icon: 'layout-grid', label: 'Competency Dictionary' },
         { href: 'hav-setup.html', icon: 'settings', label: 'HAV Map Setup' },
       ] : [] },
       { group: 'Mentoring', items: nMentor ? [{ href: 'mentor-idp.html', icon: 'users', label: isAdmin ? 'My Mentees' : 'IDP', badge: nPendingMine || '' }] : [] },
