@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Job Families — Anteraja CMS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../lms-design-system.css?v=20261105b">
+<link rel="expect" href="#cms-nav-ready" blocking="render">
+<link rel="stylesheet" href="../lms-glass.css?v=20261111b">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  .avatar { width: 28px; height: 28px; border-radius: 50%; }
+  .user-chip { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); }
+  .wrap.wide { max-width: 1180px; }
+  .page-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .page-head .acts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .page-head select, .page-head input { margin: 0; width: auto; }
+
+  .fam-list { display: grid; gap: 0; }
+  .fam-row { display: grid; grid-template-columns: 1fr 110px 110px 150px; gap: 12px; align-items: center; padding: 12px 20px; border-bottom: 1px solid var(--border); }
+  .fam-row:last-child { border-bottom: none; }
+  .fam-row input { margin: 0; }
+  .fam-add { display: grid; grid-template-columns: 1fr 1.4fr auto; gap: 8px; padding: 14px 20px; border-top: 1px solid var(--border); }
+  .fam-add input { margin: 0; }
+  .map-tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--border); }
+  .map-tools select, .map-tools input { margin: 0; width: auto; }
+  table.map { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.map th { text-align: left; font-size: 11px; color: var(--text-3); padding: 10px 12px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: rgba(255,255,255,.92); }
+  table.map td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  table.map select { margin: 0; min-width: 190px; }
+  .map-scroll { max-height: 560px; overflow-y: auto; }
+  .muted { color: var(--text-3); font-size: 12px; }
+  tr.unmapped td:first-child { box-shadow: inset 3px 0 0 #F59E0B; }
+  .savebar { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 20px; border-top: 1px solid var(--border); }
+
+</style>
+</head>
+<body><script>/* sidebar CMS dari cache — inline supaya ikut paint pertama (tanpa kedip) */(function () { try { var c = JSON.parse(sessionStorage.getItem('cmsNavCache') || 'null'); if (!c || !c.html) return; var st = document.createElement('style'); st.id = 'cms-shell-css'; st.textContent = c.css; document.head.appendChild(st); var box = document.createElement('div'); box.innerHTML = c.html; var nav = box.firstElementChild; if (c.sig) nav.setAttribute('data-sig', c.sig); var cur = location.pathname.split('/').pop() || 'index.html'; nav.querySelectorAll('a.as-item').forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === cur); }); document.body.prepend(nav); document.body.classList.add('has-admin-sidebar'); } catch (e) {} })();</script><i id="cms-nav-ready" hidden></i><script>/* loading screen CMS — tampil sampai halaman siap (appShell muncul / gate berisi pesan) */(function(){var id=document.documentElement.lang==='id';/* cek versi: kalau browser masih menyimpan halaman versi lama, muat ulang sekali */var BUILD='20261118-093115';try{fetch('build.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(v&&v!==BUILD&&sessionStorage.getItem('tmsBuildReload')!==v){sessionStorage.setItem('tmsBuildReload',v);location.reload()}}).catch(function(){})}catch(e){}var css='body.tms-loading #gate{display:none!important}.tms-loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:36;transition:opacity .35s ease;background:rgba(246,246,250,.35);-webkit-backdrop-filter:blur(18px) saturate(1.1);backdrop-filter:blur(18px) saturate(1.1)}body.has-admin-sidebar .tms-loader{left:232px}.tms-loader.out{opacity:0;pointer-events:none}.tms-loader .bx{display:flex;flex-direction:column;align-items:center;gap:14px;padding:28px 34px;border-radius:20px;background:rgba(255,255,255,.55);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.7);box-shadow:0 12px 40px rgba(0,0,0,.08);min-width:240px}.tms-loader .t{font-weight:700;font-size:15px;color:#1d1d1f}.tms-loader .s{font-size:12.5px;color:#86868b;text-align:center;max-width:260px}.tms-loader .s:empty{display:none}.tms-loader .bar{width:200px;height:5px;border-radius:99px;background:rgba(230,0,122,.12);overflow:hidden}.tms-loader .bar i{display:block;width:40%;height:100%;border-radius:99px;background:#E6007A;animation:tmsBar 1.1s ease-in-out infinite}@keyframes tmsBar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}@media (max-width:900px){body.has-admin-sidebar .tms-loader{left:0}}@media (prefers-reduced-motion:reduce){.tms-loader .bar i{animation-duration:2.4s}}';var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);document.body.classList.add('tms-loading');var L=document.createElement('div');L.className='tms-loader';L.setAttribute('role','status');L.innerHTML='<div class="bx"><div class="t">'+(id?'Memuat data…':'Loading data…')+'</div><div class="bar"><i></i></div><div class="s"></div></div>';document.body.appendChild(L);var sub=L.querySelector('.s');var t1=setTimeout(function(){sub.textContent=id?'Sebentar lagi…':'Almost there…'},3500);var t2=setTimeout(function(){sub.textContent=id?'Lebih lama dari biasanya. Cek koneksi, lalu refresh kalau tidak kunjung muncul.':'Taking longer than usual. Check your connection, then refresh if nothing appears.'},15000);window.tmsReady=window.appReady=function(){window.__tmsReady=true;check()};function ready(){var g=document.getElementById('gate'),gt=document.getElementById('gateTitle');if(window.__tmsReady)return true;if(g&&g.style.display!=='none'&&gt&&gt.textContent.trim()&&!/^(loading|memuat)/i.test(gt.textContent.trim()))return true;return false}var mo;function check(){if(!ready())return;mo&&mo.disconnect();clearTimeout(t1);clearTimeout(t2);document.body.classList.remove('tms-loading');L.classList.add('out');setTimeout(function(){L.remove()},380)}mo=new MutationObserver(check);mo.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['style','class'],characterData:true});})();</script>
+
+<div id="gate" class="locked-state" style="display:none;">
+  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Loading...</p>
+  <p class="text-sub" id="gateSub"></p>
+</div>
+
+<div id="appShell" style="display:none;">
+  <div class="topbar">
+    <div style="display:flex; align-items:center; gap:16px;">
+      <a href="index.html" class="sidebar-logo" style="margin:0; text-decoration:none;">anteraja CMS</a>
+    </div>
+    <div class="user-chip"><img class="avatar" id="userAvatar" src=""><span id="userName"></span></div>
+  </div>
+  <div class="wrap wide">
+    <div class="page-head"><h1 class="text-h1" style="margin:0;">Job Families</h1>
+      <div class="acts"><button class="btn btn-outline btn-sm" id="exportBtn">Download Mapping (Excel)</button><label class="btn btn-outline btn-sm" style="margin:0; cursor:pointer;">Upload Mapping<input type="file" id="importInput" accept=".xlsx,.xls,.csv" style="display:none"></label></div></div>
+
+    <div class="dash-kpis">
+      <div class="dk"><div class="n" id="kFam">-</div><div class="l">Job Families</div><div class="s">Groups of similar jobs</div></div>
+      <div class="dk"><div class="n" id="kJab">-</div><div class="l">Positions</div><div class="s">Unique Jabatan, active employees</div></div>
+      <div class="dk"><div class="n" id="kMapped">-</div><div class="l">Positions Mapped</div><div class="s" id="kMappedSub"></div></div>
+      <div class="dk"><div class="n" id="kNoFam">-</div><div class="l">Employees Without Family</div><div class="s">Their position is not mapped yet</div></div>
+    </div>
+
+    <div class="panel" style="margin-bottom:16px;">
+      <div class="panel-head"><h3 class="text-h2" style="margin:0;">Job Families</h3><span class="text-meta">Name · description · positions · employees</span></div>
+      <div class="fam-list" id="famList"></div>
+      <div class="fam-add"><input type="text" id="newName" placeholder="New job family, e.g. Hub Operations"><input type="text" id="newDesc" placeholder="Description (optional)"><button class="btn btn-primary btn-sm" id="addFam">Add</button></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h3 class="text-h2" style="margin:0;">Map Positions to Job Families</h3><span class="text-meta" id="mapCount"></span></div>
+      <div class="map-tools">
+        <select id="fDiv"></select>
+        <select id="fShow"><option value="all">All positions</option><option value="unmapped">Unmapped only</option><option value="mapped">Mapped only</option></select>
+        <input type="text" id="fSearch" placeholder="Search position">
+        <span style="flex:1"></span>
+        <span class="muted">Set selected to</span><select id="bulkFam"></select><button class="btn btn-outline btn-sm" id="bulkBtn">Apply</button>
+      </div>
+      <div class="map-scroll"><table class="map"><thead><tr><th style="width:32px;"><input type="checkbox" id="checkAll"></th><th>Position (Jabatan)</th><th>Division</th><th>Levels</th><th style="text-align:right;">Employees</th><th>Job Family</th></tr></thead><tbody id="mapBody"></tbody></table></div>
+      <div class="savebar"><span class="muted" id="dirtyNote">No unsaved changes.</span><button class="btn btn-primary" id="saveBtn">Save Mapping</button></div>
+    </div>
+
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { onAuth, ensureUserProfile } from '../firebase-shared.js';
+  const F = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const toast = msg => { const t = F('toast'); t.textContent = msg; t.style.display = 'block'; clearTimeout(toast._t); toast._t = setTimeout(() => t.style.display = 'none', 3000); };
+  import { db } from '../firebase-shared.js';
+  import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+  import { loadFamilies, loadEmployees, isActive } from './cms-data.js?v=20261118a';
+  import '../tms/mini-charts.js?v=20261116d';
+
+  let cfg = { families: [], jabatanMap: {} }, emps = [], positions = [], dirty = false, me = null;
+  const slug = s => String(s).toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'family';
+  const setDirty = v => { dirty = v; F('dirtyNote').textContent = v ? 'You have unsaved changes.' : 'No unsaved changes.'; F('dirtyNote').style.color = v ? '#B45309' : ''; };
+  window.addEventListener('beforeunload', e => { if(dirty){ e.preventDefault(); e.returnValue = ''; } });
+
+  function buildPositions(){
+    const m = new Map();
+    emps.filter(isActive).forEach(e => {
+      const j = (e.jabatan || '').trim(); if(!j) return;
+      if(!m.has(j)) m.set(j, { jabatan: j, n: 0, divs: new Map(), levels: new Set() });
+      const p = m.get(j); p.n++; p.levels.add(e.level || '-'); const d = e.divisi || '-'; p.divs.set(d, (p.divs.get(d) || 0) + 1);
+    });
+    positions = [...m.values()].map(p => ({ ...p, div: [...p.divs.entries()].sort((a, b) => b[1] - a[1])[0][0], divList: [...p.divs.keys()] })).sort((a, b) => a.jabatan.localeCompare(b.jabatan));
+  }
+  const famName = id => cfg.families.find(f => f.id === id)?.nama || '';
+  const famOpts = (sel, blank = '— Not mapped —') => `<option value="">${blank}</option>` + cfg.families.map(f => `<option value="${esc(f.id)}" ${f.id === sel ? 'selected' : ''}>${esc(f.nama)}</option>`).join('');
+
+  function renderKpis(){
+    const mapped = positions.filter(p => cfg.jabatanMap[p.jabatan]).length;
+    F('kFam').textContent = cfg.families.length; F('kJab').textContent = positions.length;
+    F('kMapped').textContent = positions.length ? Math.round(mapped / positions.length * 100) + '%' : '-';
+    F('kMappedSub').textContent = `${mapped} of ${positions.length} positions`;
+    F('kNoFam').textContent = positions.filter(p => !cfg.jabatanMap[p.jabatan]).reduce((n, p) => n + p.n, 0);
+  }
+  function renderFamilies(){
+    const cnt = id => { const ps = positions.filter(p => cfg.jabatanMap[p.jabatan] === id); return [ps.length, ps.reduce((n, p) => n + p.n, 0)]; };
+    F('famList').innerHTML = cfg.families.length ? cfg.families.map(f => { const [np, ne] = cnt(f.id); return `<div class="fam-row" data-id="${esc(f.id)}">
+        <div><input type="text" data-f="nama" value="${esc(f.nama)}" style="font-weight:600; margin-bottom:4px;"><input type="text" data-f="deskripsi" value="${esc(f.deskripsi || '')}" placeholder="Description" style="font-size:12px;"></div>
+        <div class="muted"><b style="color:var(--text); font-size:15px;">${np}</b> position${np === 1 ? '' : 's'}</div>
+        <div class="muted"><b style="color:var(--text); font-size:15px;">${ne}</b> employee${ne === 1 ? '' : 's'}</div>
+        <div style="text-align:right;"><button class="btn btn-outline btn-sm" data-del>Delete</button></div></div>`; }).join('')
+      : '<div class="empty-state" style="padding:24px;"><p>No job families yet. Add the first one below.</p></div>';
+    F('famList').querySelectorAll('.fam-row').forEach(row => {
+      const f = cfg.families.find(x => x.id === row.dataset.id);
+      row.querySelectorAll('[data-f]').forEach(inp => inp.addEventListener('input', () => { f[inp.dataset.f] = inp.value; setDirty(true); renderMap(); }));
+      row.querySelector('[data-del]').addEventListener('click', () => {
+        const [np] = cnt(f.id);
+        if(np && !confirm(`Delete "${f.nama}"? ${np} positions will become unmapped.`)) return;
+        cfg.families = cfg.families.filter(x => x.id !== f.id);
+        Object.keys(cfg.jabatanMap).forEach(j => { if(cfg.jabatanMap[j] === f.id) delete cfg.jabatanMap[j]; });
+        setDirty(true); renderAll();
+      });
+    });
+  }
+  function filtered(){
+    const d = F('fDiv').value, show = F('fShow').value, q = F('fSearch').value.trim().toLowerCase();
+    return positions.filter(p => (!d || p.divList.includes(d)) && (show === 'all' || (show === 'unmapped' ? !cfg.jabatanMap[p.jabatan] : !!cfg.jabatanMap[p.jabatan])) && (!q || p.jabatan.toLowerCase().includes(q)));
+  }
+  function renderMap(){
+    const rows = filtered();
+    F('mapCount').textContent = `${rows.length} of ${positions.length} positions`;
+    F('mapBody').innerHTML = rows.map(p => `<tr class="${cfg.jabatanMap[p.jabatan] ? '' : 'unmapped'}" data-j="${esc(p.jabatan)}">
+      <td><input type="checkbox" data-chk></td><td><b>${esc(p.jabatan)}</b></td><td class="muted">${esc(p.div)}${p.divList.length > 1 ? ` +${p.divList.length - 1}` : ''}</td>
+      <td class="muted">${esc([...p.levels].join(', '))}</td><td style="text-align:right;">${p.n}</td><td><select data-sel>${famOpts(cfg.jabatanMap[p.jabatan])}</select></td></tr>`).join('')
+      || '<tr><td colspan="6" class="muted" style="padding:20px;">No positions match.</td></tr>';
+    F('mapBody').querySelectorAll('[data-sel]').forEach(sel => sel.addEventListener('change', () => {
+      const j = sel.closest('tr').dataset.j; if(sel.value) cfg.jabatanMap[j] = sel.value; else delete cfg.jabatanMap[j];
+      sel.closest('tr').classList.toggle('unmapped', !sel.value); setDirty(true); renderKpis(); renderFamilies();
+    }));
+    F('checkAll').checked = false;
+  }
+  function renderAll(){
+    renderKpis(); renderFamilies(); renderMap();
+    F('bulkFam').innerHTML = famOpts('', '— Not mapped —');
+  }
+
+  async function save(){
+    // nama job family wajib & unik
+    const names = cfg.families.map(f => f.nama.trim().toLowerCase());
+    if(names.some(n => !n)) return toast('Every job family needs a name.');
+    if(new Set(names).size !== names.length) return toast('Job family names must be unique.');
+    cfg.families.forEach(f => { f.nama = f.nama.trim(); f.deskripsi = (f.deskripsi || '').trim(); });
+    try{
+      F('saveBtn').disabled = true;
+      await setDoc(doc(db, 'settings', 'jobFamilies'), { families: cfg.families, jabatanMap: cfg.jabatanMap, updatedAt: serverTimestamp(), updatedBy: me.email });
+      setDirty(false); toast('Job families saved.');
+    } catch(err){ console.error('Gagal simpan jobFamilies', err.code, err.message); toast('Save failed: ' + err.message); }
+    finally { F('saveBtn').disabled = false; }
+  }
+
+  async function init(profile){
+    me = profile;
+    [cfg, emps] = await Promise.all([loadFamilies(), loadEmployees()]);
+    buildPositions();
+    const divs = [...new Set(positions.flatMap(p => p.divList))].sort();
+    F('fDiv').innerHTML = '<option value="">All divisions</option>' + divs.map(d => `<option>${esc(d)}</option>`).join('');
+    ['fDiv', 'fShow'].forEach(id => F(id).addEventListener('change', renderMap));
+    F('fSearch').addEventListener('input', renderMap);
+    F('checkAll').addEventListener('change', e => F('mapBody').querySelectorAll('[data-chk]').forEach(c => c.checked = e.target.checked));
+    F('bulkBtn').addEventListener('click', () => {
+      const sel = [...F('mapBody').querySelectorAll('[data-chk]:checked')].map(c => c.closest('tr').dataset.j);
+      if(!sel.length) return toast('Tick the positions to update first.');
+      const v = F('bulkFam').value; sel.forEach(j => { if(v) cfg.jabatanMap[j] = v; else delete cfg.jabatanMap[j]; });
+      setDirty(true); renderAll(); toast(`${sel.length} positions updated. Remember to save.`);
+    });
+    F('addFam').addEventListener('click', () => {
+      const nama = F('newName').value.trim(); if(!nama) return F('newName').focus();
+      if(cfg.families.some(f => f.nama.toLowerCase() === nama.toLowerCase())) return toast('That job family already exists.');
+      let id = slug(nama); while(cfg.families.some(f => f.id === id) || id === '_all') id += '-x';
+      cfg.families.push({ id, nama, deskripsi: F('newDesc').value.trim() });
+      F('newName').value = ''; F('newDesc').value = ''; setDirty(true); renderAll();
+    });
+    F('saveBtn').addEventListener('click', save);
+    F('exportBtn').addEventListener('click', () => {
+      const rows = [['Jabatan', 'Job Family', 'Divisi', 'Jumlah Karyawan'], ...positions.map(p => [p.jabatan, famName(cfg.jabatanMap[p.jabatan]), p.div, p.n])];
+      const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), 'Mapping'); XLSX.writeFile(wb, 'job-family-mapping.xlsx');
+    });
+    F('importInput').addEventListener('change', e => {
+      const file = e.target.files[0]; if(!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        try{
+          const wb = XLSX.read(ev.target.result, { type: 'binary' });
+          const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '', raw: false });
+          let set = 0, created = 0, skipped = 0;
+          rows.forEach(r => {
+            const key = k => Object.keys(r).find(x => x.toLowerCase().replace(/\s+/g, '') === k);
+            const j = String(r[key('jabatan')] ?? '').trim(), fn = String(r[key('jobfamily')] ?? '').trim();
+            if(!j){ skipped++; return; }
+            if(!fn){ delete cfg.jabatanMap[j]; return; }
+            let f = cfg.families.find(x => x.nama.toLowerCase() === fn.toLowerCase());
+            if(!f){ let id = slug(fn); while(cfg.families.some(x => x.id === id) || id === '_all') id += '-x'; f = { id, nama: fn, deskripsi: '' }; cfg.families.push(f); created++; }
+            cfg.jabatanMap[j] = f.id; set++;
+          });
+          setDirty(true); renderAll(); toast(`${set} positions mapped${created ? `, ${created} new job families` : ''}. Review, then Save Mapping.`);
+        } catch(err){ console.error('Gagal baca file mapping', err); toast('Could not read the file: ' + err.message); }
+        e.target.value = '';
+      };
+      reader.readAsBinaryString(file);
+    });
+    renderAll();
+  }
+
+  onAuth(async (user) => { try {
+    const gate = F('gate'), shell = F('appShell');
+    if(!user){ gate.style.display = 'block'; shell.style.display = 'none'; F('gateTitle').textContent = 'Please sign in'; F('gateSub').innerHTML = '<a href="../index.html">Sign in here</a>.'; return; }
+    const profile = await ensureUserProfile(user);
+    if(profile.role !== 'admin'){ gate.style.display = 'block'; shell.style.display = 'none'; F('gateTitle').textContent = 'Access denied'; F('gateSub').innerHTML = 'CMS is for admins (HR/OD) only. <a href="../index.html">Back to LMS</a>.'; return; }
+    gate.style.display = 'none'; shell.style.display = 'block';
+    F('userAvatar').src = profile.photoURL; F('userName').textContent = profile.displayName;
+    await init(profile);
+  } finally { window.appReady?.(); } }); // loading screen hilang setelah semua data halaman tampil
+</script>
+<script type="module" src="./cms-shell.js?v=20261118a"></script>
+<script src="../lms-motion.js?v=20261109" defer></script>
+</body>
+</html>

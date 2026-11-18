@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Competency Matrix — Anteraja CMS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../lms-design-system.css?v=20261105b">
+<link rel="expect" href="#cms-nav-ready" blocking="render">
+<link rel="stylesheet" href="../lms-glass.css?v=20261111b">
+
+<style>
+  .avatar { width: 28px; height: 28px; border-radius: 50%; }
+  .user-chip { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); }
+  .wrap.wide { max-width: 1180px; }
+  .page-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .page-head .acts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .page-head select, .page-head input { margin: 0; width: auto; }
+
+  .mx-tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--border); }
+  .mx-tools select { margin: 0; width: auto; max-width: 200px; }
+  .muted { color: var(--text-3); font-size: 12px; }
+  .mx-scroll { overflow-x: auto; }
+  table.mx { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 980px; }
+  table.mx th { font-size: 11px; color: var(--text-3); font-weight: 600; padding: 10px 6px; border-bottom: 1px solid var(--border); text-align: center; line-height: 1.25; vertical-align: bottom; }
+  table.mx th:first-child { text-align: left; padding-left: 20px; }
+  table.mx td { padding: 6px; border-bottom: 1px solid var(--border); text-align: center; }
+  table.mx td:first-child { text-align: left; padding-left: 20px; }
+  table.mx tr.cat td { background: rgba(230,0,122,.05); font-weight: 700; font-size: 12px; color: var(--pink-dark); padding: 8px 20px; text-align: left; }
+  table.mx select { margin: 0; width: 64px; padding: 5px 4px; font-size: 13px; text-align: center; }
+  table.mx select.set { background: var(--pink-bg); border-color: var(--pink); font-weight: 700; color: var(--pink-dark); }
+  table.mx select.excl { background: rgba(120,120,128,.12); color: var(--text-3); text-decoration: line-through; }
+  table.mx select.inh { color: var(--text-3); }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; padding: 12px 20px; font-size: 12px; color: var(--text-3); border-top: 1px solid var(--border); }
+  .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -2px; border: 1px solid var(--border); }
+  .savebar { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 20px; border-top: 1px solid var(--border); }
+  .fam-info { padding: 12px 20px; font-size: 13px; color: var(--text-2); border-bottom: 1px solid var(--border); }
+
+</style>
+</head>
+<body><script>/* sidebar CMS dari cache — inline supaya ikut paint pertama (tanpa kedip) */(function () { try { var c = JSON.parse(sessionStorage.getItem('cmsNavCache') || 'null'); if (!c || !c.html) return; var st = document.createElement('style'); st.id = 'cms-shell-css'; st.textContent = c.css; document.head.appendChild(st); var box = document.createElement('div'); box.innerHTML = c.html; var nav = box.firstElementChild; if (c.sig) nav.setAttribute('data-sig', c.sig); var cur = location.pathname.split('/').pop() || 'index.html'; nav.querySelectorAll('a.as-item').forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === cur); }); document.body.prepend(nav); document.body.classList.add('has-admin-sidebar'); } catch (e) {} })();</script><i id="cms-nav-ready" hidden></i><script>/* loading screen CMS — tampil sampai halaman siap (appShell muncul / gate berisi pesan) */(function(){var id=document.documentElement.lang==='id';/* cek versi: kalau browser masih menyimpan halaman versi lama, muat ulang sekali */var BUILD='20261118-093115';try{fetch('build.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(v&&v!==BUILD&&sessionStorage.getItem('tmsBuildReload')!==v){sessionStorage.setItem('tmsBuildReload',v);location.reload()}}).catch(function(){})}catch(e){}var css='body.tms-loading #gate{display:none!important}.tms-loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:36;transition:opacity .35s ease;background:rgba(246,246,250,.35);-webkit-backdrop-filter:blur(18px) saturate(1.1);backdrop-filter:blur(18px) saturate(1.1)}body.has-admin-sidebar .tms-loader{left:232px}.tms-loader.out{opacity:0;pointer-events:none}.tms-loader .bx{display:flex;flex-direction:column;align-items:center;gap:14px;padding:28px 34px;border-radius:20px;background:rgba(255,255,255,.55);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.7);box-shadow:0 12px 40px rgba(0,0,0,.08);min-width:240px}.tms-loader .t{font-weight:700;font-size:15px;color:#1d1d1f}.tms-loader .s{font-size:12.5px;color:#86868b;text-align:center;max-width:260px}.tms-loader .s:empty{display:none}.tms-loader .bar{width:200px;height:5px;border-radius:99px;background:rgba(230,0,122,.12);overflow:hidden}.tms-loader .bar i{display:block;width:40%;height:100%;border-radius:99px;background:#E6007A;animation:tmsBar 1.1s ease-in-out infinite}@keyframes tmsBar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}@media (max-width:900px){body.has-admin-sidebar .tms-loader{left:0}}@media (prefers-reduced-motion:reduce){.tms-loader .bar i{animation-duration:2.4s}}';var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);document.body.classList.add('tms-loading');var L=document.createElement('div');L.className='tms-loader';L.setAttribute('role','status');L.innerHTML='<div class="bx"><div class="t">'+(id?'Memuat data…':'Loading data…')+'</div><div class="bar"><i></i></div><div class="s"></div></div>';document.body.appendChild(L);var sub=L.querySelector('.s');var t1=setTimeout(function(){sub.textContent=id?'Sebentar lagi…':'Almost there…'},3500);var t2=setTimeout(function(){sub.textContent=id?'Lebih lama dari biasanya. Cek koneksi, lalu refresh kalau tidak kunjung muncul.':'Taking longer than usual. Check your connection, then refresh if nothing appears.'},15000);window.tmsReady=window.appReady=function(){window.__tmsReady=true;check()};function ready(){var g=document.getElementById('gate'),gt=document.getElementById('gateTitle');if(window.__tmsReady)return true;if(g&&g.style.display!=='none'&&gt&&gt.textContent.trim()&&!/^(loading|memuat)/i.test(gt.textContent.trim()))return true;return false}var mo;function check(){if(!ready())return;mo&&mo.disconnect();clearTimeout(t1);clearTimeout(t2);document.body.classList.remove('tms-loading');L.classList.add('out');setTimeout(function(){L.remove()},380)}mo=new MutationObserver(check);mo.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['style','class'],characterData:true});})();</script>
+
+<div id="gate" class="locked-state" style="display:none;">
+  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Loading...</p>
+  <p class="text-sub" id="gateSub"></p>
+</div>
+
+<div id="appShell" style="display:none;">
+  <div class="topbar">
+    <div style="display:flex; align-items:center; gap:16px;">
+      <a href="index.html" class="sidebar-logo" style="margin:0; text-decoration:none;">anteraja CMS</a>
+    </div>
+    <div class="user-chip"><img class="avatar" id="userAvatar" src=""><span id="userName"></span></div>
+  </div>
+  <div class="wrap wide">
+    <div class="page-head"><h1 class="text-h1" style="margin:0;">Competency Matrix</h1>
+      <div class="acts"><span class="muted">Job family</span><select id="famSel"></select></div></div>
+
+    <div class="dash-kpis">
+      <div class="dk"><div class="n" id="kComp">-</div><div class="l">Competencies</div><div class="s">In the dictionary</div></div>
+      <div class="dk"><div class="n" id="kReq">-</div><div class="l">Required Cells</div><div class="s" id="kReqSub">Competency × level, this family</div></div>
+      <div class="dk"><div class="n" id="kLv">-</div><div class="l">Levels Covered</div><div class="s">Levels with at least 1 requirement</div></div>
+      <div class="dk"><div class="n" id="kFams">-</div><div class="l">Families With Matrix</div><div class="s" id="kFamsSub"></div></div>
+    </div>
+
+    <div class="panel">
+      <div class="fam-info" id="famInfo"></div>
+      <div class="mx-tools">
+        <span class="muted">Quick fill</span>
+        <select id="qCat"><option value="">All categories</option><option>Core</option><option>Managerial</option><option>Values</option></select>
+        <select id="qLv"></select>
+        <span class="muted">to</span>
+        <select id="qVal"></select>
+        <button class="btn btn-outline btn-sm" id="qBtn">Apply</button>
+        <span style="flex:1"></span>
+        <select id="copyFrom"></select><button class="btn btn-outline btn-sm" id="copyBtn">Copy</button>
+        <button class="btn btn-outline btn-sm" id="clearBtn">Clear All</button>
+      </div>
+      <div class="mx-scroll"><table class="mx"><thead id="mxHead"></thead><tbody id="mxBody"></tbody></table></div>
+      <div class="legend" id="legend"></div>
+      <div class="savebar"><span class="muted" id="dirtyNote">No unsaved changes.</span><button class="btn btn-primary" id="saveBtn">Save Matrix</button></div>
+    </div>
+
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { onAuth, ensureUserProfile } from '../firebase-shared.js';
+  const F = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const toast = msg => { const t = F('toast'); t.textContent = msg; t.style.display = 'block'; clearTimeout(toast._t); toast._t = setTimeout(() => t.style.display = 'none', 3000); };
+  import { db } from '../firebase-shared.js';
+  import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+  import { loadFamilies, loadMatrix, loadCompetencies, BASELINE, LEVEL_COLUMNS } from './cms-data.js?v=20261118a';
+  import '../tms/mini-charts.js?v=20261116d';
+
+  let cfg, matrix, comps, fam = BASELINE, req = {}, dirty = false, me = null;
+  const isBase = () => fam === BASELINE;
+  const famLabel = id => id === BASELINE ? 'All Families (Baseline)' : (cfg.families.find(f => f.id === id)?.nama || id);
+  const clone = o => JSON.parse(JSON.stringify(o || {}));
+  const setDirty = v => { dirty = v; F('dirtyNote').textContent = v ? 'You have unsaved changes.' : 'No unsaved changes.'; F('dirtyNote').style.color = v ? '#B45309' : ''; };
+  window.addEventListener('beforeunload', e => { if(dirty){ e.preventDefault(); e.returnValue = ''; } });
+  const baseVal = (lv, c) => (matrix[BASELINE] || {})[lv]?.[c];
+  const getVal = (lv, c) => req[lv]?.[c];
+  function setVal(lv, c, v){ // v: number (0 = exclude, hanya untuk job family) atau null = kosong / ikut baseline
+    if(v == null || v === '' || (isBase() && !Number(v))){ if(req[lv]){ delete req[lv][c]; if(!Object.keys(req[lv]).length) delete req[lv]; } return; }
+    (req[lv] = req[lv] || {})[c] = Number(v);
+  }
+  const effective = (lv, c) => { const v = getVal(lv, c); if(isBase()) return v || 0; if(v != null) return Number(v); return baseVal(lv, c) || 0; };
+
+  function cellOpts(lv, c){
+    const v = getVal(lv, c), b = baseVal(lv, c);
+    let o = isBase() ? `<option value="">–</option>` : `<option value="">${b ? '↳ ' + b : '–'}</option>`;
+    for(let i = 1; i <= 5; i++) o += `<option value="${i}" ${Number(v) === i ? 'selected' : ''}>${i}</option>`;
+    if(!isBase() && b) o += `<option value="0" ${v != null && Number(v) === 0 ? 'selected' : ''}>Excl.</option>`;
+    return o;
+  }
+  const cellCls = (lv, c) => { const v = getVal(lv, c); if(v == null) return isBase() ? '' : (baseVal(lv, c) ? 'inh' : ''); return Number(v) === 0 ? 'excl' : 'set'; };
+
+  function renderKpis(){
+    let n = 0; const lvs = new Set();
+    LEVEL_COLUMNS.forEach(l => comps.forEach(c => { if(effective(l.key, c.id) > 0){ n++; lvs.add(l.key); } }));
+    F('kComp').textContent = comps.length; F('kReq').textContent = n; F('kLv').textContent = `${lvs.size}/${LEVEL_COLUMNS.length}`;
+    F('kReqSub').textContent = isBase() ? 'Competency × level, baseline' : 'Competency × level, incl. baseline';
+    const withM = cfg.families.filter(f => Object.keys(matrix[f.id] || {}).length).length;
+    F('kFams').textContent = `${withM}/${cfg.families.length}`; F('kFamsSub').textContent = cfg.families.length ? 'Job families with their own requirements' : 'No job families yet';
+  }
+  function render(){
+    F('famInfo').innerHTML = isBase()
+      ? '<b>Baseline</b> applies to every job family (e.g. Core &amp; Values for all employees). Each cell = required proficiency level (1–5) for that employee level.'
+      : `<b>${esc(famLabel(fam))}</b> — inherits the baseline (<span style="color:var(--text-3)">↳</span>). Set a level to add or override a requirement, or <b>Excl.</b> to drop a baseline competency for this family.`;
+    F('mxHead').innerHTML = '<tr><th style="min-width:240px;">Competency</th>' + LEVEL_COLUMNS.map(l => `<th>${esc(l.label)}</th>`).join('') + '</tr>';
+    let html = '', cat = null;
+    comps.forEach(c => {
+      if(c.kategori !== cat){ cat = c.kategori; html += `<tr class="cat"><td colspan="${LEVEL_COLUMNS.length + 1}">${esc(cat || 'Other')}</td></tr>`; }
+      html += `<tr><td><b>${esc(c.nama)}</b></td>` + LEVEL_COLUMNS.map(l => `<td title="${esc(l.label + ': ' + (c.indikator?.[l.key] || 'No indicator for this level yet.'))}"><select data-lv="${l.key}" data-c="${esc(c.id)}" class="${cellCls(l.key, c.id)}">${cellOpts(l.key, c.id)}</select></td>`).join('') + '</tr>';
+    });
+    F('mxBody').innerHTML = html || `<tr><td colspan="${LEVEL_COLUMNS.length + 1}" class="muted" style="padding:20px;">No competencies yet. Add them in the <a href="dictionary.html">Competency Dictionary</a>.</td></tr>`;
+    F('mxBody').querySelectorAll('select').forEach(s => s.addEventListener('change', () => { setVal(s.dataset.lv, s.dataset.c, s.value === '' ? null : s.value); s.className = cellCls(s.dataset.lv, s.dataset.c); setDirty(true); renderKpis(); }));
+    F('legend').innerHTML = `<span><i style="background:var(--pink-bg); border-color:var(--pink);"></i>Set for ${isBase() ? 'baseline' : 'this family'}</span>` + (isBase() ? '' : '<span><i></i>↳ Inherited from baseline</span><span><i style="background:rgba(120,120,128,.12);"></i>Excluded</span>') + `<span>Hover a cell to read the behavioural indicator.</span>`;
+    F('qVal').innerHTML = (isBase() ? '<option value="">– (empty)</option>' : '<option value="">↳ Inherit</option><option value="0">Excl.</option>') + [1, 2, 3, 4, 5].map(i => `<option ${i === 3 ? 'selected' : ''}>${i}</option>`).join('');
+    F('copyFrom').innerHTML = '<option value="">Copy from…</option>' + [BASELINE, ...cfg.families.map(f => f.id)].filter(id => id !== fam).map(id => `<option value="${esc(id)}">${esc(famLabel(id))}</option>`).join('');
+    renderKpis();
+  }
+  function selectFamily(id){
+    if(dirty && !confirm('Discard unsaved changes to this matrix?')){ F('famSel').value = fam; return; }
+    fam = id; req = clone(matrix[fam]); setDirty(false); render();
+  }
+
+  async function init(profile){
+    me = profile;
+    [cfg, matrix, comps] = await Promise.all([loadFamilies(), loadMatrix(), loadCompetencies()]);
+    const want = new URLSearchParams(location.search).get('family');
+    F('famSel').innerHTML = `<option value="${BASELINE}">All Families (Baseline)</option>` + cfg.families.map(f => `<option value="${esc(f.id)}">${esc(f.nama)}</option>`).join('');
+    if(want && (want === BASELINE || cfg.families.some(f => f.id === want))) fam = want;
+    F('famSel').value = fam; req = clone(matrix[fam]);
+    F('famSel').addEventListener('change', () => selectFamily(F('famSel').value));
+    F('qLv').innerHTML = '<option value="">All levels</option>' + LEVEL_COLUMNS.map(l => `<option value="${l.key}">${esc(l.label)}</option>`).join('');
+    F('qBtn').addEventListener('click', () => {
+      const cat = F('qCat').value, lv = F('qLv').value, v = F('qVal').value;
+      const cs = comps.filter(c => !cat || c.kategori === cat), ls = LEVEL_COLUMNS.filter(l => !lv || l.key === lv);
+      cs.forEach(c => ls.forEach(l => setVal(l.key, c.id, v === '' ? null : (v === '0' && !baseVal(l.key, c.id) ? null : v))));
+      setDirty(true); render(); toast(`${cs.length * ls.length} cells updated. Remember to save.`);
+    });
+    F('copyBtn').addEventListener('click', () => {
+      const src = F('copyFrom').value; if(!src) return toast('Choose a matrix to copy from.');
+      if(!confirm(`Replace this matrix with a copy of "${famLabel(src)}"?`)) return;
+      req = clone(matrix[src]); if(isBase()) Object.values(req).forEach(m => Object.keys(m).forEach(k => { if(!Number(m[k])) delete m[k]; }));
+      setDirty(true); render();
+    });
+    F('clearBtn').addEventListener('click', () => { if(!confirm('Clear every cell of this matrix?')) return; req = {}; setDirty(true); render(); });
+    F('saveBtn').addEventListener('click', async () => {
+      try{
+        F('saveBtn').disabled = true;
+        await setDoc(doc(db, 'competencyMatrix', fam), { req, updatedAt: serverTimestamp(), updatedBy: me.email });
+        matrix[fam] = clone(req); setDirty(false); renderKpis(); toast(`Matrix for ${famLabel(fam)} saved.`);
+      } catch(err){ console.error('Gagal simpan matrix', err.code, err.message); toast('Save failed: ' + err.message); }
+      finally { F('saveBtn').disabled = false; }
+    });
+    render();
+  }
+
+  onAuth(async (user) => { try {
+    const gate = F('gate'), shell = F('appShell');
+    if(!user){ gate.style.display = 'block'; shell.style.display = 'none'; F('gateTitle').textContent = 'Please sign in'; F('gateSub').innerHTML = '<a href="../index.html">Sign in here</a>.'; return; }
+    const profile = await ensureUserProfile(user);
+    if(profile.role !== 'admin'){ gate.style.display = 'block'; shell.style.display = 'none'; F('gateTitle').textContent = 'Access denied'; F('gateSub').innerHTML = 'CMS is for admins (HR/OD) only. <a href="../index.html">Back to LMS</a>.'; return; }
+    gate.style.display = 'none'; shell.style.display = 'block';
+    F('userAvatar').src = profile.photoURL; F('userName').textContent = profile.displayName;
+    await init(profile);
+  } finally { window.appReady?.(); } }); // loading screen hilang setelah semua data halaman tampil
+</script>
+<script type="module" src="./cms-shell.js?v=20261118a"></script>
+<script src="../lms-motion.js?v=20261109" defer></script>
+</body>
+</html>

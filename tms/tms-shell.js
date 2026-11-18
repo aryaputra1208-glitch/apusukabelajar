@@ -87,12 +87,11 @@ onAuth(async (user) => {
         { href: 'idp.html', icon: 'check', label: 'IDP' },
       ] : [] },
       { group: 'Settings', items: isAdmin ? [
-        { href: 'competencies.html', icon: 'layout-grid', label: 'Competency Dictionary' },
         { href: 'hav-setup.html', icon: 'settings', label: 'HAV Map Setup' },
       ] : [] },
       { group: 'Mentoring', items: nMentor ? [{ href: 'mentor-idp.html', icon: 'users', label: isAdmin ? 'My Mentees' : 'IDP', badge: nPendingMine || '' }] : [] },
       { group: 'For You', items: nIdp ? [{ href: 'my-idp.html', icon: 'file-text', label: 'IDP Saya' }] : [] },
-      { group: 'Other Apps', items: [{ href: '../index.html', icon: 'arrow-right', label: 'LMS' }] },
+      { group: 'Other Apps', items: [{ href: '../index.html', icon: 'arrow-right', label: 'LMS' }, ...(isAdmin ? [{ href: '../cms/index.html', icon: 'arrow-right', label: 'CMS' }] : [])] },
     ];
     const roleLabel = isAdmin ? 'HR/OD (Admin)' : nMentor ? 'Department Head · Mentor' : 'Employee';
     render(nav, roleLabel);

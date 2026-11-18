@@ -129,6 +129,11 @@ service cloud.firestore {
       allow read: if hasLmsProfile();
       allow write: if isSignedIn() && myRole() == 'admin';
     }
+    // CMS: competency matrix per job family (dokumen '_all' = baseline). Job family ada di settings/jobFamilies.
+    match /competencyMatrix/{familyId} {
+      allow read: if hasLmsProfile();
+      allow write: if isSignedIn() && myRole() == 'admin';
+    }
     // Data karyawan sensitif: admin semua, karyawan cuma datanya sendiri (dicocokkan by email).
     // Akun anonim tidak punya email -> otomatis ditolak.
     match /employees/{nik} {

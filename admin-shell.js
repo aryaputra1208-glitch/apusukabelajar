@@ -45,7 +45,7 @@ function navFor(role, { nApproval = 0, nSubmissions = 0, tms = null } = {}) {
       { href: 'trainer-analytics.html', icon: 'chart-bar', label: 'Module Analytics' },
       { href: 'training-dashboard-v2.html', icon: 'chart-bar', label: 'Training Dashboard' },
     ] },
-    { group: 'Other Apps', items: [{ href: 'tms/index.html', icon: 'arrow-right', label: 'TMS' }] },
+    { group: 'Other Apps', items: [{ href: 'tms/index.html', icon: 'arrow-right', label: 'TMS' }, { href: 'cms/index.html', icon: 'arrow-right', label: 'CMS' }] },
   ];
   if (role === 'trainer') return [
     { group: 'General', items: [{ href: 'index.html', icon: 'home', label: 'Home' }] },
