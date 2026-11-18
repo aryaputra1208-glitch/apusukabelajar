@@ -16,12 +16,14 @@ export { LEVEL_COLUMNS };
 
 const grab = async (ref, label) => {
   try { const s = await getDocs(ref); const o = []; s.forEach(d => o.push({ _id: d.id, ...d.data() })); return o; }
-  catch (err) { console.error('CMS: gagal baca', label, err.code, err.message); return []; }
+  catch (err) { console.error('CMS: gagal baca', label, err.code, err.message); loadErrors.push(`${label}: ${err.code || err.message}`); return []; }
 };
+/** Daftar koleksi yang gagal dibaca (ditampilkan ke admin, bukan diam-diam kosong). */
+export const loadErrors = [];
 
 export async function loadFamilies() {
   try { const s = await getDoc(doc(db, 'settings', 'jobFamilies')); const d = s.exists() ? s.data() : {}; return { families: d.families || [], jabatanMap: d.jabatanMap || {} }; }
-  catch (err) { console.error('CMS: gagal baca settings/jobFamilies', err.code, err.message); return { families: [], jabatanMap: {} }; }
+  catch (err) { console.error('CMS: gagal baca settings/jobFamilies', err.code, err.message); loadErrors.push(`settings/jobFamilies: ${err.code || err.message}`); return { families: [], jabatanMap: {} }; }
 }
 export async function loadMatrix() {
   const rows = await grab(collection(db, 'competencyMatrix'), 'competencyMatrix');
@@ -33,7 +35,13 @@ export async function loadCompetencies() {
     .map(c => ({ ...c, id: c._id }))
     .sort((a, b) => (order.indexOf(a.kategori) - order.indexOf(b.kategori)) || ((a.urutan ?? 999) - (b.urutan ?? 999)) || String(a.nama).localeCompare(String(b.nama)));
 }
-export const loadEmployees = () => grab(collection(db, 'employees'), 'employees').then(l => l.map(e => ({ ...e, nik: e._id })));
+// kolom teks dipaksa jadi string yang sudah di-trim (Excel kadang menyimpan angka / spasi berlebih)
+const TEXT = ['nama', 'jabatan', 'level', 'divisi', 'departemen', 'email', 'jobFamily', 'status'];
+export const loadEmployees = () => grab(collection(db, 'employees'), 'employees').then(l => l.map(e => {
+  const o = { ...e, nik: e._id };
+  TEXT.forEach(k => { if (o[k] != null) o[k] = String(o[k]).trim(); });
+  return o;
+}));
 export const loadModules = () => grab(collection(db, 'modules'), 'modules');
 // percobaan lama mungkin hanya menyimpan uid → lengkapi email dari profil users supaya bisa dicocokkan ke karyawan
 export async function loadAttempts() {
@@ -44,7 +52,8 @@ export async function loadAttempts() {
 export const loadPlans = () => grab(collection(db, 'developmentPlans'), 'developmentPlans');
 export const loadUpdates = () => grab(collection(db, 'idpUpdates'), 'idpUpdates');
 
-export const isActive = e => (e.status || 'Aktif') === 'Aktif';
+// sama dengan TMS Employees: status Aktif dan belum lewat tanggal resign
+export const isActive = e => (e.status || 'Aktif') === 'Aktif' && !(e.tanggalResign && e.tanggalResign <= new Date().toISOString().slice(0, 10));
 export const levelLabelOf = key => LEVEL_COLUMNS.find(c => c.key === key)?.label || key || '(Unmapped level)';
 
 /** Job family karyawan: dari pemetaan jabatan; kalau belum dipetakan, dari kolom Job Family karyawan (bila namanya cocok). */
