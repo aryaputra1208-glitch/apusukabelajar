@@ -1,8 +1,8 @@
 /* =========================================================
    CMS — data & aturan bersama (khusus kompetensi TECHNICAL; Core/Managerial/Values ada di TMS)
-   - Kamus: koleksi competencies dengan kategori 'Technical' (indikator per level jabatan)
+   - Kamus: koleksi competencies dengan kategori 'Technical'; deskripsi per level kemahiran 1-5 (profisiensi)
    - Job family: settings/jobFamilies = { families: [{ id, nama, deskripsi }], jabatanMap: { "<Jabatan>": familyId } }
-   - Competency matrix: competencyMatrix/{familyId} = { req: { <LEVEL_KEY>: { <compId>: 1 } } }  (1 = wajib)
+   - Competency matrix: competencyMatrix/{familyId} = { req: { <LEVEL_KEY>: { <compId>: 1-5 } } }  (level kemahiran yang dibutuhkan per level jabatan)
    - "Sudah ditrain" = lulus modul LMS online yang membangun kompetensi itu (post-test ≥ 70)
                        ATAU aktivitas IDP untuk kompetensi itu sudah Done (IDP approved).
    ========================================================= */
@@ -64,11 +64,21 @@ export function familyOf(emp, cfg) {
   return null;
 }
 
-/** Kompetensi Technical wajib { compId: 1 } untuk job family + level (dari matrix job family itu). */
+/** Level kemahiran (proficiency) kompetensi Technical. Kamus: competencies/{id}.profisiensi = { "1": "...", …, "5": "..." } */
+export const PROFICIENCY = [
+  { lv: 1, label: 'Basic' },
+  { lv: 2, label: 'Developing' },
+  { lv: 3, label: 'Proficient' },
+  { lv: 4, label: 'Advanced' },
+  { lv: 5, label: 'Expert' },
+];
+export const profLabel = n => { const p = PROFICIENCY.find(x => x.lv === Number(n)); return p ? `${p.lv} · ${p.label}` : '-'; };
+
+/** Kompetensi Technical wajib { compId: levelKemahiran(1-5) } untuk job family + level jabatan (dari matrix job family itu). */
 export function requiredFor(familyId, levelKey, matrix) {
   if (!levelKey || !familyId) return {};
   const out = {};
-  Object.entries((matrix[familyId] || {})[levelKey] || {}).forEach(([k, v]) => { if (Number(v) > 0) out[k] = 1; });
+  Object.entries((matrix[familyId] || {})[levelKey] || {}).forEach(([k, v]) => { const n = Number(v); if (n > 0) out[k] = Math.min(5, n); });
   return out;
 }
 

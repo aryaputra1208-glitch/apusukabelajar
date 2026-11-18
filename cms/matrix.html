@@ -25,22 +25,19 @@
   table.mx { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 980px; }
   table.mx th { font-size: 11px; color: var(--text-3); font-weight: 600; padding: 10px 6px; border-bottom: 1px solid var(--border); text-align: center; line-height: 1.25; vertical-align: bottom; }
   table.mx th:first-child { text-align: left; padding-left: 20px; }
-  table.mx th.colh { cursor: pointer; }
-  table.mx th.colh:hover { color: var(--pink); }
-  table.mx td { padding: 0; border-bottom: 1px solid var(--border); text-align: center; height: 46px; }
+  table.mx td { padding: 6px; border-bottom: 1px solid var(--border); text-align: center; }
   table.mx td:first-child { text-align: left; padding: 8px 20px; }
-  table.mx td.cell { cursor: pointer; }
-  table.mx td.cell:hover { background: rgba(230,0,122,.05); }
-  .tick { display: inline-flex; width: 26px; height: 26px; border-radius: 8px; align-items: center; justify-content: center; border: 1.5px solid rgba(120,120,128,.35); color: transparent; font-weight: 800; font-size: 14px; background: rgba(255,255,255,.7); }
-  td.on .tick { background: var(--pink); border-color: var(--pink); color: #fff; }
-  .rowall { font-size: 11px; color: var(--text-3); cursor: pointer; margin-left: 6px; font-weight: 600; }
-  .rowall:hover { color: var(--pink); }
+  .mx-tools:has(+ .mx-tools) { border-bottom: none; padding-bottom: 6px; }
+  table.mx select { margin: 0; width: 74px; padding: 5px 4px; font-size: 13px; text-align: center; }
+  table.mx select.set { background: var(--pink-bg); border-color: var(--pink); font-weight: 700; color: var(--pink-dark); }
+  .profleg { display: flex; gap: 14px; flex-wrap: wrap; padding: 10px 20px; font-size: 12px; color: var(--text-3); border-bottom: 1px solid var(--border); }
+  .profleg b { color: var(--pink-dark); }
   .legend { padding: 12px 20px; font-size: 12px; color: var(--text-3); border-top: 1px solid var(--border); }
   .savebar { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 20px; border-top: 1px solid var(--border); }
 
 </style>
 </head>
-<body><script>/* sidebar CMS dari cache — inline supaya ikut paint pertama (tanpa kedip) */(function () { try { var c = JSON.parse(sessionStorage.getItem('cmsNavCache') || 'null'); if (!c || !c.html) return; var st = document.createElement('style'); st.id = 'cms-shell-css'; st.textContent = c.css; document.head.appendChild(st); var box = document.createElement('div'); box.innerHTML = c.html; var nav = box.firstElementChild; if (c.sig) nav.setAttribute('data-sig', c.sig); var cur = location.pathname.split('/').pop() || 'index.html'; nav.querySelectorAll('a.as-item').forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === cur); }); document.body.prepend(nav); document.body.classList.add('has-admin-sidebar'); } catch (e) {} })();</script><i id="cms-nav-ready" hidden></i><script>/* loading screen CMS — tampil sampai halaman siap (appShell muncul / gate berisi pesan) */(function(){var id=document.documentElement.lang==='id';/* cek versi: kalau browser masih menyimpan halaman versi lama, muat ulang sekali */var BUILD='20261118-103909';try{fetch('build.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(v&&v!==BUILD&&sessionStorage.getItem('tmsBuildReload')!==v){sessionStorage.setItem('tmsBuildReload',v);location.reload()}}).catch(function(){})}catch(e){}var css='body.tms-loading #gate{display:none!important}.tms-loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:36;transition:opacity .35s ease;background:rgba(246,246,250,.35);-webkit-backdrop-filter:blur(18px) saturate(1.1);backdrop-filter:blur(18px) saturate(1.1)}body.has-admin-sidebar .tms-loader{left:232px}.tms-loader.out{opacity:0;pointer-events:none}.tms-loader .bx{display:flex;flex-direction:column;align-items:center;gap:14px;padding:28px 34px;border-radius:20px;background:rgba(255,255,255,.55);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.7);box-shadow:0 12px 40px rgba(0,0,0,.08);min-width:240px}.tms-loader .t{font-weight:700;font-size:15px;color:#1d1d1f}.tms-loader .s{font-size:12.5px;color:#86868b;text-align:center;max-width:260px}.tms-loader .s:empty{display:none}.tms-loader .bar{width:200px;height:5px;border-radius:99px;background:rgba(230,0,122,.12);overflow:hidden}.tms-loader .bar i{display:block;width:40%;height:100%;border-radius:99px;background:#E6007A;animation:tmsBar 1.1s ease-in-out infinite}@keyframes tmsBar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}@media (max-width:900px){body.has-admin-sidebar .tms-loader{left:0}}@media (prefers-reduced-motion:reduce){.tms-loader .bar i{animation-duration:2.4s}}';var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);document.body.classList.add('tms-loading');var L=document.createElement('div');L.className='tms-loader';L.setAttribute('role','status');L.innerHTML='<div class="bx"><div class="t">'+(id?'Memuat data…':'Loading data…')+'</div><div class="bar"><i></i></div><div class="s"></div></div>';document.body.appendChild(L);var sub=L.querySelector('.s');var t1=setTimeout(function(){sub.textContent=id?'Sebentar lagi…':'Almost there…'},3500);var t2=setTimeout(function(){sub.textContent=id?'Lebih lama dari biasanya. Cek koneksi, lalu refresh kalau tidak kunjung muncul.':'Taking longer than usual. Check your connection, then refresh if nothing appears.'},15000);window.tmsReady=window.appReady=function(){window.__tmsReady=true;check()};function ready(){var g=document.getElementById('gate'),gt=document.getElementById('gateTitle');if(window.__tmsReady)return true;if(g&&g.style.display!=='none'&&gt&&gt.textContent.trim()&&!/^(loading|memuat)/i.test(gt.textContent.trim()))return true;return false}var mo;function check(){if(!ready())return;mo&&mo.disconnect();clearTimeout(t1);clearTimeout(t2);document.body.classList.remove('tms-loading');L.classList.add('out');setTimeout(function(){L.remove()},380)}mo=new MutationObserver(check);mo.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['style','class'],characterData:true});})();</script>
+<body><script>/* sidebar CMS dari cache — inline supaya ikut paint pertama (tanpa kedip) */(function () { try { var c = JSON.parse(sessionStorage.getItem('cmsNavCache') || 'null'); if (!c || !c.html) return; var st = document.createElement('style'); st.id = 'cms-shell-css'; st.textContent = c.css; document.head.appendChild(st); var box = document.createElement('div'); box.innerHTML = c.html; var nav = box.firstElementChild; if (c.sig) nav.setAttribute('data-sig', c.sig); var cur = location.pathname.split('/').pop() || 'index.html'; nav.querySelectorAll('a.as-item').forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === cur); }); document.body.prepend(nav); document.body.classList.add('has-admin-sidebar'); } catch (e) {} })();</script><i id="cms-nav-ready" hidden></i><script>/* loading screen CMS — tampil sampai halaman siap (appShell muncul / gate berisi pesan) */(function(){var id=document.documentElement.lang==='id';/* cek versi: kalau browser masih menyimpan halaman versi lama, muat ulang sekali */var BUILD='20261118-111105';try{fetch('build.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(v&&v!==BUILD&&sessionStorage.getItem('tmsBuildReload')!==v){sessionStorage.setItem('tmsBuildReload',v);location.reload()}}).catch(function(){})}catch(e){}var css='body.tms-loading #gate{display:none!important}.tms-loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:36;transition:opacity .35s ease;background:rgba(246,246,250,.35);-webkit-backdrop-filter:blur(18px) saturate(1.1);backdrop-filter:blur(18px) saturate(1.1)}body.has-admin-sidebar .tms-loader{left:232px}.tms-loader.out{opacity:0;pointer-events:none}.tms-loader .bx{display:flex;flex-direction:column;align-items:center;gap:14px;padding:28px 34px;border-radius:20px;background:rgba(255,255,255,.55);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.7);box-shadow:0 12px 40px rgba(0,0,0,.08);min-width:240px}.tms-loader .t{font-weight:700;font-size:15px;color:#1d1d1f}.tms-loader .s{font-size:12.5px;color:#86868b;text-align:center;max-width:260px}.tms-loader .s:empty{display:none}.tms-loader .bar{width:200px;height:5px;border-radius:99px;background:rgba(230,0,122,.12);overflow:hidden}.tms-loader .bar i{display:block;width:40%;height:100%;border-radius:99px;background:#E6007A;animation:tmsBar 1.1s ease-in-out infinite}@keyframes tmsBar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}@media (max-width:900px){body.has-admin-sidebar .tms-loader{left:0}}@media (prefers-reduced-motion:reduce){.tms-loader .bar i{animation-duration:2.4s}}';var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);document.body.classList.add('tms-loading');var L=document.createElement('div');L.className='tms-loader';L.setAttribute('role','status');L.innerHTML='<div class="bx"><div class="t">'+(id?'Memuat data…':'Loading data…')+'</div><div class="bar"><i></i></div><div class="s"></div></div>';document.body.appendChild(L);var sub=L.querySelector('.s');var t1=setTimeout(function(){sub.textContent=id?'Sebentar lagi…':'Almost there…'},3500);var t2=setTimeout(function(){sub.textContent=id?'Lebih lama dari biasanya. Cek koneksi, lalu refresh kalau tidak kunjung muncul.':'Taking longer than usual. Check your connection, then refresh if nothing appears.'},15000);window.tmsReady=window.appReady=function(){window.__tmsReady=true;check()};function ready(){var g=document.getElementById('gate'),gt=document.getElementById('gateTitle');if(window.__tmsReady)return true;if(g&&g.style.display!=='none'&&gt&&gt.textContent.trim()&&!/^(loading|memuat)/i.test(gt.textContent.trim()))return true;return false}var mo;function check(){if(!ready())return;mo&&mo.disconnect();clearTimeout(t1);clearTimeout(t2);document.body.classList.remove('tms-loading');L.classList.add('out');setTimeout(function(){L.remove()},380)}mo=new MutationObserver(check);mo.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['style','class'],characterData:true});})();</script>
 
 <div id="gate" class="locked-state" style="display:none;">
   <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Loading...</p>
@@ -69,8 +66,11 @@
       <div class="mx-tools">
         <select id="copyFrom"></select><button class="btn btn-outline btn-sm" id="copyBtn">Copy</button>
         <button class="btn btn-outline btn-sm" id="clearBtn">Clear All</button>
-        <span style="flex:1"></span><span class="muted">Click a cell to mark the competency as required · click a level name to tick the whole column</span>
       </div>
+      <div class="mx-tools">
+        <span class="muted" style="width:62px;">Quick fill</span><select id="qComp" style="width:200px;"></select><select id="qLv" style="width:190px;"></select><span class="muted">to</span><select id="qVal" style="width:130px;"></select><button class="btn btn-outline btn-sm" id="qBtn">Apply</button>
+      </div>
+      <div class="profleg" id="profLeg"></div>
       <div class="mx-scroll"><table class="mx"><thead id="mxHead"></thead><tbody id="mxBody"></tbody></table></div>
       <div class="savebar"><span class="muted" id="dirtyNote">No unsaved changes.</span><button class="btn btn-primary" id="saveBtn">Save Matrix</button></div>
     </div>
@@ -87,7 +87,7 @@
   const toast = msg => { const t = F('toast'); t.textContent = msg; t.style.display = 'block'; clearTimeout(toast._t); toast._t = setTimeout(() => t.style.display = 'none', 3000); };
   import { db } from '../firebase-shared.js';
   import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
-  import { loadFamilies, loadMatrix, loadCompetencies, LEVEL_COLUMNS } from './cms-data.js?v=20261118d';
+  import { loadFamilies, loadMatrix, loadCompetencies, LEVEL_COLUMNS, PROFICIENCY, profLabel } from './cms-data.js?v=20261118e';
   import '../tms/mini-charts.js?v=20261116d';
 
   let cfg, matrix, comps, fam = null, req = {}, dirty = false, me = null;
@@ -96,8 +96,10 @@
   const setDirty = v => { dirty = v; F('dirtyNote').textContent = v ? 'You have unsaved changes.' : 'No unsaved changes.'; F('dirtyNote').style.color = v ? '#B45309' : ''; };
   window.addEventListener('beforeunload', e => { if(dirty){ e.preventDefault(); e.returnValue = ''; } });
   const isOn = (lv, c) => Number(req[lv]?.[c]) > 0;
-  function setOn(lv, c, on){
-    if(on) (req[lv] = req[lv] || {})[c] = 1;
+  const getV = (lv, c) => Number(req[lv]?.[c]) || 0;
+  function setV(lv, c, v){
+    v = Number(v) || 0;
+    if(v > 0) (req[lv] = req[lv] || {})[c] = v;
     else if(req[lv]){ delete req[lv][c]; if(!Object.keys(req[lv]).length) delete req[lv]; }
   }
   const famHasMatrix = id => comps.some(c => LEVEL_COLUMNS.some(l => Number((matrix[id] || {})[l.key]?.[c.id]) > 0));
@@ -111,13 +113,17 @@
     F('kFamsSub').textContent = 'Job families with requirements saved';
   }
   function render(){
-    F('mxHead').innerHTML = '<tr><th style="min-width:240px;">Technical Competency</th>' + LEVEL_COLUMNS.map(l => `<th class="colh" data-col="${l.key}" title="Tick / untick the whole column">${esc(l.label)}</th>`).join('') + '</tr>';
-    F('mxBody').innerHTML = comps.map(c => `<tr><td><b>${esc(c.nama)}</b><span class="rowall" data-row="${esc(c.id)}">all levels</span></td>` +
-      LEVEL_COLUMNS.map(l => `<td class="cell ${isOn(l.key, c.id) ? 'on' : ''}" data-lv="${l.key}" data-c="${esc(c.id)}" title="${esc(l.label + ': ' + (c.indikator?.[l.key] || 'No indicator for this level yet.'))}"><span class="tick">✓</span></td>`).join('') + '</tr>').join('')
+    F('mxHead').innerHTML = '<tr><th style="min-width:240px;">Technical Competency</th>' + LEVEL_COLUMNS.map(l => `<th>${esc(l.label)}</th>`).join('') + '</tr>';
+    const opts = v => '<option value="">–</option>' + PROFICIENCY.map(p => `<option value="${p.lv}" ${v === p.lv ? 'selected' : ''}>${p.lv}</option>`).join('');
+    const tip = (c, l) => { const v = getV(l.key, c.id); return v ? `${l.label} needs ${profLabel(v)}: ${c.profisiensi?.[v] || 'no description for this level yet'}` : `${l.label}: not required`; };
+    F('mxBody').innerHTML = comps.map(c => `<tr><td><b>${esc(c.nama)}</b></td>` +
+      LEVEL_COLUMNS.map(l => `<td title="${esc(tip(c, l))}"><select data-lv="${l.key}" data-c="${esc(c.id)}" class="${getV(l.key, c.id) ? 'set' : ''}">${opts(getV(l.key, c.id))}</select></td>`).join('') + '</tr>').join('')
       || `<tr><td colspan="${LEVEL_COLUMNS.length + 1}" class="muted" style="padding:20px;">No technical competencies yet. Add them in <a href="dictionary.html">Technical Competencies</a>.</td></tr>`;
-    F('mxBody').querySelectorAll('td.cell').forEach(td => td.addEventListener('click', () => { const on = !isOn(td.dataset.lv, td.dataset.c); setOn(td.dataset.lv, td.dataset.c, on); td.classList.toggle('on', on); setDirty(true); renderKpis(); }));
-    F('mxBody').querySelectorAll('[data-row]').forEach(s => s.addEventListener('click', () => { const c = s.dataset.row, all = LEVEL_COLUMNS.every(l => isOn(l.key, c)); LEVEL_COLUMNS.forEach(l => setOn(l.key, c, !all)); setDirty(true); render(); }));
-    F('mxHead').querySelectorAll('[data-col]').forEach(th => th.addEventListener('click', () => { const lv = th.dataset.col, all = comps.every(c => isOn(lv, c.id)); comps.forEach(c => setOn(lv, c.id, !all)); setDirty(true); render(); }));
+    F('mxBody').querySelectorAll('select').forEach(sel => sel.addEventListener('change', () => {
+      setV(sel.dataset.lv, sel.dataset.c, sel.value); sel.className = sel.value ? 'set' : '';
+      const c = comps.find(x => x.id === sel.dataset.c), l = LEVEL_COLUMNS.find(x => x.key === sel.dataset.lv); sel.parentElement.title = tip(c, l);
+      setDirty(true); renderKpis();
+    }));
     F('copyFrom').innerHTML = '<option value="">Copy from another job family…</option>' + cfg.families.filter(f => f.id !== fam).map(f => `<option value="${esc(f.id)}">${esc(f.nama)}</option>`).join('');
     renderKpis();
   }
@@ -135,6 +141,14 @@
     F('famSel').innerHTML = cfg.families.map(f => `<option value="${esc(f.id)}">${esc(f.nama)}</option>`).join('');
     F('famSel').value = fam; req = clone(matrix[fam]);
     F('famSel').addEventListener('change', () => selectFamily(F('famSel').value));
+    F('profLeg').innerHTML = '<span>Required proficiency:</span>' + PROFICIENCY.map(p => `<span><b>${p.lv}</b> ${esc(p.label)}</span>`).join('') + '<span>· hover a cell to read the description</span>';
+    F('qComp').innerHTML = '<option value="">All competencies</option>' + comps.map(c => `<option value="${esc(c.id)}">${esc(c.nama)}</option>`).join('');
+    F('qLv').innerHTML = '<option value="">All job levels</option>' + LEVEL_COLUMNS.map(l => `<option value="${l.key}">${esc(l.label)}</option>`).join('');
+    F('qVal').innerHTML = '<option value="">– (not required)</option>' + PROFICIENCY.map(p => `<option value="${p.lv}" ${p.lv === 3 ? 'selected' : ''}>${esc(profLabel(p.lv))}</option>`).join('');
+    F('qBtn').addEventListener('click', () => {
+      const cs = comps.filter(c => !F('qComp').value || c.id === F('qComp').value), ls = LEVEL_COLUMNS.filter(l => !F('qLv').value || l.key === F('qLv').value);
+      cs.forEach(c => ls.forEach(l => setV(l.key, c.id, F('qVal').value))); setDirty(true); render(); toast(`${cs.length * ls.length} cells updated. Remember to save.`);
+    });
     F('copyBtn').addEventListener('click', () => {
       const src = F('copyFrom').value; if(!src) return toast('Choose a job family to copy from.');
       if(!confirm(`Replace this matrix with a copy of "${famLabel(src)}"?`)) return;
@@ -142,7 +156,7 @@
     });
     F('clearBtn').addEventListener('click', () => { if(!confirm('Clear every cell of this matrix?')) return; req = {}; setDirty(true); render(); });
     F('saveBtn').addEventListener('click', async () => {
-      if(!dirty) return toast('Nothing to save yet. Click cells to mark required competencies first.');
+      if(!dirty) return toast('Nothing to save yet. Choose the required proficiency in the cells first.');
       try{
         F('saveBtn').disabled = true;
         // hanya simpan kompetensi Technical yang masih ada di kamus (sisa data lama ikut dibersihkan)
@@ -164,7 +178,7 @@
     gate.style.display = 'none'; shell.style.display = 'block';
     F('userAvatar').src = profile.photoURL; F('userName').textContent = profile.displayName;
     await init(profile);
-    const { loadErrors } = await import('./cms-data.js?v=20261118d');
+    const { loadErrors } = await import('./cms-data.js?v=20261118e');
     if(loadErrors.length) showErr('Some data could not be read: ' + [...new Set(loadErrors)].join(', ') + '. If it says permission-denied, publish the latest Firestore rules.');
   } catch(err) { console.error('CMS error', err); showErr('Something went wrong: ' + (err.message || err)); }
   finally { window.appReady?.(); } });
