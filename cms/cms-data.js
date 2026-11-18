@@ -24,6 +24,11 @@ export async function loadFamilies() {
   try { const s = await getDoc(doc(db, 'settings', 'jobFamilies')); const d = s.exists() ? s.data() : {}; return { families: d.families || [], jabatanMap: d.jabatanMap || {} }; }
   catch (err) { console.error('CMS: gagal baca settings/jobFamilies', err.code, err.message); loadErrors.push(`settings/jobFamilies: ${err.code || err.message}`); return { families: [], jabatanMap: {} }; }
 }
+/** Dokumen matrix lengkap: { familyId: { req, comps: [compId yang dipilih untuk job family ini] } } */
+export async function loadMatrixDocs() {
+  const rows = await grab(collection(db, 'competencyMatrix'), 'competencyMatrix');
+  const m = {}; rows.forEach(r => m[r._id] = { req: r.req || {}, comps: r.comps || [] }); return m;
+}
 export async function loadMatrix() {
   const rows = await grab(collection(db, 'competencyMatrix'), 'competencyMatrix');
   const m = {}; rows.forEach(r => m[r._id] = r.req || {}); return m;
