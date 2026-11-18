@@ -1,6 +1,6 @@
 /* =========================================================
    CMS — data & aturan bersama (khusus kompetensi TECHNICAL; Core/Managerial/Values ada di TMS)
-   - Kamus: koleksi competencies dengan kategori 'Technical'; deskripsi per level kemahiran 1-5 (profisiensi)
+   - Kamus: koleksi competencies dengan kategori 'Technical'; grup = kategori kompetensi technical (mis. IT, Sales); deskripsi per level kemahiran 1-5 (profisiensi)
    - Job family: settings/jobFamilies = { families: [{ id, nama, deskripsi }], jabatanMap: { "<Jabatan>": familyId } }
    - Competency matrix: competencyMatrix/{familyId} = { req: { <LEVEL_KEY>: { <compId>: 1-5 } } }  (level kemahiran yang dibutuhkan per level jabatan)
    - "Sudah ditrain" = lulus modul LMS online yang membangun kompetensi itu (post-test ≥ 70)
@@ -33,7 +33,8 @@ export async function loadCompetencies() {
   return (await grab(collection(db, 'competencies'), 'competencies'))
     .filter(c => c.kategori === 'Technical')
     .map(c => ({ ...c, id: c._id }))
-    .sort((a, b) => ((a.urutan ?? 999) - (b.urutan ?? 999)) || String(a.nama).localeCompare(String(b.nama)));
+    // dikelompokkan per kategori (grup), yang belum berkategori di akhir
+    .sort((a, b) => (a.grup ? 0 : 1) - (b.grup ? 0 : 1) || String(a.grup || '').localeCompare(String(b.grup || '')) || ((a.urutan ?? 999) - (b.urutan ?? 999)) || String(a.nama).localeCompare(String(b.nama)));
 }
 // kolom teks dipaksa jadi string yang sudah di-trim (Excel kadang menyimpan angka / spasi berlebih)
 const TEXT = ['nama', 'jabatan', 'level', 'divisi', 'departemen', 'email', 'jobFamily', 'status'];

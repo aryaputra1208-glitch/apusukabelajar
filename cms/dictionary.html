@@ -43,13 +43,15 @@
   .lv-grid label { font-size: 12.5px; font-weight: 600; padding-top: 9px; }
   .lv-grid textarea { margin: 0; min-height: 54px; font-size: 13px; resize: vertical; }
   .tc-acts { display: flex; justify-content: space-between; gap: 8px; margin-top: 14px; }
+  .grp-h { padding: 10px 20px; font-size: 12px; font-weight: 700; color: var(--pink-dark); background: rgba(230,0,122,.05); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; }
+  .grp-h span { color: var(--text-3); font-weight: 500; }
   .add-row { display: flex; gap: 8px; padding: 14px 20px; border-top: 1px solid var(--border); }
   .add-row input { margin: 0; }
   @media (max-width: 800px) { .lv-grid { grid-template-columns: 1fr; } .lv-grid label { padding-top: 0; } .tc-head { grid-template-columns: 1fr 20px; } .tc-head .stat { display: none; } }
 
 </style>
 </head>
-<body><script>/* sidebar CMS dari cache — inline supaya ikut paint pertama (tanpa kedip) */(function () { try { var c = JSON.parse(sessionStorage.getItem('cmsNavCache') || 'null'); if (!c || !c.html) return; var st = document.createElement('style'); st.id = 'cms-shell-css'; st.textContent = c.css; document.head.appendChild(st); var box = document.createElement('div'); box.innerHTML = c.html; var nav = box.firstElementChild; if (c.sig) nav.setAttribute('data-sig', c.sig); var cur = location.pathname.split('/').pop() || 'index.html'; nav.querySelectorAll('a.as-item').forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === cur); }); document.body.prepend(nav); document.body.classList.add('has-admin-sidebar'); } catch (e) {} })();</script><i id="cms-nav-ready" hidden></i><script>/* loading screen CMS — tampil sampai halaman siap (appShell muncul / gate berisi pesan) */(function(){var id=document.documentElement.lang==='id';/* cek versi: kalau browser masih menyimpan halaman versi lama, muat ulang sekali */var BUILD='20261118-113829';try{fetch('build.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(v&&v!==BUILD&&sessionStorage.getItem('tmsBuildReload')!==v){sessionStorage.setItem('tmsBuildReload',v);location.reload()}}).catch(function(){})}catch(e){}var css='body.tms-loading #gate{display:none!important}.tms-loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:36;transition:opacity .35s ease;background:rgba(246,246,250,.35);-webkit-backdrop-filter:blur(18px) saturate(1.1);backdrop-filter:blur(18px) saturate(1.1)}body.has-admin-sidebar .tms-loader{left:232px}.tms-loader.out{opacity:0;pointer-events:none}.tms-loader .bx{display:flex;flex-direction:column;align-items:center;gap:14px;padding:28px 34px;border-radius:20px;background:rgba(255,255,255,.55);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.7);box-shadow:0 12px 40px rgba(0,0,0,.08);min-width:240px}.tms-loader .t{font-weight:700;font-size:15px;color:#1d1d1f}.tms-loader .s{font-size:12.5px;color:#86868b;text-align:center;max-width:260px}.tms-loader .s:empty{display:none}.tms-loader .bar{width:200px;height:5px;border-radius:99px;background:rgba(230,0,122,.12);overflow:hidden}.tms-loader .bar i{display:block;width:40%;height:100%;border-radius:99px;background:#E6007A;animation:tmsBar 1.1s ease-in-out infinite}@keyframes tmsBar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}@media (max-width:900px){body.has-admin-sidebar .tms-loader{left:0}}@media (prefers-reduced-motion:reduce){.tms-loader .bar i{animation-duration:2.4s}}';var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);document.body.classList.add('tms-loading');var L=document.createElement('div');L.className='tms-loader';L.setAttribute('role','status');L.innerHTML='<div class="bx"><div class="t">'+(id?'Memuat data…':'Loading data…')+'</div><div class="bar"><i></i></div><div class="s"></div></div>';document.body.appendChild(L);var sub=L.querySelector('.s');var t1=setTimeout(function(){sub.textContent=id?'Sebentar lagi…':'Almost there…'},3500);var t2=setTimeout(function(){sub.textContent=id?'Lebih lama dari biasanya. Cek koneksi, lalu refresh kalau tidak kunjung muncul.':'Taking longer than usual. Check your connection, then refresh if nothing appears.'},15000);window.tmsReady=window.appReady=function(){window.__tmsReady=true;check()};function ready(){var g=document.getElementById('gate'),gt=document.getElementById('gateTitle');if(window.__tmsReady)return true;if(g&&g.style.display!=='none'&&gt&&gt.textContent.trim()&&!/^(loading|memuat)/i.test(gt.textContent.trim()))return true;return false}var mo;function check(){if(!ready())return;mo&&mo.disconnect();clearTimeout(t1);clearTimeout(t2);document.body.classList.remove('tms-loading');L.classList.add('out');setTimeout(function(){L.remove()},380)}mo=new MutationObserver(check);mo.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['style','class'],characterData:true});})();</script>
+<body><script>/* sidebar CMS dari cache — inline supaya ikut paint pertama (tanpa kedip) */(function () { try { var c = JSON.parse(sessionStorage.getItem('cmsNavCache') || 'null'); if (!c || !c.html) return; var st = document.createElement('style'); st.id = 'cms-shell-css'; st.textContent = c.css; document.head.appendChild(st); var box = document.createElement('div'); box.innerHTML = c.html; var nav = box.firstElementChild; if (c.sig) nav.setAttribute('data-sig', c.sig); var cur = location.pathname.split('/').pop() || 'index.html'; nav.querySelectorAll('a.as-item').forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === cur); }); document.body.prepend(nav); document.body.classList.add('has-admin-sidebar'); } catch (e) {} })();</script><i id="cms-nav-ready" hidden></i><script>/* loading screen CMS — tampil sampai halaman siap (appShell muncul / gate berisi pesan) */(function(){var id=document.documentElement.lang==='id';/* cek versi: kalau browser masih menyimpan halaman versi lama, muat ulang sekali */var BUILD='20261118-135002';try{fetch('build.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(v&&v!==BUILD&&sessionStorage.getItem('tmsBuildReload')!==v){sessionStorage.setItem('tmsBuildReload',v);location.reload()}}).catch(function(){})}catch(e){}var css='body.tms-loading #gate{display:none!important}.tms-loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:36;transition:opacity .35s ease;background:rgba(246,246,250,.35);-webkit-backdrop-filter:blur(18px) saturate(1.1);backdrop-filter:blur(18px) saturate(1.1)}body.has-admin-sidebar .tms-loader{left:232px}.tms-loader.out{opacity:0;pointer-events:none}.tms-loader .bx{display:flex;flex-direction:column;align-items:center;gap:14px;padding:28px 34px;border-radius:20px;background:rgba(255,255,255,.55);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.7);box-shadow:0 12px 40px rgba(0,0,0,.08);min-width:240px}.tms-loader .t{font-weight:700;font-size:15px;color:#1d1d1f}.tms-loader .s{font-size:12.5px;color:#86868b;text-align:center;max-width:260px}.tms-loader .s:empty{display:none}.tms-loader .bar{width:200px;height:5px;border-radius:99px;background:rgba(230,0,122,.12);overflow:hidden}.tms-loader .bar i{display:block;width:40%;height:100%;border-radius:99px;background:#E6007A;animation:tmsBar 1.1s ease-in-out infinite}@keyframes tmsBar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}@media (max-width:900px){body.has-admin-sidebar .tms-loader{left:0}}@media (prefers-reduced-motion:reduce){.tms-loader .bar i{animation-duration:2.4s}}';var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);document.body.classList.add('tms-loading');var L=document.createElement('div');L.className='tms-loader';L.setAttribute('role','status');L.innerHTML='<div class="bx"><div class="t">'+(id?'Memuat data…':'Loading data…')+'</div><div class="bar"><i></i></div><div class="s"></div></div>';document.body.appendChild(L);var sub=L.querySelector('.s');var t1=setTimeout(function(){sub.textContent=id?'Sebentar lagi…':'Almost there…'},3500);var t2=setTimeout(function(){sub.textContent=id?'Lebih lama dari biasanya. Cek koneksi, lalu refresh kalau tidak kunjung muncul.':'Taking longer than usual. Check your connection, then refresh if nothing appears.'},15000);window.tmsReady=window.appReady=function(){window.__tmsReady=true;check()};function ready(){var g=document.getElementById('gate'),gt=document.getElementById('gateTitle');if(window.__tmsReady)return true;if(g&&g.style.display!=='none'&&gt&&gt.textContent.trim()&&!/^(loading|memuat)/i.test(gt.textContent.trim()))return true;return false}var mo;function check(){if(!ready())return;mo&&mo.disconnect();clearTimeout(t1);clearTimeout(t2);document.body.classList.remove('tms-loading');L.classList.add('out');setTimeout(function(){L.remove()},380)}mo=new MutationObserver(check);mo.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['style','class'],characterData:true});})();</script>
 
 <div id="gate" class="locked-state" style="display:none;">
   <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Loading...</p>
@@ -68,7 +70,7 @@
       <div class="acts"><span class="muted">Core, Managerial &amp; Values are managed in <a href="../tms/competencies.html">TMS</a></span></div></div>
 
     <div class="dash-kpis">
-      <div class="dk"><div class="n" id="kTot">-</div><div class="l">Technical Competencies</div><div class="s">In the dictionary</div></div>
+      <div class="dk"><div class="n" id="kTot">-</div><div class="l">Technical Competencies</div><div class="s" id="kTotSub">In the dictionary</div></div>
       <div class="dk"><div class="n" id="kFull">-</div><div class="l">Indicators Complete</div><div class="s">All 5 proficiency levels described</div></div>
       <div class="dk"><div class="n" id="kUsed">-</div><div class="l">Used In Matrix</div><div class="s">Required by at least 1 job family</div></div>
       <div class="dk"><div class="n" id="kMod">-</div><div class="l">With LMS Module</div><div class="s">Has a published online module</div></div>
@@ -77,16 +79,16 @@
     <div class="panel" style="margin-bottom:16px;">
       <div class="panel-head"><h3 class="text-h2" style="margin:0;">Upload via Excel</h3><a href="#" id="dlBtn" style="font-size:12px; font-weight:700; color:var(--pink);">Download Template / Current Data</a></div>
       <div style="padding:14px 20px 18px;">
-        <p class="text-sub" style="margin:0 0 12px;">First column = competency name; next columns = description of each proficiency level (1 Basic, 2 Developing, 3 Proficient, 4 Advanced, 5 Expert). The required level per job is set in the Competency Matrix. Uploading again updates competencies with the same name; nothing is deleted.</p>
+        <p class="text-sub" style="margin:0 0 12px;">First column = competency name; second column = Category (e.g. IT, Sales — used to group competencies and fill the matrix per category); next columns = description of each proficiency level (1 Basic, 2 Developing, 3 Proficient, 4 Advanced, 5 Expert). The required level per job is set in the Competency Matrix. Uploading again updates competencies with the same name; nothing is deleted.</p>
         <div class="dz" id="dz">Drag &amp; drop an .xlsx file here, or click to browse<input type="file" id="fileIn" accept=".xlsx,.xls" style="display:none"></div>
         <div id="preview"></div>
       </div>
     </div>
 
     <div class="panel">
-      <div class="panel-head"><h3 class="text-h2" style="margin:0;">Dictionary</h3><input type="text" id="q" placeholder="Search competency" style="margin:0; width:220px;"></div>
+      <div class="panel-head"><h3 class="text-h2" style="margin:0;">Dictionary</h3><div style="display:flex; gap:8px;"><select id="fCat" style="margin:0; width:190px;"></select><input type="text" id="q" placeholder="Search competency" style="margin:0; width:200px;"></div></div>
       <div id="list"></div>
-      <div class="add-row"><input type="text" id="newName" placeholder="New technical competency, e.g. Data Analytics"><button class="btn btn-primary btn-sm" id="addBtn" style="white-space:nowrap;">Add Competency</button></div>
+      <div class="add-row"><input type="text" id="newName" placeholder="New technical competency, e.g. Data Analytics"><input type="text" id="newCat" list="catList" placeholder="Category, e.g. IT" style="max-width:220px;"><datalist id="catList"></datalist><button class="btn btn-primary btn-sm" id="addBtn" style="white-space:nowrap;">Add Competency</button></div>
     </div>
 
   </div>
@@ -100,7 +102,7 @@
   const toast = msg => { const t = F('toast'); t.textContent = msg; t.style.display = 'block'; clearTimeout(toast._t); toast._t = setTimeout(() => t.style.display = 'none', 3000); };
   import { db } from '../firebase-shared.js';
   import { doc, setDoc, deleteDoc, writeBatch, serverTimestamp, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
-  import { loadCompetencies, loadFamilies, loadMatrix, loadModules, PROFICIENCY, loadAssessSettings, applyLabels } from './cms-data.js?v=20261118f';
+  import { loadCompetencies, loadFamilies, loadMatrix, loadModules, PROFICIENCY, loadAssessSettings, applyLabels } from './cms-data.js?v=20261118g';
   import { slugify } from '../competency-shared.js?v=20261118a';
   // kolom kamus Technical = level kemahiran 1-5 (bukan level jabatan)
   let LEVELS = PROFICIENCY.map(p => ({ key: String(p.lv), label: `${p.lv} - ${p.label}` })); // label dari Assessment Settings (diisi ulang di init)
@@ -113,13 +115,28 @@
   const filled = c => LEVELS.filter(l => (c.profisiensi?.[l.key] || '').trim()).length;
 
   function render(){
-    F('kTot').textContent = comps.length;
+    F('kTot').textContent = comps.length; { const n = catsOf().length; F('kTotSub').textContent = n ? `In ${n} categor${n === 1 ? 'y' : 'ies'}` : 'In the dictionary'; }
     F('kFull').textContent = comps.filter(c => filled(c) === LEVELS.length).length;
     F('kUsed').textContent = comps.filter(c => famsUsing(c.id).length).length;
     F('kMod').textContent = comps.filter(c => modsFor(c.id).length).length;
-    const q = F('q').value.trim().toLowerCase();
-    const list = comps.filter(c => !q || c.nama.toLowerCase().includes(q));
+    const q = F('q').value.trim().toLowerCase(), fc = F('fCat').value;
+    const cats = catsOf();
+    F('fCat').innerHTML = '<option value="">All categories</option>' + cats.map(k => `<option ${k === fc ? 'selected' : ''}>${esc(k)}</option>`).join('') + (comps.some(c => !c.grup) ? `<option value="__none" ${fc === '__none' ? 'selected' : ''}>Uncategorized</option>` : '');
+    F('catList').innerHTML = cats.map(k => `<option value="${esc(k)}">`).join('');
+    const list = comps.filter(c => (!q || c.nama.toLowerCase().includes(q) || String(c.grup || '').toLowerCase().includes(q)) && (!fc || (fc === '__none' ? !c.grup : c.grup === fc)))
+      .sort((a, b) => grpKey(a).localeCompare(grpKey(b)));
+    let last = null;
     F('list').innerHTML = list.map(c => {
+      const g = c.grup || 'Uncategorized', head = g !== last ? `<div class="grp-h">${esc(g)}<span>${(n => `${n} competenc${n === 1 ? 'y' : 'ies'}`)(comps.filter(x => (x.grup || 'Uncategorized') === g).length)}</span></div>` : ''; last = g;
+      return head + item(c);
+    }).join('') || `<div class="empty-state" style="padding:28px;"><p>${comps.length ? 'No competency matches.' : 'No technical competencies yet. Add one below or upload an Excel file.'}</p></div>`;
+    F('list').querySelectorAll('.tc-head').forEach(h => h.addEventListener('click', () => { const id = h.parentElement.dataset.id; openId = openId === id ? null : id; render(); }));
+    const box = F('list').querySelector('.tc.open'); if(box) bindEditor(box);
+  }
+  const catsOf = () => [...new Set(comps.map(c => c.grup).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  const grpKey = c => (c.grup ? '0' + c.grup.toLowerCase() : '1') + '|' + String(c.urutan ?? 999).padStart(4, '0') + '|' + c.nama.toLowerCase();
+  function item(c){
+    {
       const fams = famsUsing(c.id), n = filled(c), nm = modsFor(c.id).length;
       return `<div class="tc ${openId === c.id ? 'open' : ''}" data-id="${esc(c.id)}">
         <div class="tc-head"><div style="min-width:0;"><div class="tc-name">${esc(c.nama)}</div>
@@ -129,12 +146,11 @@
           <div class="stat"><b>${fams.length}</b> famil${fams.length === 1 ? 'y' : 'ies'}</div>
           <span class="caret">&#9656;</span></div>
         <div class="tc-body">${openId === c.id ? editor(c) : ''}</div></div>`;
-    }).join('') || `<div class="empty-state" style="padding:28px;"><p>${comps.length ? 'No competency matches.' : 'No technical competencies yet. Add one below or upload an Excel file.'}</p></div>`;
-    F('list').querySelectorAll('.tc-head').forEach(h => h.addEventListener('click', () => { const id = h.parentElement.dataset.id; openId = openId === id ? null : id; render(); }));
-    const box = F('list').querySelector('.tc.open'); if(box) bindEditor(box);
+    }
   }
   function editor(c){
     return `<div class="lv-grid"><label>Competency name</label><input type="text" data-f="nama" value="${esc(c.nama)}" style="margin:0;">
+      <label>Category</label><input type="text" data-f="grup" list="catList" value="${esc(c.grup || '')}" placeholder="e.g. IT, Sales" style="margin:0;">
       ${LEVELS.map(l => `<label>${esc(l.label)}</label><textarea data-lv="${l.key}" placeholder="What a person at level ${esc(l.label)} can do">${esc(c.profisiensi?.[l.key] || '')}</textarea>`).join('')}</div>
       <div class="tc-acts"><button class="btn btn-outline btn-sm" data-del>Delete</button><button class="btn btn-primary btn-sm" data-save>Save Competency</button></div>`;
   }
@@ -143,10 +159,11 @@
     box.querySelector('[data-save]').addEventListener('click', async e => {
       const nama = box.querySelector('[data-f="nama"]').value.trim(); if(!nama) return toast('Name cannot be empty.');
       if(comps.some(x => x.id !== c.id && x.nama.toLowerCase() === nama.toLowerCase())) return toast('Another competency already has that name.');
+      const grup = box.querySelector('[data-f="grup"]').value.trim();
       const profisiensi = {}; box.querySelectorAll('[data-lv]').forEach(t => profisiensi[t.dataset.lv] = t.value.replace(/\s+/g, ' ').trim());
       try{ e.target.disabled = true;
-        await setDoc(doc(db, 'competencies', c.id), { nama, kategori: 'Technical', profisiensi, urutan: c.urutan ?? comps.length, updatedAt: serverTimestamp(), updatedBy: me.email });
-        Object.assign(c, { nama, profisiensi }); toast('Competency saved.'); render();
+        await setDoc(doc(db, 'competencies', c.id), { nama, grup, kategori: 'Technical', profisiensi, urutan: c.urutan ?? comps.length, updatedAt: serverTimestamp(), updatedBy: me.email });
+        Object.assign(c, { nama, grup, profisiensi }); toast('Competency saved.'); render();
       } catch(err){ console.error('Gagal simpan kompetensi', err.code, err.message); toast('Save failed: ' + err.message); e.target.disabled = false; }
     });
     box.querySelector('[data-del]').addEventListener('click', async () => {
@@ -162,16 +179,22 @@
     const hi = rows.findIndex(r => r.filter(h => matchProf(h)).length >= 3);
     if(hi === -1) throw new Error('Header row with proficiency levels (1 - Basic … 5 - Expert) not found.');
     const colMap = {}; rows[hi].forEach((h, i) => { const k = matchProf(h); if(k && i > 0 && !(k in colMap)) colMap[k] = i; });
+    const hn = rows[hi].map(h => String(h || '').trim().toLowerCase());
+    const cName = Math.max(0, hn.findIndex(h => /^(kompetensi|competency|nama kompetensi|competency name)/.test(h)));
+    const cCat = hn.findIndex(h => /^(kategori|category|grup|group|kelompok)/.test(h));
     const items = [], warnings = [];
     LEVELS.filter(l => !(l.key in colMap)).forEach(l => warnings.push(`Column "${l.label}" not found.`));
+    if(cCat < 0) warnings.push('Column "Kategori" not found — existing categories are kept, new competencies stay uncategorized.');
     rows.slice(hi + 1).forEach(r => {
-      const raw = String(r[0] || '').trim(); if(!raw) return;
+      const raw = String(r[cName] || '').trim(); if(!raw) return;
       const nama = raw.split(/\r?\n/)[0].replace(/\((technical|core|managerial|values?)\)/ig, '').trim(); if(!nama) return;
       const id = slugify(nama);
       if(otherIds.has(id)){ warnings.push(`${nama} — skipped: this name is already a Core/Managerial/Values competency in TMS.`); return; }
       const profisiensi = {};
       LEVELS.forEach(l => { const t = l.key in colMap ? String(r[colMap[l.key]] || '').replace(/\s+/g, ' ').trim() : ''; profisiensi[l.key] = t; if(!t) warnings.push(`${nama} — ${l.label}: empty.`); });
-      items.push({ id, nama, profisiensi });
+      const grup = cCat >= 0 ? String(r[cCat] || '').trim() : (comps.find(c => c.id === id)?.grup || '');
+      if(cCat >= 0 && !grup) warnings.push(`${nama} — Category: empty.`);
+      items.push({ id, nama, grup, profisiensi });
     });
     return { items, warnings };
   }
@@ -179,14 +202,14 @@
     if(!pending) return F('preview').innerHTML = '';
     const nNew = pending.items.filter(i => !comps.some(c => c.id === i.id)).length;
     F('preview').innerHTML = `<div class="preview"><b>${pending.items.length} competencies read</b> — ${nNew} new, ${pending.items.length - nNew} updates.
-      <div class="muted" style="margin-top:4px;">${pending.items.map(i => esc(i.nama)).join(' · ')}</div>
+      <div class="muted" style="margin-top:4px;">${pending.items.map(i => esc(i.nama) + (i.grup ? ` <span style="opacity:.7">(${esc(i.grup)})</span>` : '')).join(' · ')}</div>
       ${pending.warnings.length ? `<ul>${pending.warnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul>` : ''}
       <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;"><button class="btn btn-outline btn-sm" id="pvCancel">Cancel</button><button class="btn btn-primary btn-sm" id="pvSave" ${pending.items.length ? '' : 'disabled'}>Save to Dictionary</button></div></div>`;
     F('pvCancel').addEventListener('click', () => { pending = null; showPreview(); });
     F('pvSave').addEventListener('click', async () => {
       try{ F('pvSave').disabled = true;
         const b = writeBatch(db);
-        pending.items.forEach((it, i) => { const ex = comps.find(c => c.id === it.id); b.set(doc(db, 'competencies', it.id), { nama: it.nama, kategori: 'Technical', profisiensi: it.profisiensi, urutan: ex?.urutan ?? comps.length + i, updatedAt: serverTimestamp(), updatedBy: me.email }); });
+        pending.items.forEach((it, i) => { const ex = comps.find(c => c.id === it.id); b.set(doc(db, 'competencies', it.id), { nama: it.nama, grup: it.grup, kategori: 'Technical', profisiensi: it.profisiensi, urutan: ex?.urutan ?? comps.length + i, updatedAt: serverTimestamp(), updatedBy: me.email }); });
         await b.commit();
         toast(`${pending.items.length} technical competencies saved.`); pending = null; showPreview();
         comps = await loadCompetencies(); render();
@@ -209,16 +232,16 @@
     [comps, cfg, matrix, modules, all] = await Promise.all([loadCompetencies(), loadFamilies(), loadMatrix(), loadModules(),
       getDocs(collection(db, 'competencies')).then(q => { const o = []; q.forEach(d => o.push({ id: d.id, ...d.data() })); return o; }).catch(() => [])]);
     otherIds = new Set(all.filter(c => c.kategori !== 'Technical').map(c => c.id));
-    F('q').addEventListener('input', render);
+    F('q').addEventListener('input', render); F('fCat').addEventListener('change', render);
     F('addBtn').addEventListener('click', async () => {
-      const nama = F('newName').value.trim(); if(!nama) return F('newName').focus();
+      const nama = F('newName').value.trim(), grup = F('newCat').value.trim(); if(!nama) return F('newName').focus();
       const id = slugify(nama);
       if(comps.some(c => c.id === id || c.nama.toLowerCase() === nama.toLowerCase())) return toast('That competency already exists.');
       if(otherIds.has(id)) return toast('That name is already a Core/Managerial/Values competency in TMS.');
       try{
-        const c = { id, nama, kategori: 'Technical', profisiensi: Object.fromEntries(LEVELS.map(l => [l.key, ''])), urutan: comps.length };
-        await setDoc(doc(db, 'competencies', id), { nama, kategori: 'Technical', profisiensi: c.profisiensi, urutan: c.urutan, updatedAt: serverTimestamp(), updatedBy: me.email });
-        comps.push(c); openId = id; F('newName').value = ''; render(); toast('Added. Fill in the indicator for each level, then save.');
+        const c = { id, nama, grup, kategori: 'Technical', profisiensi: Object.fromEntries(LEVELS.map(l => [l.key, ''])), urutan: comps.length };
+        await setDoc(doc(db, 'competencies', id), { nama, grup, kategori: 'Technical', profisiensi: c.profisiensi, urutan: c.urutan, updatedAt: serverTimestamp(), updatedBy: me.email });
+        comps.push(c); openId = id; F('newName').value = ''; F('fCat').value = ''; render(); toast('Added. Fill in the indicator for each level, then save.');
         F('list').querySelector('.tc.open textarea')?.focus();
       } catch(err){ console.error('Gagal tambah kompetensi', err.code, err.message); toast('Add failed: ' + err.message); }
     });
@@ -230,8 +253,8 @@
     dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('over'); if(e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0]); });
     F('dlBtn').addEventListener('click', e => {
       e.preventDefault();
-      const rows = [['Kompetensi', ...LEVELS.map(l => l.label)], ...(comps.length ? comps.map(c => [c.nama, ...LEVELS.map(l => c.profisiensi?.[l.key] || '')]) : [['Contoh: Software Engineering', ...LEVELS.map(() => '')]])];
-      const ws = XLSX.utils.aoa_to_sheet(rows); ws['!cols'] = [{ wch: 30 }, ...LEVELS.map(() => ({ wch: 40 }))];
+      const rows = [['Kompetensi', 'Kategori', ...LEVELS.map(l => l.label)], ...(comps.length ? [...comps].sort((a, b) => grpKey(a).localeCompare(grpKey(b))).map(c => [c.nama, c.grup || '', ...LEVELS.map(l => c.profisiensi?.[l.key] || '')]) : [['Contoh: Software Engineering', 'IT', ...LEVELS.map(() => '')]])];
+      const ws = XLSX.utils.aoa_to_sheet(rows); ws['!cols'] = [{ wch: 30 }, { wch: 16 }, ...LEVELS.map(() => ({ wch: 40 }))];
       const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Technical Competencies'); XLSX.writeFile(wb, 'technical-competencies.xlsx');
     });
     render();
@@ -245,7 +268,7 @@
     gate.style.display = 'none'; shell.style.display = 'block';
     F('userAvatar').src = profile.photoURL; F('userName').textContent = profile.displayName;
     await init(profile);
-    const { loadErrors } = await import('./cms-data.js?v=20261118f');
+    const { loadErrors } = await import('./cms-data.js?v=20261118g');
     if(loadErrors.length) showErr('Some data could not be read: ' + [...new Set(loadErrors)].join(', ') + '. If it says permission-denied, publish the latest Firestore rules.');
   } catch(err) { console.error('CMS error', err); showErr('Something went wrong: ' + (err.message || err)); }
   finally { window.appReady?.(); } });
