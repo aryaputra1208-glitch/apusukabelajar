@@ -15,7 +15,7 @@ export const LEVEL_COLUMNS = [
   { key: 'DIVH',   label: 'Division Head (VP & SVP)' },
 ];
 
-export const KATEGORI_ORDER = ['Core', 'Managerial', 'Values'];
+export const KATEGORI_ORDER = ['Core', 'Managerial', 'Technical', 'Values'];
 
 /** Skala penilaian default (dari PA kualitatif). Bisa diubah admin di halaman Kamus Kompetensi. */
 export const DEFAULT_SCALE = {

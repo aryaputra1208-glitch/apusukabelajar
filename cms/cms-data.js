@@ -8,7 +8,7 @@
                        ATAU aktivitas IDP untuk kompetensi itu sudah Done (IDP approved).
    ========================================================= */
 import { db } from '../firebase-shared.js';
-import { LEVEL_COLUMNS, isPassed, planApproval, itemProgress } from '../competency-shared.js?v=20261111d';
+import { LEVEL_COLUMNS, isPassed, planApproval, itemProgress } from '../competency-shared.js?v=20261118a';
 import { collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
 export const BASELINE = '_all';
@@ -30,7 +30,7 @@ export async function loadMatrix() {
   const m = {}; rows.forEach(r => m[r._id] = r.req || {}); return m;
 }
 export async function loadCompetencies() {
-  const order = ['Core', 'Managerial', 'Values'];
+  const order = ['Core', 'Managerial', 'Technical', 'Values'];
   return (await grab(collection(db, 'competencies'), 'competencies'))
     .map(c => ({ ...c, id: c._id }))
     .sort((a, b) => (order.indexOf(a.kategori) - order.indexOf(b.kategori)) || ((a.urutan ?? 999) - (b.urutan ?? 999)) || String(a.nama).localeCompare(String(b.nama)));
