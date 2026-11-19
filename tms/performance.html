@@ -34,7 +34,7 @@
 </style>
 </head>
 <body>
-<script>/* sidebar TMS dari cache — inline supaya ikut paint pertama (tanpa kedip) */(function () { try { var c = JSON.parse(sessionStorage.getItem('tmsNavCache2') || 'null'); if (!c || !c.html) return; var st = document.createElement('style'); st.id = 'tms-shell-css'; st.textContent = c.css; document.head.appendChild(st); var box = document.createElement('div'); box.innerHTML = c.html; var nav = box.firstElementChild; if (c.sig) nav.setAttribute('data-sig', c.sig); var cur = location.pathname.split('/').pop() || 'index.html'; nav.querySelectorAll('a.as-item').forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === cur); }); document.body.prepend(nav); document.body.classList.add('has-admin-sidebar'); } catch (e) {} })();</script><i id="tms-nav-ready" hidden></i><script>/* loading screen TMS — tampil sampai halaman siap (appShell muncul / gate berisi pesan) */(function(){var id=document.documentElement.lang==='id';/* cek versi: kalau browser masih menyimpan halaman versi lama, muat ulang sekali */var BUILD='20261118-173146';try{fetch('build.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(v&&v!==BUILD&&sessionStorage.getItem('tmsBuildReload')!==v){sessionStorage.setItem('tmsBuildReload',v);location.reload()}}).catch(function(){})}catch(e){}var css='body.tms-loading #gate{display:none!important}.tms-loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:36;transition:opacity .35s ease;background:rgba(246,246,250,.35);-webkit-backdrop-filter:blur(18px) saturate(1.1);backdrop-filter:blur(18px) saturate(1.1)}body.has-admin-sidebar .tms-loader{left:232px}.tms-loader.out{opacity:0;pointer-events:none}.tms-loader .bx{display:flex;flex-direction:column;align-items:center;gap:14px;padding:28px 34px;border-radius:20px;background:rgba(255,255,255,.55);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.7);box-shadow:0 12px 40px rgba(0,0,0,.08);min-width:240px}.tms-loader .t{font-weight:700;font-size:15px;color:#1d1d1f}.tms-loader .s{font-size:12.5px;color:#86868b;text-align:center;max-width:260px}.tms-loader .s:empty{display:none}.tms-loader .bar{width:200px;height:5px;border-radius:99px;background:rgba(230,0,122,.12);overflow:hidden}.tms-loader .bar i{display:block;width:40%;height:100%;border-radius:99px;background:#E6007A;animation:tmsBar 1.1s ease-in-out infinite}@keyframes tmsBar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}@media (max-width:900px){body.has-admin-sidebar .tms-loader{left:0}}@media (prefers-reduced-motion:reduce){.tms-loader .bar i{animation-duration:2.4s}}';var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);document.body.classList.add('tms-loading');var L=document.createElement('div');L.className='tms-loader';L.setAttribute('role','status');L.innerHTML='<div class="bx"><div class="t">'+(id?'Memuat data…':'Loading data…')+'</div><div class="bar"><i></i></div><div class="s"></div></div>';document.body.appendChild(L);var sub=L.querySelector('.s');var t1=setTimeout(function(){sub.textContent=id?'Sebentar lagi…':'Almost there…'},3500);var t2=setTimeout(function(){sub.textContent=id?'Lebih lama dari biasanya. Cek koneksi, lalu refresh kalau tidak kunjung muncul.':'Taking longer than usual. Check your connection, then refresh if nothing appears.'},15000);window.tmsReady=function(){window.__tmsReady=true;check()};function ready(){var g=document.getElementById('gate'),gt=document.getElementById('gateTitle');if(window.__tmsReady)return true;if(g&&g.style.display!=='none'&&gt&&gt.textContent.trim()&&!/^(loading|memuat)/i.test(gt.textContent.trim()))return true;return false}var mo;function check(){if(!ready())return;mo&&mo.disconnect();clearTimeout(t1);clearTimeout(t2);document.body.classList.remove('tms-loading');L.classList.add('out');setTimeout(function(){L.remove()},380)}mo=new MutationObserver(check);mo.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['style','class'],characterData:true});})();</script>
+<script>/* sidebar TMS dari cache — inline supaya ikut paint pertama (tanpa kedip) */(function () { try { var c = JSON.parse(sessionStorage.getItem('tmsNavCache2') || 'null'); if (!c || !c.html) return; var st = document.createElement('style'); st.id = 'tms-shell-css'; st.textContent = c.css; document.head.appendChild(st); var box = document.createElement('div'); box.innerHTML = c.html; var nav = box.firstElementChild; if (c.sig) nav.setAttribute('data-sig', c.sig); var cur = location.pathname.split('/').pop() || 'index.html'; nav.querySelectorAll('a.as-item').forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === cur); }); document.body.prepend(nav); document.body.classList.add('has-admin-sidebar'); } catch (e) {} })();</script><i id="tms-nav-ready" hidden></i><script>/* loading screen TMS — tampil sampai halaman siap (appShell muncul / gate berisi pesan) */(function(){var id=document.documentElement.lang==='id';/* cek versi: kalau browser masih menyimpan halaman versi lama, muat ulang sekali */var BUILD='20261119-140431';try{fetch('build.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(v&&v!==BUILD&&sessionStorage.getItem('tmsBuildReload')!==v){sessionStorage.setItem('tmsBuildReload',v);location.reload()}}).catch(function(){})}catch(e){}var css='body.tms-loading #gate{display:none!important}.tms-loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:36;transition:opacity .35s ease;background:rgba(246,246,250,.35);-webkit-backdrop-filter:blur(18px) saturate(1.1);backdrop-filter:blur(18px) saturate(1.1)}body.has-admin-sidebar .tms-loader{left:232px}.tms-loader.out{opacity:0;pointer-events:none}.tms-loader .bx{display:flex;flex-direction:column;align-items:center;gap:14px;padding:28px 34px;border-radius:20px;background:rgba(255,255,255,.55);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.7);box-shadow:0 12px 40px rgba(0,0,0,.08);min-width:240px}.tms-loader .t{font-weight:700;font-size:15px;color:#1d1d1f}.tms-loader .s{font-size:12.5px;color:#86868b;text-align:center;max-width:260px}.tms-loader .s:empty{display:none}.tms-loader .bar{width:200px;height:5px;border-radius:99px;background:rgba(230,0,122,.12);overflow:hidden}.tms-loader .bar i{display:block;width:40%;height:100%;border-radius:99px;background:#E6007A;animation:tmsBar 1.1s ease-in-out infinite}@keyframes tmsBar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}@media (max-width:900px){body.has-admin-sidebar .tms-loader{left:0}}@media (prefers-reduced-motion:reduce){.tms-loader .bar i{animation-duration:2.4s}}';var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);document.body.classList.add('tms-loading');var L=document.createElement('div');L.className='tms-loader';L.setAttribute('role','status');L.innerHTML='<div class="bx"><div class="t">'+(id?'Memuat data…':'Loading data…')+'</div><div class="bar"><i></i></div><div class="s"></div></div>';document.body.appendChild(L);var sub=L.querySelector('.s');var t1=setTimeout(function(){sub.textContent=id?'Sebentar lagi…':'Almost there…'},3500);var t2=setTimeout(function(){sub.textContent=id?'Lebih lama dari biasanya. Cek koneksi, lalu refresh kalau tidak kunjung muncul.':'Taking longer than usual. Check your connection, then refresh if nothing appears.'},15000);window.tmsReady=function(){window.__tmsReady=true;check()};function ready(){var g=document.getElementById('gate'),gt=document.getElementById('gateTitle');if(window.__tmsReady)return true;if(g&&g.style.display!=='none'&&gt&&gt.textContent.trim()&&!/^(loading|memuat)/i.test(gt.textContent.trim()))return true;return false}var mo;function check(){if(!ready())return;mo&&mo.disconnect();clearTimeout(t1);clearTimeout(t2);document.body.classList.remove('tms-loading');L.classList.add('out');setTimeout(function(){L.remove()},380)}mo=new MutationObserver(check);mo.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['style','class'],characterData:true});})();</script>
 
 <div id="gate" class="locked-state" style="display:none;">
   <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Loading...</p>
@@ -67,7 +67,7 @@
     <div class="dash-kpis">
       <div class="dk"><div class="n" id="kpiDinilai">-</div><div class="l">Employees Assessed</div><div class="s" id="kpiDinilaiSub"></div></div>
       <div class="dk"><div class="n" id="kpiAvg">-</div><div class="l">Average Final Score</div><div class="s" id="kpiAvgSub"></div></div>
-      <div class="dk"><div class="n" id="kpiGap">-</div><div class="l">Have Competency Gaps</div><div class="s">≥1 competency below standard</div></div>
+      <div class="dk"><div class="n" id="kpiGap">-</div><div class="l">Average Potential</div><div class="s" id="kpiPotSub">Skor Potensi, for HAV Map</div></div>
       <div class="dk"><div class="n" id="kpiNoViewer">-</div><div class="l">No DH+ Manager</div><div class="s">Scores visible to admins only</div></div>
     </div>
     <div class="dash-card" style="margin-bottom:16px;"><h3 style="margin-bottom:12px;">Final Score Distribution</h3><div id="chDist"></div></div>
@@ -82,7 +82,7 @@
         <h2 class="text-h2" style="margin:0;">Import PA &amp; KPI Results via Excel</h2>
         <span class="link-add" id="downloadTemplateBtn"></span>
       </div>
-      <p class="text-sub" style="margin-bottom:12px;">Columns: <strong>NIK, Periode</strong> (<em>2026</em> annual, <em>2026-S1</em> / <em>2026-S2</em> semester), then <strong>one column per competency</strong> (dictionary name, score 1–5). Optional: <strong>Skor KPI</strong>, <strong>Skor PA</strong> (blank = competency average), <strong>Skor Final</strong> (blank = weighted), <strong>Skor Potensi</strong> (1–5, for HAV Map). Re-importing a period overwrites only the people in the file.</p>
+      <p class="text-sub" style="margin-bottom:12px;">Columns: <strong>NIK, Periode</strong> (<em>2026</em> annual, <em>2026-S1</em> / <em>2026-S2</em> semester), then the scores (1–5): <strong>Skor PA</strong>, <strong>Skor KPI</strong>, <strong>Skor Final</strong> (blank = weighted from PA &amp; KPI), <strong>Skor Potensi</strong> (for HAV Map). Fill at least one of PA, KPI or Final. Per-competency ratings are no longer part of this file. Re-importing a period overwrites only the people in the file.</p>
       <div class="dropzone" id="excelDropzone"></div>
       <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" style="display:none">
       <div id="previewBox" class="preview-box" style="display:none;"></div>
@@ -112,7 +112,7 @@
       <div style="overflow-x:auto">
       <table class="data-table">
         <thead><tr>
-          <th>NIK</th><th>Name</th><th>Level</th><th>Model</th><th>PA</th><th>KPI</th><th>Final</th><th>Gap</th><th>Visible to</th>
+          <th>NIK</th><th>Name</th><th>Level</th><th>Model</th><th>PA</th><th>KPI</th><th>Final</th><th>Potential</th><th>Visible to</th>
         </tr></thead>
         <tbody id="tableBody"></tbody>
       </table>
@@ -130,7 +130,7 @@
   import {
     LEVEL_COLUMNS, KATEGORI_ORDER, DEFAULT_SCALE, DEFAULT_WEIGHTS, slugify, escapeHtml, levelLabel,
     normalizePeriode, periodeRank, periodeLabel, scoreLabel, round2, computeFinal, viewerEmailsFor, gapsFor,
-  } from '../competency-shared.js?v=20261118a';
+  } from '../competency-shared.js?v=20261119a';
   import { donut, hbars, vbars, bellCurve, avg, f2, PALETTE } from './mini-charts.js?v=20261116d';
   import { fillLevelSelect, bindLevelSelect, matchLevel } from './level-filter.js?v=20261116a';
   import { collection, getDocs, doc, getDoc, setDoc, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
@@ -197,22 +197,21 @@
     const rows = inPeriode.filter(a => [a.nik, a.nama].some(v => String(v||'').toLowerCase().includes(q)))
       .sort((a,b) => (a.nama||'').localeCompare(b.nama||''));
     const standar = scale.standar || 3;
-    F('kpiGap').textContent = inPeriode.filter(a => gapsFor(a.kompetensi, standar).length).length;
+    { const pv = inPeriode.map(a => a.skorPotensi).filter(v => v != null && !isNaN(v)); F('kpiGap').textContent = pv.length ? f2(pv.reduce((s, v) => s + Number(v), 0) / pv.length) : '-'; F('kpiPotSub').textContent = `${pv.length} of ${inPeriode.length} with Skor Potensi`; }
     F('kpiNoViewer').textContent = inPeriode.filter(a => !(a.viewerEmails||[]).length).length;
     F('rowCount').textContent = `${rows.length} employees`;
 
     F('tableBody').innerHTML = rows.slice(0, 400).map(a => {
-      const nGap = gapsFor(a.kompetensi, standar).length;
       const label = scoreLabel(a.skorFinal, scale);
       return `<tr>
         <td>${escapeHtml(a.nik)}</td>
         <td><a href="profile.html?nik=${encodeURIComponent(a.nik)}&periode=${encodeURIComponent(a.periode)}" style="color:var(--text); font-weight:700; text-decoration:none;">${escapeHtml(a.nama || a.nik)}</a><div class="text-meta">${escapeHtml(a.jabatan || '')}</div></td>
         <td class="text-meta">${escapeHtml(levelLabel(a.levelKey) || a.level || '-')}</td>
-        <td><span class="badge ${a.modelSkor === 'PA + KPI' ? 'badge-blue' : 'badge-gray'}">${escapeHtml(a.modelSkor === 'PA saja' ? 'PA only' : (a.modelSkor || '-'))}</span></td>
+        <td><span class="badge ${a.modelSkor === 'PA + KPI' ? 'badge-blue' : 'badge-gray'}">${escapeHtml(a.modelSkor === 'PA saja' ? 'PA only' : a.modelSkor === 'KPI saja' ? 'KPI only' : (a.modelSkor || '-'))}</span></td>
         <td class="num">${fmt(a.skorPA)}</td>
         <td class="num">${fmt(a.skorKPI)}</td>
         <td class="num"><strong>${fmt(a.skorFinal)}</strong>${label ? `<div class="text-meta">${escapeHtml(label)}${a.skorFinalSumber === 'import' ? ' · dari file' : ''}</div>` : ''}</td>
-        <td>${!Object.keys(a.kompetensi || {}).length ? '<span class="badge badge-gray" title="No per-competency scores in the import file, so gaps cannot be calculated">No competency scores</span>' : nGap ? `<span class="badge badge-amber">${nGap} ${nGap === 1 ? 'competency' : 'competencies'}</span>` : '<span class="badge badge-green">None</span>'}</td>
+        <td class="num">${fmt(a.skorPotensi)}</td>
         <td class="text-meta">${(a.viewerEmails||[]).length ? escapeHtml(a.viewerEmails.join(', ')) : '<span style="color:var(--red);">admins only</span>'}</td>
       </tr>`;
     }).join('');
@@ -302,7 +301,6 @@
   const normHead = s => slugify(String(s).split(/\r?\n/)[0].replace(/\(.*?\)/g, ''));
 
   function handleFile(file){
-    if(!competencies.length){ showToast('The competency dictionary is empty. Fill it in first.'); return; }
     const reader = new FileReader();
     reader.onload = (e) => {
       try{
@@ -321,44 +319,33 @@
     const header = rows[headerIdx].map(normHead);
     const col = name => header.indexOf(name);
     const iNik = col('nik'), iPer = col('periode'), iKpi = col('skor-kpi'), iPa = col('skor-pa'), iFin = col('skor-final'), iPot = col('skor-potensi');
-    const compCols = competencies.map(c => ({ id: c.id, nama: c.nama, i: header.indexOf(slugify(c.nama)) }));
-    const missingComps = compCols.filter(c => c.i === -1).map(c => c.nama);
+    // rating per kompetensi tidak lagi diimport dari data performa (kompetensi datang dari assessment terpisah)
+    const missingComps = [];
     const warnings = [], records = []; let blankRows = 0;
     if(iPer === -1) warnings.push('No Periode column; all rows will be skipped.');
-    if(missingComps.length) warnings.push(`Competency columns not found (scores treated as empty): ${missingComps.join(', ')}.`);
 
     rows.slice(headerIdx + 1).forEach((r, idx) => {
       const line = headerIdx + idx + 2;
       const nik = String(r[iNik] ?? '').trim();
       if(!nik) return;
-      const scoreCells = [iKpi, iPa, iFin, iPot, ...compCols.map(c => c.i)].filter(i => i >= 0).map(i => String(r[i] ?? '').trim());
+      const scoreCells = [iKpi, iPa, iFin, iPot].filter(i => i >= 0).map(i => String(r[i] ?? '').trim());
       if(scoreCells.every(x => x === '')){ blankRows++; return; } // karyawan yang tidak diisi → dilewati, data lamanya tetap aman
       const periode = iPer >= 0 ? normalizePeriode(r[iPer]) : null;
       if(!periode){ warnings.push(`Row ${line} (NIK ${nik}): empty/unknown period, skipped.`); return; }
       const emp = employeesByNik[nik];
       if(!emp){ warnings.push(`Row ${line}: NIK ${nik} not in Employees, skipped.`); return; }
-      const kompetensi = {};
+      // rating kompetensi lama (kalau ada) dipertahankan; file performa hanya berisi skor
+      const kompetensi = { ...(assessments.find(a => a.id === `${periode}_${nik}`)?.kompetensi || {}) };
       let bad = false;
-      const invalid = [];
-      compCols.forEach(c => {
-        if(c.i === -1) return;
-        const v = toNum(r[c.i]);
-        if(v === null) return;
-        if(isNaN(v) || v < 0 || v > 5){ invalid.push(`${c.nama} "${r[c.i]}"`); return; }
-        kompetensi[c.id] = v;
-      });
-      if(invalid.length){ warnings.push(`Row ${line} (${emp.nama}): scores outside 0–5: ${invalid.length > 3 ? invalid.slice(0,3).join(', ') + ` and ${invalid.length - 3} more` : invalid.join(', ')}. Row skipped.`); bad = true; }
       const kpi = iKpi >= 0 ? toNum(r[iKpi]) : null;
       const paImp = iPa >= 0 ? toNum(r[iPa]) : null;
       const finImp = iFin >= 0 ? toNum(r[iFin]) : null;
       const potImp = iPot >= 0 ? toNum(r[iPot]) : null;
       [['KPI', kpi], ['PA', paImp], ['Final', finImp], ['Potential', potImp]].forEach(([n, v]) => { if(v !== null && (isNaN(v) || v < 0 || v > 5)){ warnings.push(`Row ${line} (${emp.nama}): ${n} score "${v}" outside 0–5.`); bad = true; } });
       if(bad) return;
-      if(!Object.keys(kompetensi).length && paImp === null){ warnings.push(`Row ${line} (${emp.nama}): no competency scores or PA score, skipped.`); return; }
-      if(!Object.keys(kompetensi).length) warnings.push(`Row ${line} (${emp.nama}): PA score only, no competency scores; gaps can't be calculated.`);
-      if(!emp.levelKey) warnings.push(`Row ${line} (${emp.nama}): level "${emp.level || '-'}" not mapped to the dictionary; gaps still calculated, expected indicators not shown.`);
-      const vals = Object.values(kompetensi);
-      const skorPA = paImp !== null ? paImp : round2(vals.reduce((s, v) => s + v, 0) / vals.length);
+      if(paImp === null && kpi === null && finImp === null){ warnings.push(`Row ${line} (${emp.nama}): no PA, KPI or Final score, skipped.`); return; }
+      if(!emp.levelKey) warnings.push(`Row ${line} (${emp.nama}): level "${emp.level || '-'}" is not mapped; level-based weights use the default.`);
+      const skorPA = paImp;
       records.push({ nik, periode, kompetensi, skorPA, skorKPI: kpi, skorFinalImport: finImp, skorPotensi: potImp });
     });
     // NIK+periode dobel → yang terakhir dipakai
@@ -377,7 +364,7 @@
       <div style="font-weight:700; margin-bottom:6px;">Preview: ${records.length} assessments ready to save</div>
       <div class="text-sub">${Object.entries(perPeriode).map(([p, n]) => `${escapeHtml(periodeLabel(p))}: ${n} people`).join(' · ') || '-'}</div>
       ${pending.blankRows ? `<div class="text-sub">${pending.blankRows} employees left empty in the file are skipped; their existing data is not changed.</div>` : ''}
-      <div class="text-sub">${records.filter(r => r.skorKPI != null).length} with KPI, ${records.filter(r => r.skorKPI == null).length} PA only. ${nTimpa ? `${nTimpa} overwrite existing data for the same period.` : ''}</div>
+      <div class="text-sub">${records.filter(r => r.skorPA != null).length} with PA, ${records.filter(r => r.skorKPI != null).length} with KPI, ${records.filter(r => r.skorPotensi != null).length} with Skor Potensi. ${nTimpa ? `${nTimpa} overwrite existing data for the same period.` : ''}</div>
       ${warnings.length ? `<ul class="warn-list">${warnings.slice(0, 60).map(w => `<li>${escapeHtml(w)}</li>`).join('')}${warnings.length > 60 ? `<li>… and ${warnings.length - 60} more</li>` : ''}</ul>` : ''}
       <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
         <button class="btn btn-outline btn-sm" id="cancelUploadBtn">Cancel</button>
@@ -472,19 +459,18 @@
     btn.disabled = false;
   });
 
-  /* ===== Template: berisi daftar karyawan aktif + kolom kompetensi ===== */
+  /* ===== Template: daftar karyawan aktif + kolom skor (PA, KPI, Final, Potensi) ===== */
   F('downloadTemplateBtn').innerHTML = iconSvg('file-text', {size:13}) + ' Download Template (employee list + saved scores)';
   F('downloadTemplateBtn').addEventListener('click', () => {
-    if(!competencies.length){ showToast('The competency dictionary is empty.'); return; }
-    const header = ['NIK', 'Nama', 'Level', 'Periode', 'Skor KPI', 'Skor PA', 'Skor Final', 'Skor Potensi', ...competencies.map(c => c.nama)];
+    const header = ['NIK', 'Nama', 'Level', 'Periode', 'Skor PA', 'Skor KPI', 'Skor Final', 'Skor Potensi'];
     // Data yang sudah tersimpan untuk periode yang sedang dipilih ikut terisi, supaya tidak perlu diketik ulang.
     const per = selectedPeriode || '';
     const have = {}; assessments.filter(a => a.periode === per).forEach(a => have[a.nik] = a);
     const v = x => (x === null || x === undefined || x === '') ? '' : x;
     const body = employees.filter(e => (e.status || 'Aktif') === 'Aktif').sort((a,b) => (a.nama||'').localeCompare(b.nama||''))
       .map(e => { const a = have[e.nik];
-        return a ? [e.nik, e.nama || '', e.level || '', per, v(a.skorKPI), v(a.skorPA), a.skorFinalSumber === 'import' ? v(a.skorFinal) : '', v(a.skorPotensi), ...competencies.map(c => v(a.kompetensi?.[c.id]))]
-                 : [e.nik, e.nama || '', e.level || '', per, '', '', '', '', ...competencies.map(() => '')]; });
+        return a ? [e.nik, e.nama || '', e.level || '', per, v(a.skorPA), v(a.skorKPI), a.skorFinalSumber === 'import' ? v(a.skorFinal) : '', v(a.skorPotensi)]
+                 : [e.nik, e.nama || '', e.level || '', per, '', '', '', '']; });
     const ws = XLSX.utils.aoa_to_sheet([header, ...body]);
     ws['!cols'] = header.map((h, i) => ({ wch: i < 2 ? 22 : Math.max(10, Math.min(28, h.length + 2)) }));
     const wb = XLSX.utils.book_new();

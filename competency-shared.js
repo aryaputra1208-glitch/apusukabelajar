@@ -147,7 +147,8 @@ export function computeFinal({ skorPA, skorKPI, skorFinalImport, levelKey, weigh
   }
   const w = (weights?.perLevel?.[levelKey]) || weights?.default || DEFAULT_WEIGHTS;
   const total = (Number(w.pa) || 0) + (Number(w.kpi) || 0) || 100;
-  const final = skorPA == null ? skorKPI : (skorPA * w.pa + skorKPI * w.kpi) / total;
+  if (skorPA == null) return { skorFinal: round2(skorKPI), skorFinalSumber: 'hitung', modelSkor: 'KPI saja', bobot: null };
+  const final = (skorPA * w.pa + skorKPI * w.kpi) / total;
   return { skorFinal: round2(final), skorFinalSumber: 'hitung', modelSkor: 'PA + KPI', bobot: { pa: Number(w.pa), kpi: Number(w.kpi) } };
 }
 
@@ -424,10 +425,10 @@ export const HAV_PERF_SOURCES = {
   pa: 'PA score (competency average)',
 };
 export const HAV_POT_SOURCES = {
-  competency: 'Competency average (all competencies)',
-  category: 'Competency category only',
-  selected: 'Selected competencies only',
   imported: 'Potential score (imported "Skor Potensi" column)',
+  competency: 'Competency average (all competencies) — needs per-competency scores',
+  category: 'Competency category only — needs per-competency scores',
+  selected: 'Selected competencies only — needs per-competency scores',
 };
 export const HAV_ZONES = {
   g: { label: 'Green', bg: 'rgba(34,160,90,.28)', fg: '#0f5a31', dot: '#22a05a' },
@@ -455,7 +456,7 @@ export function havDefaultCells(size) {
   }));
 }
 export function havDefaultConfig(size = 3) {
-  return { size, perfSource: 'final', potSource: 'competency', potCategory: '', potCompetencies: [],
+  return { size, perfSource: 'final', potSource: 'imported', potCategory: '', potCompetencies: [],
     perfLevels: havLevels(size), potLevels: havLevels(size), cells: havDefaultCells(size) };
 }
 /** Lengkapi konfigurasi tersimpan supaya selalu valid. */
