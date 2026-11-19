@@ -422,7 +422,7 @@ export function reminderEmail(r, tmsUrl) {
 export const HAV_PERF_SOURCES = {
   final: 'PA final score (PA + KPI)',
   kpi: 'KPI score',
-  pa: 'PA score (competency average)',
+  pa: 'PA score',
 };
 export const HAV_POT_SOURCES = {
   imported: 'Potential score (imported "Skor Potensi" column)',
@@ -496,4 +496,59 @@ export function havPlace(a, cfg, competencies = []) {
   if (perf == null || pot == null) return null;
   const col = havIdx(perf, cfg.perfLevels), potI = havIdx(pot, cfg.potLevels), row = cfg.size - 1 - potI;
   return { perf, pot, row, col, cell: cfg.cells[row][col] };
+}
+
+/* =========================================================
+   ASSESSMENT CENTER (AC) — sumber skor kompetensi Core / Managerial / Values
+   acResults/{auto}: { nik, email, tanggal 'yyyy-mm-dd', penyelenggara, rekomendasi, catatan, skor: { compId: 1-5 }, viewerEmails, createdAt, createdBy }
+   settings/acConfig: aturan yang bisa diubah admin (AC_DEFAULTS)
+   ========================================================= */
+export const AC_DEFAULTS = {
+  validityMonths: 0,        // 0 = berlaku sampai ada AC baru; > 0 = hasil lebih tua dari N bulan tidak dipakai
+  usePaFallback: true,      // kompetensi yang belum pernah di-AC memakai rating kompetensi PA lama (kalau ada)
+  recommendations: ['Ready Now', 'Ready in 1–2 Years', 'Ready in 3+ Years', 'Not Ready'],
+};
+export function acNormalize(c) { return { ...AC_DEFAULTS, ...(c || {}), recommendations: c?.recommendations?.length ? c.recommendations : AC_DEFAULTS.recommendations }; }
+
+/** Tanggal akhir periode PA: 2026-S1 → 2026-06-30, 2026-S2 / 2026 → 2026-12-31. */
+export function periodeEnd(p) {
+  const m = String(p || '').match(/^(\d{4})(?:-S([12]))?$/);
+  if (!m) return null;
+  return m[2] === '1' ? `${m[1]}-06-30` : `${m[1]}-12-31`;
+}
+const minusMonths = (iso, n) => { const d = new Date(iso + 'T00:00:00Z'); d.setUTCMonth(d.getUTCMonth() - n); return d.toISOString().slice(0, 10); };
+
+/**
+ * Skor AC terbaru per kompetensi untuk satu karyawan, per tanggal acuan (asOf = null → terbaru tanpa batas).
+ * → { skor: { compId: { v, tanggal, penyelenggara } }, rekomendasi, tanggal, penyelenggara } atau null
+ */
+export function acLatest(acResults, nik, asOf, cfg) {
+  const c = acNormalize(cfg);
+  const lo = c.validityMonths > 0 ? minusMonths(asOf || new Date().toISOString().slice(0, 10), c.validityMonths) : '';
+  const list = acResults.filter(r => r.nik === nik && (!asOf || String(r.tanggal) <= asOf) && String(r.tanggal) >= lo)
+    .sort((a, b) => String(a.tanggal).localeCompare(String(b.tanggal)) || ((a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0)));
+  if (!list.length) return null;
+  const skor = {};
+  list.forEach(r => Object.entries(r.skor || {}).forEach(([id, v]) => { v = Number(v); if (v >= 0 && v <= 5) skor[id] = { v, tanggal: r.tanggal, penyelenggara: r.penyelenggara || '' }; }));
+  const last = list[list.length - 1], withRec = [...list].reverse().find(r => r.rekomendasi);
+  return { skor, tanggal: last.tanggal, penyelenggara: last.penyelenggara || '', rekomendasi: withRec?.rekomendasi || '', rekomendasiTanggal: withRec?.tanggal || '' };
+}
+
+/**
+ * Ganti a.kompetensi setiap assessment dengan skor AC (periode terbaru karyawan = AC terbaru; periode lama = AC sampai akhir periode itu).
+ * Rating PA lama disimpan di a.kompetensiPA dan dipakai sebagai cadangan kalau usePaFallback aktif. a.kompSumber[compId] = 'AC' | 'PA'.
+ */
+export function applyAc(assessments, acResults, cfg) {
+  const c = acNormalize(cfg);
+  const latestRank = {}; assessments.forEach(a => { latestRank[a.nik] = Math.max(latestRank[a.nik] || 0, periodeRank(a.periode)); });
+  assessments.forEach(a => {
+    if (!a.kompetensiPA) a.kompetensiPA = { ...(a.kompetensi || {}) };
+    const isLatest = periodeRank(a.periode) === latestRank[a.nik];
+    const ac = acLatest(acResults, a.nik, isLatest ? null : periodeEnd(a.periode), c);
+    const komp = {}, src = {};
+    if (c.usePaFallback) Object.entries(a.kompetensiPA).forEach(([id, v]) => { komp[id] = v; src[id] = 'PA'; });
+    Object.entries(ac?.skor || {}).forEach(([id, x]) => { komp[id] = x.v; src[id] = 'AC'; });
+    a.kompetensi = komp; a.kompSumber = src; a.ac = ac;
+  });
+  return assessments;
 }

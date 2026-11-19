@@ -7,7 +7,7 @@
                        ATAU aktivitas IDP untuk kompetensi itu sudah Done (IDP approved).
    ========================================================= */
 import { db } from '../firebase-shared.js';
-import { LEVEL_COLUMNS, isPassed, planApproval, itemProgress } from '../competency-shared.js?v=20261119a';
+import { LEVEL_COLUMNS, isPassed, planApproval, itemProgress } from '../competency-shared.js?v=20261119b';
 import { collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
 export const BASELINE = '_all';

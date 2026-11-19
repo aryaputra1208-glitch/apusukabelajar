@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assessment Center — Anteraja TMS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../lms-design-system.css?v=20261105b">
+<link rel="expect" href="#tms-nav-ready" blocking="render">
+<link rel="stylesheet" href="../lms-glass.css?v=20261111b">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  .avatar { width: 28px; height: 28px; border-radius: 50%; }
+  .user-chip { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); }
+  .wrap.wide { max-width: 1180px; }
+  .page-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .page-head .acts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .page-head select, .page-head input { margin: 0; width: auto; }
+
+  .muted { color: var(--text-3); font-size: 12px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .row select, .row input { margin: 0; width: auto; }
+  .step { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+  .step:last-child { border-bottom: none; }
+  .step .no { width: 26px; height: 26px; border-radius: 50%; background: var(--pink-bg); color: var(--pink-dark); font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; }
+  .step h4 { margin: 2px 0 4px; font-size: 14px; }
+  .step p { margin: 0 0 10px; font-size: 12.5px; color: var(--text-3); }
+  .dz { border: 1.5px dashed var(--border); border-radius: 12px; padding: 16px; text-align: center; font-size: 13px; color: var(--text-2); cursor: pointer; }
+  .dz.over { border-color: var(--pink); background: var(--pink-bg); }
+  .preview { background: rgba(255,255,255,.6); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-top: 12px; font-size: 13px; }
+  .preview ul { margin: 8px 0 0; padding-left: 18px; font-size: 12px; color: #92400E; max-height: 150px; overflow: auto; }
+  table.t { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.t th { text-align: left; font-size: 11px; color: var(--text-3); font-weight: 600; padding: 9px 12px; border-bottom: 1px solid var(--border); }
+  table.t td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .num { text-align: right; }
+  .icon-x { border: none; background: none; color: var(--text-3); cursor: pointer; font-size: 16px; }
+  .icon-x:hover { color: #B91C1C; }
+  details.set summary { cursor: pointer; font-weight: 700; font-size: 15px; padding: 16px 20px; }
+  .set-body { padding: 0 20px 18px; display: grid; gap: 14px; }
+  .set-body h5 { margin: 0 0 4px; font-size: 13px; }
+  .set-body p { margin: 0 0 8px; font-size: 12px; color: var(--text-3); }
+  .opt { display: flex; gap: 10px; align-items: center; font-size: 13px; }
+  .opt input { margin: 0; width: auto; }
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .tag { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 4px 6px 4px 10px; border-radius: 99px; background: rgba(120,120,128,.12); }
+  .tag button { border: none; background: none; cursor: pointer; color: var(--text-3); font-size: 14px; padding: 0 2px; }
+  .pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 99px; background: rgba(59,130,246,.12); color: #1D4ED8; }
+
+</style>
+</head>
+<body><script>/* sidebar TMS dari cache — inline supaya ikut paint pertama (tanpa kedip) */(function () { try { var c = JSON.parse(sessionStorage.getItem('tmsNavCache2') || 'null'); if (!c || !c.html) return; var st = document.createElement('style'); st.id = 'tms-shell-css'; st.textContent = c.css; document.head.appendChild(st); var box = document.createElement('div'); box.innerHTML = c.html; var nav = box.firstElementChild; if (c.sig) nav.setAttribute('data-sig', c.sig); var cur = location.pathname.split('/').pop() || 'index.html'; nav.querySelectorAll('a.as-item').forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === cur); }); document.body.prepend(nav); document.body.classList.add('has-admin-sidebar'); } catch (e) {} })();</script><i id="tms-nav-ready" hidden></i><script>/* loading screen TMS — tampil sampai halaman siap (appShell muncul / gate berisi pesan) */(function(){var id=document.documentElement.lang==='id';/* cek versi: kalau browser masih menyimpan halaman versi lama, muat ulang sekali */var BUILD='20261119-143907';try{fetch('build.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(v&&v!==BUILD&&sessionStorage.getItem('tmsBuildReload')!==v){sessionStorage.setItem('tmsBuildReload',v);location.reload()}}).catch(function(){})}catch(e){}var css='body.tms-loading #gate{display:none!important}.tms-loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:36;transition:opacity .35s ease;background:rgba(246,246,250,.35);-webkit-backdrop-filter:blur(18px) saturate(1.1);backdrop-filter:blur(18px) saturate(1.1)}body.has-admin-sidebar .tms-loader{left:232px}.tms-loader.out{opacity:0;pointer-events:none}.tms-loader .bx{display:flex;flex-direction:column;align-items:center;gap:14px;padding:28px 34px;border-radius:20px;background:rgba(255,255,255,.55);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.7);box-shadow:0 12px 40px rgba(0,0,0,.08);min-width:240px}.tms-loader .t{font-weight:700;font-size:15px;color:#1d1d1f}.tms-loader .s{font-size:12.5px;color:#86868b;text-align:center;max-width:260px}.tms-loader .s:empty{display:none}.tms-loader .bar{width:200px;height:5px;border-radius:99px;background:rgba(230,0,122,.12);overflow:hidden}.tms-loader .bar i{display:block;width:40%;height:100%;border-radius:99px;background:#E6007A;animation:tmsBar 1.1s ease-in-out infinite}@keyframes tmsBar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}@media (max-width:900px){body.has-admin-sidebar .tms-loader{left:0}}@media (prefers-reduced-motion:reduce){.tms-loader .bar i{animation-duration:2.4s}}';var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);document.body.classList.add('tms-loading');var L=document.createElement('div');L.className='tms-loader';L.setAttribute('role','status');L.innerHTML='<div class="bx"><div class="t">'+(id?'Memuat data…':'Loading data…')+'</div><div class="bar"><i></i></div><div class="s"></div></div>';document.body.appendChild(L);var sub=L.querySelector('.s');var t1=setTimeout(function(){sub.textContent=id?'Sebentar lagi…':'Almost there…'},3500);var t2=setTimeout(function(){sub.textContent=id?'Lebih lama dari biasanya. Cek koneksi, lalu refresh kalau tidak kunjung muncul.':'Taking longer than usual. Check your connection, then refresh if nothing appears.'},15000);window.tmsReady=function(){window.__tmsReady=true;check()};function ready(){var g=document.getElementById('gate'),gt=document.getElementById('gateTitle');if(window.__tmsReady)return true;if(g&&g.style.display!=='none'&&gt&&gt.textContent.trim()&&!/^(loading|memuat)/i.test(gt.textContent.trim()))return true;return false}var mo;function check(){if(!ready())return;mo&&mo.disconnect();clearTimeout(t1);clearTimeout(t2);document.body.classList.remove('tms-loading');L.classList.add('out');setTimeout(function(){L.remove()},380)}mo=new MutationObserver(check);mo.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['style','class'],characterData:true});})();</script>
+
+<div id="gate" class="locked-state" style="display:none;">
+  <p class="text-h2" id="gateTitle" style="margin-bottom:8px;">Loading...</p>
+  <p class="text-sub" id="gateSub"></p>
+</div>
+
+<div id="appShell" style="display:none;">
+  <div class="topbar">
+    <div style="display:flex; align-items:center; gap:16px;">
+      <a href="index.html" class="sidebar-logo" style="margin:0; text-decoration:none;">anteraja TMS</a>
+    </div>
+    <div class="user-chip"><img class="avatar" id="userAvatar" src=""><span id="userName"></span></div>
+  </div>
+  <div class="wrap wide">
+    <div class="page-head"><h1 class="text-h1" style="margin:0;">Assessment Center</h1>
+      <div class="acts"><span class="muted">Source of Core, Managerial &amp; Values competency scores</span></div></div>
+
+    <div class="dash-kpis">
+      <div class="dk"><div class="n" id="kEmp">-</div><div class="l">Employees Assessed</div><div class="s" id="kEmpSub"></div></div>
+      <div class="dk"><div class="n" id="kEv">-</div><div class="l">AC Results</div><div class="s" id="kEvSub"></div></div>
+      <div class="dk"><div class="n" id="kAvg">-</div><div class="l">Average Score</div><div class="s">Latest AC per employee, all competencies</div></div>
+      <div class="dk"><div class="n" id="kRec">-</div><div class="l" id="kRecL">Ready Now</div><div class="s">Latest recommendation per employee</div></div>
+    </div>
+
+    <div class="panel" style="margin-bottom:16px;">
+      <div class="panel-head"><h3 class="text-h2" style="margin:0;">Upload AC Results (Excel)</h3></div>
+      <div class="step"><div class="no">1</div><div><h4>Download the template</h4><p>One row per employee, one column per competency (Core, Managerial &amp; Values from the Competency Dictionary). Filter to the participants of the AC.</p>
+        <div class="row"><select id="tDiv"></select><select id="tLv"></select><button class="btn btn-outline btn-sm" id="tplBtn">Download Template</button><span class="muted" id="tplCount"></span></div></div></div>
+      <div class="step"><div class="no">2</div><div><h4>Fill in the scores (1–5)</h4><p>Fill the AC date, provider/assessor, recommendation (see the "Guide" sheet) and the score of each competency assessed. Rows without any score or recommendation are skipped; empty competency columns are simply not assessed.</p></div></div>
+      <div class="step"><div class="no">3</div><div><h4>Upload the filled file</h4><p>Each row is saved as one AC result. Older results are kept as history; the latest score per competency is used.</p>
+        <div class="dz" id="dz">Drag &amp; drop the .xlsx here, or click to browse<input type="file" id="fileIn" accept=".xlsx,.xls" style="display:none"></div><div id="preview"></div></div></div>
+    </div>
+
+    <div class="panel" style="margin-bottom:16px;">
+      <div class="panel-head"><h3 class="text-h2" style="margin:0;">AC History</h3><input type="text" id="hQ" placeholder="Search name / NIK / provider" style="margin:0; width:240px;"></div>
+      <table class="t"><thead><tr><th>AC Date</th><th>Employee</th><th>Provider / Assessor</th><th>Recommendation</th><th class="num">Competencies</th><th class="num">Average</th><th></th></tr></thead><tbody id="hBody"></tbody></table>
+      <div class="muted" id="hMore" style="padding:12px 20px;"></div>
+    </div>
+
+    <details class="panel set" id="setCard"><summary>AC Settings <span class="muted" id="setStatus" style="font-weight:500;"></span></summary>
+      <div class="set-body">
+        <div><h5>Validity</h5><p>How long an AC result stays valid. After that the competency counts as not assessed (or falls back to old PA ratings, below).</p>
+          <div class="opt"><select id="sVal" style="width:240px;"><option value="0">Until a newer AC result</option><option value="12">12 months</option><option value="24">24 months</option><option value="36">36 months</option></select></div></div>
+        <div><h5>Old PA Competency Ratings</h5><p>Per-competency ratings from earlier PA uploads.</p>
+          <label class="opt"><input type="checkbox" id="sPa"> Use them for competencies that have no (valid) AC score yet</label></div>
+        <div><h5>Recommendation Options</h5><p>Values shown in the template guide and accepted in the "Rekomendasi" column.</p>
+          <div class="tags" id="sRec"></div><div class="row"><input type="text" id="sRecNew" placeholder="e.g. Ready in 1 Year" style="width:220px;"><button class="btn btn-outline btn-sm" id="sRecAdd">Add</button></div></div>
+        <div style="display:flex; justify-content:flex-end;"><button class="btn btn-primary btn-sm" id="sSave">Save Settings</button></div>
+      </div>
+    </details>
+
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { onAuth, ensureUserProfile } from '../firebase-shared.js';
+  const F = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const toast = msg => { const t = F('toast'); t.textContent = msg; t.style.display = 'block'; clearTimeout(toast._t); toast._t = setTimeout(() => t.style.display = 'none', 3000); };
+  import { db } from '../firebase-shared.js';
+  import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+  import { KATEGORI_ORDER, slugify, viewerEmailsFor, acNormalize, acLatest } from '../competency-shared.js?v=20261119b';
+  import './mini-charts.js?v=20261116d';
+  import { fillLevelSelect, bindLevelSelect, matchLevel, getLevel } from './level-filter.js?v=20261116a';
+
+  let comps = [], emps = [], empByNik = {}, active = [], results = [], cfg = acNormalize(), me, pending = null;
+  const grab = async name => { try{ const s = await getDocs(collection(db, name)); const o = []; s.forEach(d => o.push({ _id: d.id, ...d.data() })); return o; } catch(err){ console.error('Gagal baca', name, err.code, err.message); showErr(`Could not read ${name}: ${err.code || err.message}. If it says permission-denied, publish the latest Firestore rules.`); return []; } };
+  const today = () => new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10);
+  const avgOf = o => { const v = Object.values(o || {}).map(Number).filter(x => !isNaN(x)); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
+  const f2 = n => n == null ? '-' : n.toFixed(2).replace('.', ',');
+  const norm = s => String(s ?? '').trim().toLowerCase();
+
+  function kpis(){
+    const latest = active.map(e => ({ e, ac: acLatest(results, e.nik, null, cfg) })).filter(x => x.ac);
+    F('kEmp').textContent = latest.length; F('kEmpSub').textContent = `of ${active.length} active employees`;
+    F('kEv').textContent = results.length; F('kEvSub').textContent = results.length ? `Latest on ${[...results].sort((a, b) => String(b.tanggal).localeCompare(String(a.tanggal)))[0].tanggal}` : 'No results yet';
+    const all = latest.flatMap(x => Object.values(x.ac.skor).map(s => s.v)); F('kAvg').textContent = all.length ? f2(all.reduce((a, b) => a + b, 0) / all.length) : '-';
+    const top = cfg.recommendations[0]; F('kRecL').textContent = top || 'Recommendation'; F('kRec').textContent = latest.filter(x => x.ac.rekomendasi === top).length;
+  }
+
+  /* ===== Template ===== */
+  const tplEmps = () => active.filter(e => (!F('tDiv').value || e.divisi === F('tDiv').value) && matchLevel(e.level, getLevel()));
+  function downloadTpl(){
+    const list = tplEmps(); if(!list.length) return toast('No active employees for this filter.');
+    const head = ['NIK', 'Nama', 'Jabatan', 'Level', 'Divisi', 'Tanggal AC (yyyy-mm-dd)', 'Penyelenggara / Asesor', 'Rekomendasi', 'Catatan', ...comps.map(c => c.nama)];
+    const ws = XLSX.utils.aoa_to_sheet([head, ...list.map(e => [e.nik, e.nama || '', e.jabatan || '', e.level || '', e.divisi || '', '', '', '', '', ...comps.map(() => '')])]);
+    ws['!cols'] = head.map((h, i) => ({ wch: i === 1 || i === 2 ? 26 : i < 9 ? 16 : Math.max(12, Math.min(26, h.length + 2)) }));
+    const guide = [['Rekomendasi (pilihan)'], ...cfg.recommendations.map(r => [r]), [], ['Skor kompetensi: 1–5 (boleh desimal, mis. 3,5). Kosongkan kompetensi yang tidak dinilai.'], [], ['Kompetensi', 'Kategori'], ...comps.map(c => [c.nama, c.kategori])];
+    const wg = XLSX.utils.aoa_to_sheet(guide); wg['!cols'] = [{ wch: 40 }, { wch: 14 }];
+    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'AC Results'); XLSX.utils.book_append_sheet(wb, wg, 'Guide');
+    XLSX.writeFile(wb, 'assessment-center-template.xlsx');
+  }
+
+  /* ===== Upload ===== */
+  const toISO = v => { if(v instanceof Date) return new Date(v.getTime() + 12 * 3600e3).toISOString().slice(0, 10); const s = String(v || '').trim(); if(!s) return ''; if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10); const m = s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/); return m ? `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}` : 'x'; };
+  const toNum = v => { if(v === '' || v == null) return null; const n = Number(String(v).replace(',', '.')); return isNaN(n) ? NaN : n; };
+  function parse(rows){
+    const hi = rows.findIndex(r => r.some(h => norm(h) === 'nik')); if(hi < 0) throw new Error('NIK column not found.');
+    const head = rows[hi].map(norm);
+    const col = (...ns) => { for(const n of ns){ const i = head.findIndex(h => h === n || h.startsWith(n)); if(i >= 0) return i; } return -1; };
+    const cN = col('nik'), cT = col('tanggal', 'date'), cP = col('penyelenggara', 'provider', 'asesor'), cR = col('rekomendasi', 'recommendation'), cC = col('catatan', 'note');
+    const slugHead = rows[hi].map(h => slugify(String(h || '')));
+    const cc = comps.map(c => ({ c, i: slugHead.indexOf(slugify(c.nama)) }));
+    const warnings = [], items = []; let skipped = 0;
+    const missing = cc.filter(x => x.i < 0).map(x => x.c.nama); if(missing.length === comps.length) warnings.push('No competency columns found — only recommendations will be saved.');
+    rows.slice(hi + 1).forEach((r, k) => {
+      const line = hi + k + 2, nik = String(r[cN] ?? '').trim(); if(!nik) return;
+      const skor = {}, bad = [];
+      cc.forEach(({ c, i }) => { if(i < 0) return; const v = toNum(r[i]); if(v === null) return; if(isNaN(v) || v < 0 || v > 5) bad.push(`${c.nama} "${r[i]}"`); else skor[c.id] = Math.round(v * 100) / 100; });
+      const rek = cR >= 0 ? String(r[cR] ?? '').trim() : '';
+      if(!Object.keys(skor).length && !rek && !bad.length){ skipped++; return; }
+      const e = empByNik[nik]; if(!e) return warnings.push(`Row ${line}: NIK ${nik} not found in Employees.`);
+      if(bad.length) return warnings.push(`Row ${line} (${e.nama}): scores must be 1–5: ${bad.slice(0, 3).join(', ')}${bad.length > 3 ? '…' : ''}. Row skipped.`);
+      let rec = rek; if(rek){ const m = cfg.recommendations.find(x => norm(x) === norm(rek)); if(m) rec = m; else warnings.push(`Row ${line} (${e.nama}): recommendation "${rek}" is not in the options list (saved as written).`); }
+      let tgl = cT >= 0 ? toISO(r[cT]) : ''; if(tgl === 'x'){ warnings.push(`Row ${line} (${e.nama}): AC date "${r[cT]}" not recognised — today used.`); tgl = ''; } else if(!tgl) warnings.push(`Row ${line} (${e.nama}): no AC date — today used.`);
+      items.push({ nik, email: String(e.email || '').toLowerCase(), tanggal: tgl || today(), penyelenggara: cP >= 0 ? String(r[cP] ?? '').trim() : '', rekomendasi: rec, catatan: cC >= 0 ? String(r[cC] ?? '').trim() : '', skor, viewerEmails: viewerEmailsFor(nik, empByNik) });
+    });
+    return { items, warnings, skipped };
+  }
+  function showPreview(){
+    if(!pending) return F('preview').innerHTML = '';
+    const nS = pending.items.reduce((n, i) => n + Object.keys(i.skor).length, 0);
+    F('preview').innerHTML = `<div class="preview"><b>${pending.items.length} AC results</b> · ${nS} competency scores${pending.skipped ? ` · ${pending.skipped} empty rows skipped` : ''}.
+      ${pending.warnings.length ? `<ul>${pending.warnings.slice(0, 60).map(w => `<li>${esc(w)}</li>`).join('')}${pending.warnings.length > 60 ? `<li>… and ${pending.warnings.length - 60} more</li>` : ''}</ul>` : ''}
+      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;"><button class="btn btn-outline btn-sm" id="pvCancel">Cancel</button><button class="btn btn-primary btn-sm" id="pvSave" ${pending.items.length ? '' : 'disabled'}>Save ${pending.items.length} Results</button></div></div>`;
+    F('pvCancel').addEventListener('click', () => { pending = null; showPreview(); });
+    F('pvSave').addEventListener('click', async () => {
+      try{ F('pvSave').disabled = true;
+        for(let i = 0; i < pending.items.length; i += 400){ const b = writeBatch(db); pending.items.slice(i, i + 400).forEach(it => b.set(doc(collection(db, 'acResults')), { ...it, createdAt: serverTimestamp(), createdBy: me.email })); await b.commit(); }
+        toast(`${pending.items.length} AC results saved.`); pending = null; showPreview(); results = await grab('acResults'); kpis(); renderHist();
+      } catch(err){ console.error('Gagal simpan hasil AC', err.code, err.message); toast('Save failed: ' + err.message); F('pvSave').disabled = false; }
+    });
+  }
+  function readFile(file){
+    const reader = new FileReader();
+    reader.onload = ev => { try{ const wb = XLSX.read(ev.target.result, { type: 'binary', cellDates: true }); pending = parse(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '', raw: true })); showPreview(); } catch(err){ console.error('Gagal baca file AC', err); toast('Could not read the file: ' + err.message); } };
+    reader.readAsBinaryString(file);
+  }
+
+  /* ===== Riwayat ===== */
+  function renderHist(){
+    const q = norm(F('hQ').value);
+    const list = results.filter(r => !q || [r.nik, empByNik[r.nik]?.nama, r.penyelenggara].some(x => norm(x).includes(q))).sort((a, b) => String(b.tanggal).localeCompare(String(a.tanggal)) || ((b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)));
+    F('hBody').innerHTML = list.slice(0, 100).map(r => `<tr><td>${esc(r.tanggal)}</td><td><b>${esc(empByNik[r.nik]?.nama || r.nik)}</b><div class="muted">${esc(r.nik)} · ${esc(empByNik[r.nik]?.jabatan || '')}</div></td><td>${esc(r.penyelenggara || '-')}</td>
+      <td>${r.rekomendasi ? `<span class="pill">${esc(r.rekomendasi)}</span>` : '<span class="muted">–</span>'}</td><td class="num">${Object.keys(r.skor || {}).length}</td><td class="num"><b>${f2(avgOf(r.skor))}</b></td>
+      <td><button class="icon-x" data-del="${esc(r._id)}" title="Delete this result">×</button></td></tr>`).join('') || '<tr><td colspan="7" class="muted" style="padding:18px 12px;">No AC results yet. Download the template, fill it in, and upload.</td></tr>';
+    F('hMore').textContent = list.length > 100 ? `Showing the latest 100 of ${list.length}.` : list.length ? `${list.length} results` : '';
+    F('hBody').querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', async () => {
+      if(!confirm('Delete this AC result?')) return;
+      try{ await deleteDoc(doc(db, 'acResults', b.dataset.del)); results = results.filter(r => r._id !== b.dataset.del); kpis(); renderHist(); toast('AC result deleted.'); }
+      catch(err){ console.error('Gagal hapus hasil AC', err.code, err.message); toast('Delete failed: ' + err.message); }
+    }));
+  }
+
+  /* ===== Pengaturan ===== */
+  function renderSet(){
+    F('sVal').value = String(cfg.validityMonths || 0); if(!F('sVal').value){ F('sVal').insertAdjacentHTML('beforeend', `<option value="${cfg.validityMonths}">${cfg.validityMonths} months</option>`); F('sVal').value = String(cfg.validityMonths); }
+    F('sPa').checked = !!cfg.usePaFallback;
+    F('sRec').innerHTML = cfg.recommendations.map((t, i) => `<span class="tag">${esc(t)}<button data-i="${i}" title="Remove">×</button></span>`).join('');
+    F('sRec').querySelectorAll('[data-i]').forEach(b => b.addEventListener('click', () => { cfg.recommendations.splice(Number(b.dataset.i), 1); renderSet(); }));
+    F('setStatus').textContent = `· ${cfg.validityMonths ? cfg.validityMonths + ' months validity' : 'valid until a newer AC'} · old PA ratings ${cfg.usePaFallback ? 'used as fallback' : 'not used'}`;
+  }
+
+  async function init(profile){
+    me = profile;
+    let c, set;
+    [c, emps, results, set] = await Promise.all([grab('competencies'), grab('employees'), grab('acResults'), getDoc(doc(db, 'settings', 'acConfig')).then(s => s.exists() ? s.data() : null).catch(() => null)]);
+    cfg = acNormalize(set); cfg.recommendations = [...cfg.recommendations];
+    comps = c.filter(x => x.kategori !== 'Technical').map(x => ({ ...x, id: x._id })).sort((a, b) => (KATEGORI_ORDER.indexOf(a.kategori) - KATEGORI_ORDER.indexOf(b.kategori)) || ((a.urutan ?? 999) - (b.urutan ?? 999)));
+    emps = emps.map(e => ({ ...e, nik: e._id })); emps.forEach(e => empByNik[e.nik] = e);
+    active = emps.filter(e => (e.status || 'Aktif') === 'Aktif' && !(e.tanggalResign && e.tanggalResign <= today()));
+    const divs = [...new Set(active.map(e => e.divisi).filter(Boolean))].sort();
+    F('tDiv').innerHTML = '<option value="">All divisions</option>' + divs.map(d => `<option>${esc(d)}</option>`).join('');
+    const upd = () => F('tplCount').textContent = `${tplEmps().length} employees · ${comps.length} competencies`;
+    fillLevelSelect(F('tLv'), active.map(e => e.level)); bindLevelSelect(F('tLv'), upd); F('tDiv').addEventListener('change', upd); upd();
+    F('tplBtn').addEventListener('click', downloadTpl);
+    const dz = F('dz');
+    dz.addEventListener('click', () => F('fileIn').click());
+    F('fileIn').addEventListener('change', e => { if(e.target.files[0]) readFile(e.target.files[0]); e.target.value = ''; });
+    dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
+    dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+    dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('over'); if(e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0]); });
+    F('hQ').addEventListener('input', renderHist);
+    F('sRecAdd').addEventListener('click', () => { const t = F('sRecNew').value.trim(); if(!t) return; if(cfg.recommendations.some(x => norm(x) === norm(t))) return toast('That option already exists.'); cfg.recommendations.push(t); F('sRecNew').value = ''; renderSet(); });
+    F('sSave').addEventListener('click', async () => {
+      cfg.validityMonths = Number(F('sVal').value) || 0; cfg.usePaFallback = F('sPa').checked;
+      try{ await setDoc(doc(db, 'settings', 'acConfig'), { validityMonths: cfg.validityMonths, usePaFallback: cfg.usePaFallback, recommendations: cfg.recommendations, updatedAt: serverTimestamp(), updatedBy: me.email }); renderSet(); kpis(); toast('AC settings saved.'); }
+      catch(err){ console.error('Gagal simpan acConfig', err.code, err.message); toast('Save failed: ' + err.message); }
+    });
+    renderSet(); kpis(); renderHist();
+  }
+
+  onAuth(async (user) => { try {
+    const gate = F('gate'), shell = F('appShell');
+    if(!user){ gate.style.display = 'block'; shell.style.display = 'none'; F('gateTitle').textContent = 'Please sign in'; F('gateSub').innerHTML = '<a href="../index.html">Sign in here</a>.'; return; }
+    const profile = await ensureUserProfile(user);
+    if(profile.role !== 'admin'){ gate.style.display = 'block'; shell.style.display = 'none'; F('gateTitle').textContent = 'Access denied'; return location.replace('index.html'); }
+    gate.style.display = 'none'; shell.style.display = 'block';
+    F('userAvatar').src = profile.photoURL; F('userName').textContent = profile.displayName;
+    await init(profile);
+      } catch(err) { console.error('CMS error', err); showErr('Something went wrong: ' + (err.message || err)); }
+  finally { window.tmsReady?.(); } });
+  function showErr(msg){ let b = document.getElementById('cmsErr'); if(!b){ b = document.createElement('div'); b.id = 'cmsErr'; b.style.cssText = 'background:#FEF2F2;border:1px solid #FCA5A5;color:#991B1B;border-radius:12px;padding:12px 16px;margin-bottom:16px;font-size:13px;'; document.querySelector('#appShell .wrap')?.prepend(b); } b.textContent = msg; } // loading screen hilang setelah semua data halaman tampil
+</script>
+<script type="module" src="./tms-shell.js?v=20261119a"></script>
+<script src="../lms-motion.js?v=20261109" defer></script>
+</body>
+</html>

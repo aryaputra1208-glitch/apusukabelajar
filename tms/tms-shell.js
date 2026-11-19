@@ -83,6 +83,7 @@ onAuth(async (user) => {
       { group: 'Talent Process', items: isAdmin ? [
         { href: 'employees.html', icon: 'users', label: 'Employees' },
         { href: 'performance.html', icon: 'chart-bar', label: 'Performance Data' },
+        { href: 'assessment-center.html', icon: 'file-text', label: 'Assessment Center' },
         { href: 'profile.html', icon: 'user-check', label: 'Competency Profile' },
         { href: 'idp.html', icon: 'check', label: 'IDP' },
       ] : [] },

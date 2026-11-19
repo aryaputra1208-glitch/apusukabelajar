@@ -158,6 +158,14 @@ service cloud.firestore {
       );
       allow write: if isSignedIn() && myRole() == 'admin';
     }
+    // Hasil Assessment Center (skor kompetensi Core/Managerial/Values): diinput admin; dibaca admin & atasan DH+ (viewerEmails)
+    match /acResults/{id} {
+      allow read: if isSignedIn() && (
+        myRole() == 'admin' ||
+        (myEmail() != null && myEmail() in resource.data.viewerEmails)
+      );
+      allow write: if isSignedIn() && myRole() == 'admin';
+    }
     // IDP: DISUSUN mentor (atasan level Department Head ke atas), DIVALIDASI & bisa diedit HR/OD (admin),
     // baru tampil ke karyawan setelah disetujui HR/OD. Satu mentor per IDP.
     // Status approval: draft (mentor) → pending (dikirim ke HR/OD) → approved | revision (dikembalikan ke mentor).
